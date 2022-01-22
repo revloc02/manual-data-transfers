@@ -53,6 +53,7 @@ public class JmsSend {
     var cf = new JmsConnectionFactory(env.url());
     // todo: I have a fundamental problem with my JMS code in that I am not using CLIENT_ACKNOWLEDGE, which could result in data loss. Fix it.
     // JmsContext.AUTO_ACKNOWLEDGE is the default Acknowledgement mode. If I were to throw an exception while transferring data, and I retrieved data from a queue using AUTO_ACKNOWLEDGE, the data would be lost.
+    // here's a reference for CLIENT_ACKNOWLEDGE: https://jstobigdata.com/jms/guaranteed-delivery-using-jms-message-acknowledgement/
     try (var ctx = cf.createContext(getUsername(), getPassword(), JmsContext.AUTO_ACKNOWLEDGE)) {
       var queue = ctx.createQueue(queueName);
       var producer = ctx.createProducer();
