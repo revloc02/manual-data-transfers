@@ -23,12 +23,19 @@ import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 public class Utils {
 
   public static Map<String, String> personalSandboxRole;
-  static String personalSandboxAccessKeyId = userCreds.getProperty("aws-access-personal-sandbox.access-key-id");
-  static String personalSandboxSecretAccessKey = userCreds.getProperty("aws-access-personal-sandbox.secret-access-key");
+  static String personalSandboxAccessKeyId = userCreds.getProperty(
+      "aws-access-personal-sandbox.access-key-id");
+  static String personalSandboxSecretAccessKey = userCreds.getProperty(
+      "aws-access-personal-sandbox.secret-access-key");
   static String npKeyId = userCreds.getProperty("aws-access-np.access-key-id");
   static String npSecret = userCreds.getProperty("aws-access-np.secret-access-key");
   static String prodKeyId = userCreds.getProperty("aws-access-prod.access-key-id");
   static String prodSecret = userCreds.getProperty("aws-access-prod.secret-access-key");
+
+  // todo: see if I can make a config file separate from the creds file to contain these queue names
+  private static String sqs = userCreds.getProperty("aws-test-sqs");
+  private static String fromSqs = userCreds.getProperty("aws-test-from-sqs");
+  private static String toSqs = userCreds.getProperty("aws-test-to-sqs");
 
   public static AwsCredentialsProvider getNpCreds() {
     return ProfileCredentialsProvider.create("enterprise-np");
@@ -119,5 +126,17 @@ public class Utils {
 
   public static String getProdSecret() {
     return prodSecret;
+  }
+
+  public static String getSqs() {
+    return sqs;
+  }
+
+  public static String getFromSqs() {
+    return fromSqs;
+  }
+
+  public static String getToSqs() {
+    return toSqs;
   }
 }
