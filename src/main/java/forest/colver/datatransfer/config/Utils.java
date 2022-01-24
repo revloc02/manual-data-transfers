@@ -17,12 +17,14 @@ import org.slf4j.LoggerFactory;
 public class Utils {
 
   // todo: move all tech-specific utils to their package (AWS or Azure or qpid). Leave general utils
+  // todo: also, I think some of these methods are not used. Either remove them or write Javadocs so it's easier to remember what they are for
   public static final String TIME_STAMP =
       new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss.SSS").format(new Date());
   static final long DEFAULT_TTL = 60_000L; // time to live in milliseconds
-  static final String CREDS_DEFAULT_PATH = "/.emx/credentials.properties";
   private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
   public static String defaultPayload = "Default Payload: " + TIME_STAMP;
+  // user cred file
+  static final String CREDS_DEFAULT_PATH = "/.emx/credentials.properties";
   public static Properties userCreds = getCredentials();
   static String password = userCreds.getProperty("emx.password");
   static String username = userCreds.getProperty("emx.username");
