@@ -33,9 +33,11 @@ public class Utils {
   static String prodSecret = userCreds.getProperty("aws-access-prod.secret-access-key");
 
   // todo: see if I can make a config file separate from the creds file to contain these queue names
-  private static String sqs = userCreds.getProperty("aws-test-sqs");
-  private static String fromSqs = userCreds.getProperty("aws-test-from-sqs");
-  private static String toSqs = userCreds.getProperty("aws-test-to-sqs");
+  private static final String sqs = userCreds.getProperty("aws-test-sqs");
+  private static final String fromSqs = userCreds.getProperty("aws-test-from-sqs");
+  private static final String toSqs = userCreds.getProperty("aws-test-to-sqs");
+  private static final String s3Internal = userCreds.getProperty("aws-test-s3-internal");
+  private static final String s3TargetCustomer = userCreds.getProperty("aws-test-s3-target-customer");
 
   public static AwsCredentialsProvider getNpCreds() {
     return ProfileCredentialsProvider.create("enterprise-np");
@@ -138,5 +140,13 @@ public class Utils {
 
   public static String getToSqs() {
     return toSqs;
+  }
+
+  public static String getS3Internal() {
+    return s3Internal;
+  }
+
+  public static String getS3TargetCustomer() {
+    return s3TargetCustomer;
   }
 }
