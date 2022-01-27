@@ -21,12 +21,15 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SqsIntegrationTests {
+/**
+ * Integration Tests for AWS SQS
+ */
+public class AwsSqsIntTests {
 
   public static final String QUEUE = Utils.getSqs();
   public static final String FROM_QUEUE = Utils.getFromSqs();
   public static final String TO_QUEUE = Utils.getToSqs();
-  private static final Logger LOG = LoggerFactory.getLogger(SqsIntegrationTests.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AwsSqsIntTests.class);
 
   @Test
   public void testSqsPurge() {

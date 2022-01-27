@@ -14,9 +14,12 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class s3IntegrationTests {
+/**
+ * Integration Tests for AWS S3
+ */
+public class AwsS3IntTests {
 
-  private static final Logger LOG = LoggerFactory.getLogger(s3IntegrationTests.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AwsS3IntTests.class);
   private static final String SANDBOX_SFTP_INTERNAL_BUCKET = getS3Internal();
   private static final String SANDBOX_SFTP_TARGET_CUSTOMER_BUCKET = getS3TargetCustomer();
 

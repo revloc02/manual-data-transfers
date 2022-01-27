@@ -5,7 +5,10 @@ import static forest.colver.datatransfer.aws.Utils.getSbCreds;
 
 import org.junit.jupiter.api.Test;
 
-public class SnsIntegrationTests {
+/**
+ * Integration Tests for AWS SNS
+ */
+public class AwsSnsIntTests {
 
   /**
    * This tests a very specific use case, access from Enterprise Sandbox account to a topic created
