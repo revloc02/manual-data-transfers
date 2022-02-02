@@ -33,11 +33,12 @@ public class Utils {
   static String prodSecret = userCreds.getProperty("aws-access-prod.secret-access-key");
 
   // todo: see if I can make a config file separate from the creds file to contain these queue names
-  private static final String sqs = userCreds.getProperty("aws-test-sqs");
-  private static final String fromSqs = userCreds.getProperty("aws-test-from-sqs");
-  private static final String toSqs = userCreds.getProperty("aws-test-to-sqs");
+  private static final String sqs1 = userCreds.getProperty("aws-test-sqs1");
+  private static final String sqs2 = userCreds.getProperty("aws-test-sqs2");
+  // todo: can these s3 refs be consolidated? can we just use 1 or 2
   private static final String s3Internal = userCreds.getProperty("aws-test-s3-internal");
   private static final String s3TargetCustomer = userCreds.getProperty("aws-test-s3-target-customer");
+  private static final String s3SourceCache = userCreds.getProperty("aws-test-s3-source-cache");
 
   public static AwsCredentialsProvider getNpCreds() {
     return ProfileCredentialsProvider.create("enterprise-np");
@@ -130,16 +131,12 @@ public class Utils {
     return prodSecret;
   }
 
-  public static String getSqs() {
-    return sqs;
+  public static String getSqs1() {
+    return sqs1;
   }
 
-  public static String getFromSqs() {
-    return fromSqs;
-  }
-
-  public static String getToSqs() {
-    return toSqs;
+  public static String getSqs2() {
+    return sqs2;
   }
 
   public static String getS3Internal() {
@@ -148,5 +145,9 @@ public class Utils {
 
   public static String getS3TargetCustomer() {
     return s3TargetCustomer;
+  }
+
+  public static String getS3SourceCache() {
+    return s3SourceCache;
   }
 }

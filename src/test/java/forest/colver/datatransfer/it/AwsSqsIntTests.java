@@ -26,9 +26,8 @@ import org.slf4j.LoggerFactory;
  */
 public class AwsSqsIntTests {
 
-  public static final String QUEUE = Utils.getSqs();
-  public static final String FROM_QUEUE = Utils.getFromSqs();
-  public static final String TO_QUEUE = Utils.getToSqs();
+  public static final String QUEUE1 = Utils.getSqs1();
+  public static final String QUEUE2 = Utils.getSqs2();
   private static final Logger LOG = LoggerFactory.getLogger(AwsSqsIntTests.class);
 
   @Test
@@ -38,18 +37,19 @@ public class AwsSqsIntTests {
     for (var i = 0; i < 5; i++) {
       sqsSend(
           creds,
-          QUEUE,
+          QUEUE1,
           readFile("src/main/resources/1test.txt", StandardCharsets.UTF_8));
     }
     sleepo(1_000);
 
     // check that the messages are where we think they are
-    var attributes = sqsGetQueueAttributes(creds, QUEUE);
-    sqsPurge(creds, QUEUE); // purge before asserting depth in case it's wrong, thus a rerun will work
+    var attributes = sqsGetQueueAttributes(creds, QUEUE1);
+    sqsPurge(creds,
+        QUEUE1); // purge before asserting depth in case it's wrong, thus a rerun will work
     assertThat(attributes.attributesAsStrings().get("ApproximateNumberOfMessages")).isEqualTo("5");
 
     // assert the queue was cleared
-    var messages = sqsGet(creds, QUEUE);
+    var messages = sqsGet(creds, QUEUE1);
     assertThat(messages.hasMessages()).isFalse();
   }
 
@@ -58,27 +58,27 @@ public class AwsSqsIntTests {
     // put message on queue
     var creds = getSbCreds();
     var payload = getDefaultPayload();
-    sqsSend(creds, FROM_QUEUE, payload);
+    sqsSend(creds, QUEUE1, payload);
 
     // verify message is on the queue
-    var fromQResponse = sqsGet(creds, FROM_QUEUE);
+    var fromQResponse = sqsGet(creds, QUEUE1);
     var body = fromQResponse.messages().get(0).body();
     assertThat(body).isEqualTo(payload);
 
     // copy the message
     sleepo(4_000); // waiting for the visibility timeout from the sqsGet()
-    sqsCopy(creds, FROM_QUEUE, TO_QUEUE);
+    sqsCopy(creds, QUEUE1, QUEUE2);
 
     // remove message from source queue
-    sqsDelete(creds, fromQResponse, FROM_QUEUE);
+    sqsDelete(creds, fromQResponse, QUEUE1);
 
     // verify the message is on the other queue
-    var toQResponse = sqsGet(creds, TO_QUEUE);
+    var toQResponse = sqsGet(creds, QUEUE2);
     body = toQResponse.messages().get(0).body();
     assertThat(body).isEqualTo(payload);
 
     // cleanup
-    sqsDelete(creds, toQResponse, TO_QUEUE);
+    sqsDelete(creds, toQResponse, QUEUE2);
   }
 
   @Test
@@ -86,12 +86,12 @@ public class AwsSqsIntTests {
     // send some stuff
     var creds = getSbCreds();
     var payload = "message with payload only, no headers";
-    sqsSend(creds, QUEUE, payload);
+    sqsSend(creds, QUEUE1, payload);
     // check that it arrived
-    var response = sqsGet(creds, QUEUE);
+    var response = sqsGet(creds, QUEUE1);
     assertThat(response.messages().get(0).body()).isEqualTo(payload);
     // cleanup
-    sqsDelete(creds, response, QUEUE);
+    sqsDelete(creds, response, QUEUE1);
   }
 
   @Test
@@ -100,9 +100,9 @@ public class AwsSqsIntTests {
     var creds = getSbCreds();
     var messageProps = Map.of("timestamp", getTimeStamp(), "key2", "value2", "key3", "value3");
     var payload = getDefaultPayload();
-    sqsSend(creds, QUEUE, payload, messageProps);
+    sqsSend(creds, QUEUE1, payload, messageProps);
     // check that it arrived
-    var response = sqsGet(creds, QUEUE);
+    var response = sqsGet(creds, QUEUE1);
     assertThat(response.messages().get(0).body()).isEqualTo(payload);
     assertThat(response.messages().get(0).hasMessageAttributes()).isEqualTo(true);
     assertThat(response.messages().get(0).messageAttributes().get("key2").stringValue()).isEqualTo(
@@ -111,7 +111,7 @@ public class AwsSqsIntTests {
         "value3");
     assertThat(response.messages().get(0).body()).isEqualTo(payload);
     // cleanup
-    sqsDelete(creds, response, QUEUE);
+    sqsDelete(creds, response, QUEUE1);
   }
 
   @Test
@@ -119,24 +119,24 @@ public class AwsSqsIntTests {
     // put message on queue
     var creds = getSbCreds();
     var payload = getDefaultPayload();
-    sqsSend(creds, FROM_QUEUE, payload);
+    sqsSend(creds, QUEUE1, payload);
 
     // verify message is on the queue
-    var fromQResponse = sqsGet(creds, FROM_QUEUE);
+    var fromQResponse = sqsGet(creds, QUEUE1);
     var body = fromQResponse.messages().get(0).body();
     assertThat(body).isEqualTo(payload);
 
     // move the message
     sleepo(4_000); // waiting for the visibility timeout from the sqsGet()
-    sqsMove(creds, FROM_QUEUE, TO_QUEUE);
+    sqsMove(creds, QUEUE1, QUEUE2);
 
     // verify the message is on the other queue
-    var toQResponse = sqsGet(creds, TO_QUEUE);
+    var toQResponse = sqsGet(creds, QUEUE2);
     body = toQResponse.messages().get(0).body();
     assertThat(body).isEqualTo(payload);
 
     // cleanup
-    sqsDelete(creds, toQResponse, TO_QUEUE);
+    sqsDelete(creds, toQResponse, QUEUE2);
 
   }
 }
