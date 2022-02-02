@@ -1,0 +1,38 @@
+{
+  "Records": [
+    {
+      "eventVersion": "2.1",
+      "eventSource": "aws:s3",
+      "awsRegion": "us-east-1",
+      "eventTime": "2021-08-25T17:07:02.444Z",
+      "eventName": "ObjectCreated:Copy",
+      "userIdentity": {
+        "principalId": "AWS:AROAZM4CLSXWK4BTKHN6O:sftpMoveLambda"
+      },
+      "requestParameters": {
+        "sourceIPAddress": "23.22.60.77"
+      },
+      "responseElements": {
+        "x-amz-request-id": "71KM1ZD7EDA2MTQJ",
+        "x-amz-id-2": "t4k61xnPsls0qmYLPgs8/lDB7xuNhbBEVsTgA6WRJMOoz94vqvVCfDhpS04ecDP5293xg1/8Bfsm+Uedfxbh/YVbKf40FOREDULFGPp5SuY="
+      },
+      "s3": {
+        "s3SchemaVersion": "1.0",
+        "configurationId": "tf-s3-lambda-20210301194700924400000004",
+        "bucket": {
+          "name": "emx-sandbox-sftp-source-cache",
+          "ownerIdentity": {
+            "principalId": "A3MDRH7XJ6JWYF"
+          },
+          "arn": "arn:aws:s3:::emx-sandbox-sftp-source-cache"
+        },
+        "object": {
+          "key": "ext-aiko1/outbound/dev/flox/dd/1test.txt",
+          "size": 12,
+          "eTag": "6f5902ac237024bdd0c176cb93063dc4",
+          "sequencer": "00612678C009A2451D"
+        }
+      }
+    }
+  ]
+}
