@@ -38,7 +38,7 @@ public class AwsSqsIntTests {
       sqsSend(
           creds,
           QUEUE1,
-          readFile("src/main/resources/1test.txt", StandardCharsets.UTF_8));
+          readFile("src/test/resources/1test.txt", StandardCharsets.UTF_8));
     }
     sleepo(1_000);
 

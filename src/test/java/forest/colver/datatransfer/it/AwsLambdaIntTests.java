@@ -37,7 +37,7 @@ public class AwsLambdaIntTests {
 
     // Place object in the s3 cache.
     var objectKey = "ext-aiko1/outbound/dev/flox/dd/1test.txt";
-    var contents = readFile("src/main/resources/1test.txt", StandardCharsets.UTF_8);
+    var contents = readFile("src/test/resources/1test.txt", StandardCharsets.UTF_8);
     s3Put(creds, SANDBOX_SFTP_SOURCE_CAHCE_BUCKET, objectKey, contents);
 
     // The initial placement triggered the bridge lambda, so verify that...
