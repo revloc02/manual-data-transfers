@@ -29,8 +29,8 @@ public class JmsBrowse {
             env.name(),
             queueName,
             createStringFromMessage(message));
-        var queueDepth = Collections.list(msgs).size(); // this empties msgs Enumeration series
-        LOG.info("Queue {} Depth={}", queueName, queueDepth);
+        var msgCount = Collections.list(msgs).size()+1; // this empties msgs Enumeration series
+        LOG.info("Queue={}; MessageCount={}", queueName, msgCount);
       } catch (JMSException e) {
         e.printStackTrace();
       }
