@@ -42,7 +42,7 @@ public class Utils {
     return ProfileCredentialsProvider.create("enterprise-np");
   }
 
-  public static AwsCredentialsProvider getSbCreds() { // enterprise sandbox
+  public static AwsCredentialsProvider getEmxSbCreds() { // enterprise sandbox
     return ProfileCredentialsProvider.create("enterprise-sb");
   }
 

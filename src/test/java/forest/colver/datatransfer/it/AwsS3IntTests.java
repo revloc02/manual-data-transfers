@@ -6,7 +6,7 @@ import static forest.colver.datatransfer.aws.S3Operations.s3List;
 import static forest.colver.datatransfer.aws.S3Operations.s3Put;
 import static forest.colver.datatransfer.aws.Utils.S3_INTERNAL;
 import static forest.colver.datatransfer.aws.Utils.S3_TARGET_CUSTOMER;
-import static forest.colver.datatransfer.aws.Utils.getSbCreds;
+import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -24,7 +24,7 @@ public class AwsS3IntTests {
   @Test
   public void testS3Copy() {
     // place a file
-    var creds = getSbCreds();
+    var creds = getEmxSbCreds();
     var sourceKey = "revloc02/source/test/test.txt";
     s3Put(creds, S3_INTERNAL, sourceKey, getDefaultPayload());
 
@@ -54,7 +54,7 @@ public class AwsS3IntTests {
   public void testS3Delete() {
     // put a file
     var sourceKey = "revloc02/source/test/test.txt";
-    var creds = getSbCreds();
+    var creds = getEmxSbCreds();
     s3Put(creds, S3_INTERNAL, sourceKey, getDefaultPayload());
 
     // verify the file is there
@@ -72,7 +72,7 @@ public class AwsS3IntTests {
 
   @Test
   public void testS3List() {
-    var creds = getSbCreds();
+    var creds = getEmxSbCreds();
     var key = "revloc02/target/test/mdtTest1.txt";
     s3Put(creds, S3_INTERNAL, key, getDefaultPayload());
     var objects = s3List(creds, S3_INTERNAL, "revloc02/target/test");

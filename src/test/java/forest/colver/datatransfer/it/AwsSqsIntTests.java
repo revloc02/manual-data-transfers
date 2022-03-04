@@ -9,7 +9,7 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.SQS1;
 import static forest.colver.datatransfer.aws.Utils.SQS2;
-import static forest.colver.datatransfer.aws.Utils.getSbCreds;
+import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStamp;
 import static forest.colver.datatransfer.config.Utils.readFile;
@@ -32,7 +32,7 @@ public class AwsSqsIntTests {
   @Test
   public void testSqsPurge() {
     // place some messages
-    var creds = getSbCreds();
+    var creds = getEmxSbCreds();
     for (var i = 0; i < 5; i++) {
       sqsSend(
           creds,
@@ -55,7 +55,7 @@ public class AwsSqsIntTests {
   @Test
   public void testSqsCopy() {
     // put message on queue
-    var creds = getSbCreds();
+    var creds = getEmxSbCreds();
     var payload = getDefaultPayload();
     sqsSend(creds, SQS1, payload);
 
@@ -83,7 +83,7 @@ public class AwsSqsIntTests {
   @Test
   public void testSqsSend() {
     // send some stuff
-    var creds = getSbCreds();
+    var creds = getEmxSbCreds();
     var payload = "message with payload only, no headers";
     sqsSend(creds, SQS1, payload);
     // check that it arrived
@@ -96,7 +96,7 @@ public class AwsSqsIntTests {
   @Test
   public void testSqsSendWithProperties() {
     // send some stuff
-    var creds = getSbCreds();
+    var creds = getEmxSbCreds();
     var messageProps = Map.of("timestamp", getTimeStamp(), "key2", "value2", "key3", "value3");
     var payload = getDefaultPayload();
     sqsSend(creds, SQS1, payload, messageProps);
@@ -116,7 +116,7 @@ public class AwsSqsIntTests {
   @Test
   public void testSqsMove() {
     // put message on queue
-    var creds = getSbCreds();
+    var creds = getEmxSbCreds();
     var payload = getDefaultPayload();
     sqsSend(creds, SQS1, payload);
 

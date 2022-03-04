@@ -8,12 +8,11 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsGet;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
 import static forest.colver.datatransfer.aws.Utils.S3_SOURCE_CACHE;
 import static forest.colver.datatransfer.aws.Utils.SQS1;
-import static forest.colver.datatransfer.aws.Utils.getSbCreds;
+import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.config.Utils.readFile;
 import static forest.colver.datatransfer.config.Utils.sleepo;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import forest.colver.datatransfer.aws.Utils;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -32,7 +31,7 @@ public class AwsLambdaIntTests {
    */
   @Test
   public void testInvokeLambda() {
-    var creds = getSbCreds();
+    var creds = getEmxSbCreds();
 
     // Place object in the s3 cache.
     var objectKey = "ext-aiko1/outbound/dev/flox/dd/1test.txt";
