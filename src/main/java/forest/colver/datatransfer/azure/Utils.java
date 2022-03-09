@@ -23,13 +23,13 @@ public class Utils {
   private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
 
   // Azure personal sandbox resources, currently Azure sandboxes are not working because they are not allowing creation of a Resource Group
-  public static final String SANDBOX_FOREST_DEV_QUEUE = "sandbox-forest-dev-queue";
-  public static final String SANDBOX_FOREST_DEV_QUEUE2 = "sandbox-forest-dev-queue2";
+  public static final String EMX_SANDBOX_FOREST_QUEUE = "forest-test-servicebus-queue";
+  public static final String EMX_SANDBOX_FOREST_QUEUE2 = "forest-test-servicebus-queue2";
 
   // Team Azure Sandbox event grid resources
-  public static final URI EMX_SANDBOX_TEST_NAMESPACE = URI.create(userCreds.getProperty("azure-emx-sandbox-test-namespace"));
-  public static final String EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY = userCreds.getProperty("azure-emx-sandbox-namespace-shared-access-policy");
-  public static final String EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY = userCreds.getProperty("azure-emx-sandbox-namespace-shared-access-key");
+  public static final URI EMX_SANDBOX_NAMESPACE = URI.create(userCreds.getProperty("azure-emx-sandbox-forest-namespace"));
+  public static final String EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY = userCreds.getProperty("azure-emx-sandbox-forest-ns-shared-access-policy");
+  public static final String EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY = userCreds.getProperty("azure-emx-sandbox-forest-ns-shared-access-key");
   public static final String EMX_SANDBOX_EVENTGRID_SUBSCRIPTION_QUEUE = "emx-core-test-eventgrid-subscription-queue";
   public static final String EMX_SANDBOX_EVENTGRID_HOST = userCreds.getProperty("azure-emx-sandbox-eventgrid-host");
   public static final String EMX_SANDBOX_EVENTGRID_TOPIC_KEY = userCreds.getProperty("azure-emx-sandbox-eventgrid-topic-key");
