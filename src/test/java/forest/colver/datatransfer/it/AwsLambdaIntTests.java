@@ -7,7 +7,7 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsDelete;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsGet;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
 import static forest.colver.datatransfer.aws.Utils.S3_SOURCE_CACHE;
-import static forest.colver.datatransfer.aws.Utils.SQS1;
+import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.config.Utils.readFile;
 import static forest.colver.datatransfer.config.Utils.sleepo;
@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 public class AwsLambdaIntTests {
 
   private static final Logger LOG = LoggerFactory.getLogger(AwsLambdaIntTests.class);
+  private static final String SQS1 = EMX_SANDBOX_TEST_SQS1;
 
   /**
    * Currently creds to run this are obtained with: aws-azure-login --mode=gui --profile

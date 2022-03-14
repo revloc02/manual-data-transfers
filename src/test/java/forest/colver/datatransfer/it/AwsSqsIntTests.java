@@ -7,8 +7,8 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsGetQueueAttributes
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMove;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
-import static forest.colver.datatransfer.aws.Utils.SQS1;
-import static forest.colver.datatransfer.aws.Utils.SQS2;
+import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
+import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS2;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStamp;
@@ -28,9 +28,12 @@ import org.slf4j.LoggerFactory;
 public class AwsSqsIntTests {
 
   private static final Logger LOG = LoggerFactory.getLogger(AwsSqsIntTests.class);
+  private static final String SQS1 = EMX_SANDBOX_TEST_SQS1;
+  private static final String SQS2 = EMX_SANDBOX_TEST_SQS2;
 
   @Test
   public void testSqsPurge() {
+    LOG.info("Interacting with: sqs={}", SQS1);
     // place some messages
     var creds = getEmxSbCreds();
     for (var i = 0; i < 5; i++) {
@@ -54,6 +57,7 @@ public class AwsSqsIntTests {
 
   @Test
   public void testSqsCopy() {
+    LOG.info("Interacting with: sqs={}; sqs={}", SQS1, SQS2);
     // put message on queue
     var creds = getEmxSbCreds();
     var payload = getDefaultPayload();
@@ -82,6 +86,7 @@ public class AwsSqsIntTests {
 
   @Test
   public void testSqsSend() {
+    LOG.info("Interacting with: sqs={}", SQS1);
     // send some stuff
     var creds = getEmxSbCreds();
     var payload = "message with payload only, no headers";
@@ -95,6 +100,7 @@ public class AwsSqsIntTests {
 
   @Test
   public void testSqsSendWithProperties() {
+    LOG.info("Interacting with: sqs={}", SQS1);
     // send some stuff
     var creds = getEmxSbCreds();
     var messageProps = Map.of("timestamp", getTimeStamp(), "key2", "value2", "key3", "value3");
@@ -115,6 +121,7 @@ public class AwsSqsIntTests {
 
   @Test
   public void testSqsMove() {
+    LOG.info("Interacting with: sqs={}; sqs={}", SQS1, SQS2);
     // put message on queue
     var creds = getEmxSbCreds();
     var payload = getDefaultPayload();
