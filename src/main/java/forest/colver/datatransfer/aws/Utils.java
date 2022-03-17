@@ -38,6 +38,9 @@ public class Utils {
   public static final String S3_TARGET_CUSTOMER = userCreds.getProperty("aws-enterprise-sandbox-test-s3-target-customer");
   public static final String S3_SOURCE_CACHE = userCreds.getProperty("aws-enterprise-sandbox-test-s3-source-cache");
 
+  public static final String PERSONAL_SANDBOX_TEST_SNS_TOPIC_ARN = userCreds.getProperty("aws-personal-sandbox-test-sns-topic-arn");
+  public static final String PERSONAL_SANDBOX_SQS_SUB_SNS = "sub_demo_adv_queue";
+
   public static AwsCredentialsProvider getNpCreds() {
     return ProfileCredentialsProvider.create("enterprise-np");
   }
