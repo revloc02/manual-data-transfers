@@ -16,8 +16,6 @@ import org.slf4j.LoggerFactory;
  */
 public class Utils {
 
-  // todo: move all tech-specific utils to their package (AWS or Azure or qpid). Leave general utils
-  // todo: also, I think some of these methods are not used. Either remove them or write Javadocs so it's easier to remember what they are for
   public static final String TIME_STAMP =
       new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss.SSS").format(new Date());
   static final long DEFAULT_TTL = 60_000L; // time to live in milliseconds
@@ -37,6 +35,12 @@ public class Utils {
   public static final String TQ_STAGE = userCreds.getProperty("tq.stage");
   public static final String TQ_PROD = userCreds.getProperty("tq.prod");
 
+  /**
+   * Used to read a file from disk, usually used for a payload of a message.
+   * @param path The path to the file, e.g. "src/test/resources/1test.txt"
+   * @param encoding The file encoding, typically StandardCharsets.UTF_8.
+   * @return The file's contents.
+   */
   public static String readFile(String path, Charset encoding) {
     byte[] encoded = new byte[0];
     try {
@@ -56,6 +60,11 @@ public class Utils {
     }
   }
 
+  /**
+   * Gets credentials from local credentials file.
+   * @param path The fully qualified location of the credentials file.
+   * @return List of credential Properties from the file.
+   */
   public static Properties getCredentials(String path) {
     Properties credentials = new Properties();
     try {
@@ -68,6 +77,10 @@ public class Utils {
     return credentials;
   }
 
+  /**
+   * Builds the default path for credentials retrieval.
+   * @return List of credential Properties from the file.
+   */
   public static Properties getCredentials() {
     String homeDirectory = System.getProperty("user.home");
     String fullPath = homeDirectory + CREDS_DEFAULT_PATH;
