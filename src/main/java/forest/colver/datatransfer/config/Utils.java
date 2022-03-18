@@ -51,6 +51,11 @@ public class Utils {
     return new String(encoded, encoding);
   }
 
+  /**
+   * Used to write a file to disk, most useful when a message payload is too big to peruse in a log.
+   * @param fullyQualifiedFilePath The path to the intended location of the written file.
+   * @param contents The contents to be written to the file.
+   */
   public static void writeFile(String fullyQualifiedFilePath, byte[] contents) {
     var path = Paths.get(fullyQualifiedFilePath);
     try {
