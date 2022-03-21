@@ -8,13 +8,23 @@ import static forest.colver.datatransfer.azure.StorageQueueOperations.asqSend;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_STORAGE_ACCOUNT_CONNECTION_STRING;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import javax.jms.JMSException;
+import javax.jms.TextMessage;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Unit tests for Azure Storage Queue operations.
+ * Integration tests for Azure Storage Queue (ASQ) operations.
  */
-public class AzureAsqTests {
+public class AzureStorageQueueIntTests {
 
+  private static final Logger LOG = LoggerFactory.getLogger(AzureStorageQueueIntTests.class);
   public static final String CONNECT_STR = EMX_SANDBOX_STORAGE_ACCOUNT_CONNECTION_STRING;
   public static final String QUEUE_NAME = "forest-test-storage-queue";
   public static final String PAYLOAD = "this is the body";
