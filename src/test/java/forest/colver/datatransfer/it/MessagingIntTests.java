@@ -36,9 +36,12 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MessagingIntegrationTests {
+/**
+ * These are integration tests for standard messaging against Qpid queues.
+ */
+public class MessagingIntTests {
 
-  private static final Logger LOG = LoggerFactory.getLogger(MessagingIntegrationTests.class);
+  private static final Logger LOG = LoggerFactory.getLogger(MessagingIntTests.class);
 
   @Test
   public void testDefaultSend() throws JMSException {
@@ -262,6 +265,11 @@ public class MessagingIntegrationTests {
   }
 
   // todo: when Azure Storage Queues finally gets set up, use this code as a pattern to do competing consumer with it
+  /**
+   * The goal is to test that the queue allows competing consumers. Sets up a queue with a bunch of
+   * unique messages. Then creates a number of threads to consume each of those messages and compare
+   * them against the master list of unique messages to ensure everything got consumed correctly.
+   */
   @Test
   public void testCompetingConsumer()
       throws ExecutionException, InterruptedException, JMSException {
