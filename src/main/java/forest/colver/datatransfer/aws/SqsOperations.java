@@ -92,7 +92,6 @@ public class SqsOperations {
     }
   }
 
-  // todo: hmm, maybe move this display stuff to Utils? think about it.
   /**
    * Displays the data and message properties of messages.
    */
