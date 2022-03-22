@@ -4,7 +4,6 @@ import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getPassword;
 import static forest.colver.datatransfer.config.Utils.getUsername;
 import static forest.colver.datatransfer.messaging.Environment.STAGE;
-import static java.util.UUID.randomUUID;
 
 import forest.colver.datatransfer.config.Utils;
 import java.util.ArrayList;
@@ -82,6 +81,14 @@ public class JmsSend {
     }
   }
 
+  /**
+   * Pass in an ArrayList of payloads and send a message for each one.
+   *
+   * @param env Which environment the queue is in.
+   * @param queueName Queue to send to.
+   * @param payloads An ArrayList of payloads. If the payloads are not unique just use {@link
+   * #sendMultipleSameMessage(Environment, String, Message, int)}
+   */
   public static void sendMultipleUniqueMessages(
       Environment env, String queueName, ArrayList<String> payloads) {
     var cf = new JmsConnectionFactory(env.url());
