@@ -82,22 +82,17 @@ public class JmsSend {
     }
   }
 
-  public static ArrayList<String> sendMultipleUniqueUuidMessages(
-      Environment env, String queueName, int num) {
-    var guids = new ArrayList<String>();
+  public static void sendMultipleUniqueMessages(
+      Environment env, String queueName, ArrayList<String> payloads) {
     var cf = new JmsConnectionFactory(env.url());
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
       var queue = ctx.createQueue(queueName);
-      for (int i = 0; i < num; i++) {
-        var guid = randomUUID().toString();
-        guids.add(guid);
+      for (String payload : payloads) {
         ctx.createProducer()
             .setProperty("sentTimestamp", Utils.TIME_STAMP)
             .setProperty("datatype", "moreTesting")
-            .setProperty("messageNumber", i)
-            .send(queue, ctx.createTextMessage(guid));
+            .send(queue, ctx.createTextMessage(payload));
       }
     }
-    return guids;
   }
 }

@@ -1,11 +1,14 @@
 package forest.colver.datatransfer.config;
 
+import static java.util.UUID.randomUUID;
+
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Properties;
 import org.slf4j.Logger;
@@ -63,6 +66,20 @@ public class Utils {
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+
+  /**
+   * Generates a list of uuids, currently used for unique message payloads.
+   * @param num The number of uuids to generate.
+   * @return A list of uuid strings.
+   */
+  public static ArrayList<String> generateUniqueStrings(int num){
+    var uuids = new ArrayList<String>();
+    for (int i = 0; i < num; i++) {
+      var uuid = randomUUID().toString();
+      uuids.add(uuid);
+    }
+    return uuids;
   }
 
   /**

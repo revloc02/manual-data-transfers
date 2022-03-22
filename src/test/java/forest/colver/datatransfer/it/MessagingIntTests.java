@@ -1,5 +1,6 @@
 package forest.colver.datatransfer.it;
 
+import static forest.colver.datatransfer.config.Utils.generateUniqueStrings;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStamp;
 import static forest.colver.datatransfer.messaging.DisplayUtils.createStringFromMessage;
@@ -20,7 +21,7 @@ import static forest.colver.datatransfer.messaging.JmsSend.createTextMessage;
 import static forest.colver.datatransfer.messaging.JmsSend.sendDefaultMessage;
 import static forest.colver.datatransfer.messaging.JmsSend.sendMessage;
 import static forest.colver.datatransfer.messaging.JmsSend.sendMultipleSameMessage;
-import static forest.colver.datatransfer.messaging.JmsSend.sendMultipleUniqueUuidMessages;
+import static forest.colver.datatransfer.messaging.JmsSend.sendMultipleUniqueMessages;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
@@ -265,6 +266,7 @@ public class MessagingIntTests {
   }
 
   // todo: when Azure Storage Queues finally gets set up, use this code as a pattern to do competing consumer with it
+
   /**
    * The goal is to test that the queue allows competing consumers. Sets up a queue with a bunch of
    * unique messages. Then creates a number of threads to consume each of those messages and compare
@@ -275,11 +277,13 @@ public class MessagingIntTests {
       throws ExecutionException, InterruptedException, JMSException {
     var queueName = "forest-test";
     purgeQueue(STAGE, queueName);
-    var numMsgs = 1000;
-    var threads = 100;
-    var guids = sendMultipleUniqueUuidMessages(STAGE, queueName, numMsgs);
+
+    var numMsgs = 500;
+    var uuids = generateUniqueStrings(numMsgs);
+    sendMultipleUniqueMessages(STAGE, queueName, uuids);
     LOG.info("Sent {} messages.", numMsgs);
 
+    var threads = 50;
     var es = Executors.newFixedThreadPool(threads);
     List<Future<TextMessage>> futuresList = new ArrayList<>();
     for (var task = 0; task < numMsgs; task++) {
@@ -287,12 +291,12 @@ public class MessagingIntTests {
     }
     LOG.info("Tasks submitted: futuresList.size={}", futuresList.size());
 
-    // Future.get() blocks execution until the task is complete
     for (Future<TextMessage> future : futuresList) {
+      // remember, future.get() blocks execution until the task is complete
       LOG.info("removing {}", future.get().getText());
-      guids.remove(future.get().getText());
+      uuids.remove(future.get().getText());
     }
-    assertThat(guids.size()).isEqualTo(0);
+    assertThat(uuids.size()).isEqualTo(0);
   }
 
   // todo
