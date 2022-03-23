@@ -265,8 +265,6 @@ public class MessagingIntTests {
     deleteAllMessagesFromQueue(env, toQueue);
   }
 
-  // todo: when Azure Storage Queues finally gets set up, use this code as a pattern to do competing consumer with it
-
   /**
    * The goal is to test that the queue allows competing consumers. Sets up a queue with a bunch of
    * unique messages. Then creates a number of threads to consume each of those messages and compare
@@ -293,8 +291,8 @@ public class MessagingIntTests {
 
     for (Future<TextMessage> future : futuresList) {
       // remember, future.get() blocks execution until the task is complete
-      LOG.info("removing {}", future.get().getText());
       uuids.remove(future.get().getText());
+      LOG.info("removed {}", future.get().getText());
     }
     assertThat(uuids.size()).isEqualTo(0);
   }
