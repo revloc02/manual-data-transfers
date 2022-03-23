@@ -13,7 +13,7 @@ import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStamp;
 import static forest.colver.datatransfer.config.Utils.readFile;
-import static forest.colver.datatransfer.config.Utils.sleepo;
+import static forest.colver.datatransfer.config.Utils.pause;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
@@ -42,7 +42,7 @@ public class AwsSqsIntTests {
           SQS1,
           readFile("src/test/resources/1test.txt", StandardCharsets.UTF_8));
     }
-    sleepo(1_000);
+    pause(1);
 
     // check that the messages are where we think they are
     var attributes = sqsGetQueueAttributes(creds, SQS1);
@@ -69,7 +69,7 @@ public class AwsSqsIntTests {
     assertThat(body).isEqualTo(payload);
 
     // copy the message
-    sleepo(4_000); // waiting for the visibility timeout from the sqsGet()
+    pause(4); // waiting for the visibility timeout from the sqsGet()
     sqsCopy(creds, SQS1, SQS2);
 
     // remove message from source queue
@@ -133,7 +133,7 @@ public class AwsSqsIntTests {
     assertThat(body).isEqualTo(payload);
 
     // move the message
-    sleepo(4_000); // waiting for the visibility timeout from the sqsGet()
+    pause(4); // waiting for the visibility timeout from the sqsGet()
     sqsMove(creds, SQS1, SQS2);
 
     // verify the message is on the other queue

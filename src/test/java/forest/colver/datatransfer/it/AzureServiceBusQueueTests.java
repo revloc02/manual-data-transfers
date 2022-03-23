@@ -17,7 +17,7 @@ import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE_SHARE
 import static forest.colver.datatransfer.azure.Utils.createIMessage;
 import static forest.colver.datatransfer.config.Utils.defaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStamp;
-import static forest.colver.datatransfer.config.Utils.sleepo;
+import static forest.colver.datatransfer.config.Utils.pause;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.microsoft.azure.servicebus.primitives.ConnectionStringBuilder;
@@ -40,7 +40,7 @@ public class AzureServiceBusQueueTests {
     Map<String, Object> properties = Map.of("timestamp", getTimeStamp(), "specificKey",
         "specificValue");
     asbSend(creds, createIMessage(defaultPayload, properties));
-    sleepo(2_000);
+    pause(2);
     assertThat(messageCount(creds, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(1);
 
     // read that message
@@ -61,7 +61,7 @@ public class AzureServiceBusQueueTests {
     Map<String, Object> properties = Map.of("timestamp", getTimeStamp(), "specificKey",
         "specificValue");
     asbSend(creds, createIMessage(defaultPayload, properties));
-    sleepo(2_000);
+    pause(2);
     assertThat(messageCount(creds, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(1);
 
     // move that message
@@ -69,7 +69,7 @@ public class AzureServiceBusQueueTests {
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
     asbMove(creds, toCreds);
-    sleepo(2_000);
+    pause(2);
     assertThat(messageCount(toCreds, EMX_SANDBOX_FOREST_QUEUE2)).isEqualTo(1);
 
     // check it
@@ -89,7 +89,7 @@ public class AzureServiceBusQueueTests {
     Map<String, Object> properties = Map.of("timestamp", getTimeStamp(), "specificKey",
         "specificValue");
     asbSend(creds, createIMessage(defaultPayload, properties));
-    sleepo(2_000);
+    pause(2);
 
     // retrieve that message
     var message = asbConsume(creds);
@@ -111,7 +111,7 @@ public class AzureServiceBusQueueTests {
     for (var i = 0; i < num; i++) {
       asbSend(creds, message);
     }
-    sleepo(3_000);
+    pause(3);
     assertThat(messageCount(creds, EMX_SANDBOX_FOREST_QUEUE)).isGreaterThanOrEqualTo(num);
 
     // purge the queue
@@ -133,20 +133,20 @@ public class AzureServiceBusQueueTests {
     // ensure the queue and the DLQ are clean
     asbPurge(credsQwDlq);
     asbPurge(credsQwDlq_Dlq);
-    sleepo(3_000);
+    pause(3);
 
     // send a message to the queue
     Map<String, Object> properties = Map.of("timestamp", getTimeStamp(), "specificKey",
         "specificValue");
     asbSend(credsQwDlq, createIMessage(defaultPayload, properties));
-    sleepo(3_000);
+    pause(3);
     assertThat(messageCount(credsQwDlq, EMX_SANDBOX_FOREST_QUEUE_W_DLQ)).isEqualTo(1);
 
     // have the message on the queue move to the DLQ
     asbDlq(credsQwDlq);
 
     // check queue to see if main queue is empty
-    sleepo(6_000);
+    pause(6);
     assertThat(messageCount(credsQwDlq, EMX_SANDBOX_FOREST_QUEUE_W_DLQ)).isEqualTo(0);
 
     // check the DLQ message

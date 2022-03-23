@@ -8,7 +8,7 @@ import static forest.colver.datatransfer.aws.Utils.PERSONAL_SANDBOX_SQS_SUB_SNS;
 import static forest.colver.datatransfer.aws.Utils.PERSONAL_SANDBOX_TEST_SNS_TOPIC_ARN;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.aws.Utils.getPrsnlSbCreds;
-import static forest.colver.datatransfer.config.Utils.sleepo;
+import static forest.colver.datatransfer.config.Utils.pause;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.json.JSONObject;
@@ -46,7 +46,7 @@ public class AwsSnsIntTests {
     var message = "testing SNS publish topic via SQS subscription";
     publishTopic(getPrsnlSbCreds(), SNS_ARN, message);
 
-    sleepo(2_000);
+    pause(2);
     // check that it arrived
     var response = sqsGet(creds, SQS);
     LOG.info("response.messages().get(0).body():{}", response.messages().get(0).body());

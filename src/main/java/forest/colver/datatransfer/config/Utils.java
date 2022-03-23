@@ -19,11 +19,13 @@ import org.slf4j.LoggerFactory;
  */
 public class Utils {
 
+  private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
+
   public static final String TIME_STAMP =
       new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss.SSS").format(new Date());
-  static final long DEFAULT_TTL = 60_000L; // time to live in milliseconds
-  private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
   public static String defaultPayload = "Default Payload: " + TIME_STAMP;
+
+  static final long DEFAULT_TTL = 60_000L; // time to live in milliseconds
   // user cred file
   static final String CREDS_DEFAULT_PATH = "/.emx/credentials.properties";
   public static Properties userCreds = getCredentials();
@@ -40,6 +42,7 @@ public class Utils {
 
   /**
    * Used to read a file from disk, usually used for a payload of a message.
+   *
    * @param path The path to the file, e.g. "src/test/resources/1test.txt"
    * @param encoding The file encoding, typically StandardCharsets.UTF_8.
    * @return The file's contents.
@@ -55,7 +58,9 @@ public class Utils {
   }
 
   /**
-   * Used to write a file to disk, most useful when a message payload is too big to peruse in a log.
+   * Used to write a file to disk, most useful when a message payload is too big to peruse in a
+   * log.
+   *
    * @param fullyQualifiedFilePath The path to the intended location of the written file.
    * @param contents The contents to be written to the file.
    */
@@ -70,10 +75,11 @@ public class Utils {
 
   /**
    * Generates a list of uuids, currently used for unique message payloads.
+   *
    * @param num The number of uuids to generate.
    * @return A list of uuid strings.
    */
-  public static ArrayList<String> generateUniqueStrings(int num){
+  public static ArrayList<String> generateUniqueStrings(int num) {
     var uuids = new ArrayList<String>();
     for (int i = 0; i < num; i++) {
       var uuid = randomUUID().toString();
@@ -84,6 +90,7 @@ public class Utils {
 
   /**
    * Gets credentials from local credentials file.
+   *
    * @param path The fully qualified location of the credentials file.
    * @return List of credential Properties from the file.
    */
@@ -101,6 +108,7 @@ public class Utils {
 
   /**
    * Builds the default path for credentials retrieval.
+   *
    * @return List of credential Properties from the file.
    */
   public static Properties getCredentials() {
@@ -125,10 +133,10 @@ public class Utils {
     return password;
   }
 
-  public static void sleepo(int millis) {
-    LOG.info("Sleeping for {} seconds...", millis / 1000);
+  public static void pause(int seconds) {
+    LOG.info("Pausing for {} seconds...", seconds);
     try {
-      Thread.sleep(millis);
+      Thread.sleep(seconds * 1_000L);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }

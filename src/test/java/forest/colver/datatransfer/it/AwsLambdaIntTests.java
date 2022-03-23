@@ -10,7 +10,7 @@ import static forest.colver.datatransfer.aws.Utils.S3_SOURCE_CACHE;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.config.Utils.readFile;
-import static forest.colver.datatransfer.config.Utils.sleepo;
+import static forest.colver.datatransfer.config.Utils.pause;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
@@ -54,7 +54,7 @@ public class AwsLambdaIntTests {
     var response = lambdaInvoke(creds, function, payload);
     assertThat(response.statusCode()).isEqualTo(200);
 
-    sleepo(1000);
+    pause(1);
 
     // ...and ensure the SQS got the new message.
     messageResp = sqsGet(creds, SQS1);
