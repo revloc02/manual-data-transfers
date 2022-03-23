@@ -1,15 +1,17 @@
 package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsume;
+import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbDlq;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbMove;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbPurge;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbRead;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbSend;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.connect;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.messageCount;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE2;
+import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE_W_DLQ;
+import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY;
 import static forest.colver.datatransfer.azure.Utils.createIMessage;
@@ -117,4 +119,40 @@ public class AzureServiceBusQueueTests {
     assertThat(messageCount(creds, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(0);
   }
 
+  @Test
+  public void testDeadLetterQueue() {
+    var dlqName = EMX_SANDBOX_FOREST_QUEUE_W_DLQ + "/$DeadLetterQueue";
+    // connection string to the queue with a DLQ configured
+    ConnectionStringBuilder credsQwDlq = connect(EMX_SANDBOX_NAMESPACE,
+        EMX_SANDBOX_FOREST_QUEUE_W_DLQ,
+        EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
+    // connection string to the actual DLQ of the queue (with a DLQ configured)
+    ConnectionStringBuilder credsQwDlq_Dlq = connect(EMX_SANDBOX_NAMESPACE, dlqName,
+        EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
+
+    // ensure the queue and the DLQ are clean
+    asbPurge(credsQwDlq);
+    asbPurge(credsQwDlq_Dlq);
+    sleepo(3_000);
+
+    // send a message to the queue
+    Map<String, Object> properties = Map.of("timestamp", getTimeStamp(), "specificKey",
+        "specificValue");
+    asbSend(credsQwDlq, createIMessage(defaultPayload, properties));
+    sleepo(3_000);
+    assertThat(messageCount(credsQwDlq, EMX_SANDBOX_FOREST_QUEUE_W_DLQ)).isEqualTo(1);
+
+    // have the message on the queue move to the DLQ
+    asbDlq(credsQwDlq);
+
+    // check queue to see if main queue is empty
+    sleepo(6_000);
+    assertThat(messageCount(credsQwDlq, EMX_SANDBOX_FOREST_QUEUE_W_DLQ)).isEqualTo(0);
+
+    // check the DLQ message
+    var message = asbConsume(credsQwDlq_Dlq);
+    var body = new String(message.getMessageBody().getBinaryData().get(0));
+    assertThat(body).isEqualTo(defaultPayload);
+    assertThat(message.getProperties().get("specificKey")).isEqualTo("specificValue");
+  }
 }

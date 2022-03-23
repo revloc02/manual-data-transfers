@@ -25,6 +25,7 @@ public class Utils {
   // Azure personal sandbox resources, currently Azure sandboxes are not working because they are not allowing creation of a Resource Group
   public static final String EMX_SANDBOX_FOREST_QUEUE = "forest-test-servicebus-queue";
   public static final String EMX_SANDBOX_FOREST_QUEUE2 = "forest-test-servicebus-queue2";
+  public static final String EMX_SANDBOX_FOREST_QUEUE_W_DLQ = "forest-test-servicebus-queue-dlq";
 
   // Team Azure Sandbox event grid resources
   public static final URI EMX_SANDBOX_NAMESPACE = URI.create(userCreds.getProperty("azure-emx-sandbox-forest-namespace"));

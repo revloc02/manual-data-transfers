@@ -19,9 +19,10 @@ public class ServiceBusQueueOperations {
   private static final Logger LOG = LoggerFactory.getLogger(ServiceBusQueueOperations.class);
 
   /**
-   * Azure Service Bus Send message
-   * @param connectionStringBuilder
-   * @param message
+   * Azure Service Bus Send message.
+   *
+   * @param connectionStringBuilder Credentails.
+   * @param message The message to send.
    */
   public static void asbSend(ConnectionStringBuilder connectionStringBuilder, IMessage message) {
     try {
@@ -60,6 +61,22 @@ public class ServiceBusQueueOperations {
     return message;
   }
 
+  /**
+   * Take a message on the queue and send it to the dead-letter sub-queue.
+   *
+   * @param connectionStringBuilder Credentials.
+   */
+  public static void asbDlq(ConnectionStringBuilder connectionStringBuilder) {
+    try {
+      IMessageReceiver iMessageReceiver = ClientFactory.createMessageReceiverFromConnectionStringBuilder(
+          connectionStringBuilder, ReceiveMode.PEEKLOCK);
+      var message = iMessageReceiver.receive(Duration.ofSeconds(1));
+      iMessageReceiver.deadLetterAsync(message.getLockToken());
+    } catch (InterruptedException | ServiceBusException e) {
+      e.printStackTrace();
+    }
+  }
+
   public static void asbMove(ConnectionStringBuilder fromCsb, ConnectionStringBuilder toCsb)
       throws ServiceBusException, InterruptedException {
     asbSend(toCsb, asbConsume(fromCsb));
@@ -82,13 +99,25 @@ public class ServiceBusQueueOperations {
     return counter;
   }
 
+  /**
+   * Returns the ActiveMessageCount for the queue.
+   *
+   * @param connectionStringBuilder Credentials.
+   * @param queueName The Service Bus Queue to count.
+   * @return The number of Active messages on the queue.
+   */
   public static long messageCount(ConnectionStringBuilder connectionStringBuilder,
       String queueName) {
     ManagementClient client = new ManagementClient(connectionStringBuilder);
     long messageCount = -1;
     try {
-      var queue = client.getQueueRuntimeInfo(queueName);
-      messageCount = queue.getMessageCount();
+      var mcd = client.getQueueRuntimeInfo(queueName).getMessageCountDetails();
+      messageCount = mcd.getActiveMessageCount();
+      LOG.info(
+          "Message Count Details:\n  ActiveMessageCount={}\n  DeadLetterMessageCount={}\n  ScheduledMessageCount={}\n  TransferMessageCount={}\n  TransferDeadLetterMessageCount={}\n",
+          mcd.getActiveMessageCount(), mcd.getDeadLetterMessageCount(),
+          mcd.getScheduledMessageCount(), mcd.getTransferMessageCount(),
+          mcd.getTransferDeadLetterMessageCount());
     } catch (ServiceBusException | InterruptedException e) {
       e.printStackTrace();
     }
