@@ -5,6 +5,7 @@ import com.azure.storage.queue.QueueClientBuilder;
 import com.azure.storage.queue.models.PeekedMessageItem;
 import com.azure.storage.queue.models.QueueMessageItem;
 import com.azure.storage.queue.models.QueueStorageException;
+import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,6 +86,21 @@ public class StorageQueueOperations {
     } catch (QueueStorageException e) {
       e.printStackTrace();
     }
+    LOG.info("Purged {}", queueName);
   }
 
+  public static void asqSendMultipleUniqueMessages(String connectStr, String queueName,
+      ArrayList<String> payloads) {
+    try {
+      QueueClient queueClient = new QueueClientBuilder()
+          .connectionString(connectStr)
+          .queueName(queueName)
+          .buildClient();
+      for (String payload : payloads) {
+        queueClient.sendMessage(payload);
+      }
+    } catch (QueueStorageException e) {
+      e.printStackTrace();
+    }
+  }
 }

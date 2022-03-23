@@ -5,16 +5,17 @@ import static forest.colver.datatransfer.azure.StorageQueueOperations.asqPeek;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqPurge;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqQueueDepth;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqSend;
+import static forest.colver.datatransfer.azure.StorageQueueOperations.asqSendMultipleUniqueMessages;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_STORAGE_ACCOUNT_CONNECTION_STRING;
+import static forest.colver.datatransfer.config.Utils.generateUniqueStrings;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.azure.storage.queue.models.QueueMessageItem;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import javax.jms.JMSException;
-import javax.jms.TextMessage;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,10 +25,10 @@ import org.slf4j.LoggerFactory;
  */
 public class AzureStorageQueueIntTests {
 
-  private static final Logger LOG = LoggerFactory.getLogger(AzureStorageQueueIntTests.class);
   public static final String CONNECT_STR = EMX_SANDBOX_STORAGE_ACCOUNT_CONNECTION_STRING;
   public static final String QUEUE_NAME = "forest-test-storage-queue";
   public static final String PAYLOAD = "this is the body";
+  private static final Logger LOG = LoggerFactory.getLogger(AzureStorageQueueIntTests.class);
 
   /**
    * Test Azure Storage Queue Send
@@ -72,5 +73,36 @@ public class AzureStorageQueueIntTests {
     asqPurge(CONNECT_STR, QUEUE_NAME);
     // assert the queue is cleared
     assertThat(asqQueueDepth(CONNECT_STR, QUEUE_NAME)).isEqualTo(0);
+  }
+
+  /**
+   * The goal is to test that the queue allows competing consumers. Sets up a queue with a bunch of
+   * unique messages. Then creates a number of threads to consume each of those messages and compare
+   * them against the master list of unique messages to ensure everything got consumed correctly.
+   */
+  @Test
+  public void testCompetingConsumer()
+      throws ExecutionException, InterruptedException {
+    asqPurge(CONNECT_STR, QUEUE_NAME);
+
+    var numMsgs = 300;
+    var uuids = generateUniqueStrings(numMsgs);
+    asqSendMultipleUniqueMessages(CONNECT_STR, QUEUE_NAME, uuids);
+    LOG.info("Sent {} messages.", numMsgs);
+
+    var threads = 30;
+    var es = Executors.newFixedThreadPool(threads);
+    List<Future<QueueMessageItem>> futuresList = new ArrayList<>();
+    for (var task = 0; task < numMsgs; task++) {
+      futuresList.add(es.submit(() -> asqConsume(CONNECT_STR, QUEUE_NAME)));
+    }
+    LOG.info("Tasks submitted: futuresList.size={}", futuresList.size());
+
+    for (Future<QueueMessageItem> future : futuresList) {
+      // remember, future.get() blocks execution until the task is complete
+      uuids.remove(future.get().getBody().toString());
+      LOG.info("removed {}", future.get().getBody().toString());
+    }
+    assertThat(uuids.size()).isEqualTo(0);
   }
 }
