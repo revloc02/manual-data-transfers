@@ -11,6 +11,7 @@ import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.message
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE2;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE_W_DLQ;
+import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE_W_FORWARD;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY;
@@ -123,11 +124,11 @@ public class AzureServiceBusQueueTests {
   public void testDeadLetterQueue() {
     var dlqName = EMX_SANDBOX_FOREST_QUEUE_W_DLQ + "/$DeadLetterQueue";
     // connection string to the queue with a DLQ configured
-    ConnectionStringBuilder credsQwDlq = connect(EMX_SANDBOX_NAMESPACE,
+    var credsQwDlq = connect(EMX_SANDBOX_NAMESPACE,
         EMX_SANDBOX_FOREST_QUEUE_W_DLQ,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
     // connection string to the actual DLQ of the queue (with a DLQ configured)
-    ConnectionStringBuilder credsQwDlq_Dlq = connect(EMX_SANDBOX_NAMESPACE, dlqName,
+    var credsQwDlq_Dlq = connect(EMX_SANDBOX_NAMESPACE, dlqName,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
 
     // ensure the queue and the DLQ are clean
@@ -154,5 +155,36 @@ public class AzureServiceBusQueueTests {
     var body = new String(message.getMessageBody().getBinaryData().get(0));
     assertThat(body).isEqualTo(defaultPayload);
     assertThat(message.getProperties().get("specificKey")).isEqualTo("specificValue");
+  }
+
+  @Test
+  public void testSendAutoForwarding() {
+    // connection string to the queue with a forward_to configured
+    var credsQwForward = connect(EMX_SANDBOX_NAMESPACE,
+        EMX_SANDBOX_FOREST_QUEUE_W_FORWARD,
+        EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
+    var toCreds = connect(EMX_SANDBOX_NAMESPACE, EMX_SANDBOX_FOREST_QUEUE2,
+        EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
+        EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
+
+    // send a message
+    Map<String, Object> properties = Map.of("timestamp", getTimeStamp(), "specificKey",
+        "specificValue");
+    asbSend(credsQwForward, createIMessage(defaultPayload, properties));
+
+    // check message is not on original queue as it was forwarded
+    pause(6);
+    assertThat(messageCount(credsQwForward, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(0);
+
+    // read the message on the other queue
+    var message = asbRead(toCreds);
+
+    // check it
+    var body = new String(message.getMessageBody().getBinaryData().get(0));
+    assertThat(body).isEqualTo(defaultPayload);
+    assertThat(message.getProperties().get("specificKey")).isEqualTo("specificValue");
+
+    // clean up
+    asbConsume(toCreds);
   }
 }
