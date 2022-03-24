@@ -22,7 +22,7 @@ public class JmsSend {
 
   // EMX
   public static void sendDefaultMessage() {
-    sendMessage(
+    sendMessageAutoAck(
         STAGE, "forest-test",
         createTextMessage(getDefaultPayload(), Map.of("defaultKey", "defaultValue")));
   }
@@ -48,7 +48,21 @@ public class JmsSend {
     return message;
   }
 
-  public static void sendMessage(Environment env, String queueName, Message message) {
+  public static void sendMessageAutoAck(Environment env, String queueName, Message message) {
+    var cf = new JmsConnectionFactory(env.url());
+    try (var ctx = cf.createContext(getUsername(), getPassword(), JmsContext.AUTO_ACKNOWLEDGE)) {
+      var queue = ctx.createQueue(queueName);
+      var producer = ctx.createProducer();
+      producer.send(queue, message);
+      LOG.info(
+          "Message sent to Host={}, Queue={}, Message->{}",
+          env.name(),
+          queueName,
+          DisplayUtils.createStringFromMessage(message));
+    }
+  }
+
+  public static void sendMessageClientAck(Environment env, String queueName, Message message) {
     var cf = new JmsConnectionFactory(env.url());
     // todo: I have a fundamental problem with my JMS code in that I am not using CLIENT_ACKNOWLEDGE, which could result in data loss. Fix it.
     // JmsContext.AUTO_ACKNOWLEDGE is the default Acknowledgement mode. If I were to throw an exception while transferring data, and I retrieved data from a queue using AUTO_ACKNOWLEDGE, the data would be lost.

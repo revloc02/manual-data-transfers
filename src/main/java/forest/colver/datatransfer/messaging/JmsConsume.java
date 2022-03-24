@@ -3,6 +3,7 @@ package forest.colver.datatransfer.messaging;
 import static forest.colver.datatransfer.config.Utils.getPassword;
 import static forest.colver.datatransfer.config.Utils.getUsername;
 import static forest.colver.datatransfer.messaging.DisplayUtils.createStringFromMessage;
+import static javax.jms.JMSContext.CLIENT_ACKNOWLEDGE;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -152,19 +153,23 @@ public class JmsConsume {
 
   public static Message consumeSpecificMessage(
       Environment env, String fromQueueName, String selector) {
+    Message message = null;
     var cf = new JmsConnectionFactory(env.url());
-    try (var ctx = cf.createContext(getUsername(), getPassword())) {
+    try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {
       var fromQ = ctx.createQueue(fromQueueName);
       try (var consumer = ctx.createConsumer(fromQ, selector)) {
-        var message = consumer.receive(5_000L);
+        message = consumer.receive(5_000L);
         LOG.info(
             "Consumed from Host={} Queue={}, Message->{}",
             env.name(),
             fromQueueName,
             createStringFromMessage(message));
-        return message;
+        message.acknowledge();
+      } catch (JMSException e) {
+        e.printStackTrace();
       }
     }
+    return message;
   }
 
   public static Message consumeOneMessage(Environment env, String fromQueueName) {

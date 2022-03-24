@@ -19,7 +19,7 @@ import static forest.colver.datatransfer.messaging.JmsConsume.purgeQueue;
 import static forest.colver.datatransfer.messaging.JmsSend.createDefaultMessage;
 import static forest.colver.datatransfer.messaging.JmsSend.createTextMessage;
 import static forest.colver.datatransfer.messaging.JmsSend.sendDefaultMessage;
-import static forest.colver.datatransfer.messaging.JmsSend.sendMessage;
+import static forest.colver.datatransfer.messaging.JmsSend.sendMessageAutoAck;
 import static forest.colver.datatransfer.messaging.JmsSend.sendMultipleSameMessage;
 import static forest.colver.datatransfer.messaging.JmsSend.sendMultipleUniqueMessages;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -63,7 +63,7 @@ public class MessagingIntTests {
   public void testSendCustomHeaders() throws JMSException {
     var env = STAGE;
     var queueName = "forest-test";
-    sendMessage(env, queueName, createMessage());
+    sendMessageAutoAck(env, queueName, createMessage());
     var message = consumeOneMessage(env, queueName);
     assertThat(((TextMessage) message).getText()).contains("Default Payload");
     assertThat(message.getStringProperty("key2")).isEqualTo("value2");
@@ -103,7 +103,7 @@ public class MessagingIntTests {
     var toQueueName = "forest-test2";
     var numMessages = 4;
     for (var i = 0; i < numMessages; i++) {
-      sendMessage(env, fromQueueName, createMessage());
+      sendMessageAutoAck(env, fromQueueName, createMessage());
     }
     moveAllMessages(env, fromQueueName, toQueueName);
     var deleted = deleteAllMessagesFromQueue(env, toQueueName);
@@ -143,7 +143,7 @@ public class MessagingIntTests {
     var messageProps = Map.of("timestamp", getTimeStamp(), "specificKey", "specificValue");
     var numMessagesTo = 3;
     for (var i = 0; i < numMessagesTo; i++) {
-      sendMessage(env, fromQueueName, createTextMessage(getDefaultPayload(), messageProps));
+      sendMessageAutoAck(env, fromQueueName, createTextMessage(getDefaultPayload(), messageProps));
     }
 
     // only move one kind of message
@@ -167,7 +167,7 @@ public class MessagingIntTests {
     var messageProps = Map.of("timestamp", getTimeStamp(), "specificKey", "specificValue");
     var numMessagesTo = 1;
     for (var i = 0; i < numMessagesTo; i++) {
-      sendMessage(env, fromQueueName, createTextMessage(getDefaultPayload(), messageProps));
+      sendMessageAutoAck(env, fromQueueName, createTextMessage(getDefaultPayload(), messageProps));
     }
 
     moveSpecificMessage(env, fromQueueName, "specificKey='specificValue'", toQueueName);
@@ -185,13 +185,13 @@ public class MessagingIntTests {
     var queue = "forest-test";
     var messageProps = Map.of("timestamp", getTimeStamp(), "specificKey", "specificValue");
     // send a specific message
-    sendMessage(env, queue, createTextMessage(getDefaultPayload(), messageProps));
+    sendMessageAutoAck(env, queue, createTextMessage(getDefaultPayload(), messageProps));
 
     // consume the specific message and check it
     var message = consumeSpecificMessage(env, queue, "specificKey='specificValue'");
     assertThat(message.getStringProperty("specificKey")).isEqualTo("specificValue");
 
-    // ensure that there is one 1 message left
+    // ensure that there was one 1 message left
     var deleted = deleteAllMessagesFromQueue(env, queue);
     assertThat(deleted).isEqualTo(1);
   }
