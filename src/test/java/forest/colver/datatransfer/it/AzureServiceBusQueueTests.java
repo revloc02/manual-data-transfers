@@ -12,6 +12,7 @@ import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE2;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE_W_DLQ;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE_W_FORWARD;
+import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE_W_TTL;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY;
@@ -152,6 +153,48 @@ public class AzureServiceBusQueueTests {
 
     // check the DLQ message
     var message = asbConsume(credsQwDlq_Dlq);
+    var body = new String(message.getMessageBody().getBinaryData().get(0));
+    assertThat(body).isEqualTo(defaultPayload);
+    assertThat(message.getProperties().get("specificKey")).isEqualTo("specificValue");
+  }
+
+  /**
+   * This should send a message to the queue and check that it arrived. Then it should wait until
+   * the message expires and goes to the Dead-letter sub-queue and then check that it arrived there.
+   * **WARNING:** This test is extremely unreliable, my theory for this is that we are demanding
+   * these actions in seconds (within the time of a unit test running), and Azure Service Bus Queues
+   * just was not built for that.
+   */
+  @Test
+  public void testExpireToDeadLetterQueue() {
+    var dlqName = EMX_SANDBOX_FOREST_QUEUE_W_TTL + "/$DeadLetterQueue";
+    // connection string to the queue with a DLQ configured
+    var credsQwTtl = connect(EMX_SANDBOX_NAMESPACE,
+        EMX_SANDBOX_FOREST_QUEUE_W_TTL,
+        EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
+    // connection string to the actual DLQ of the queue (with a DLQ configured)
+    var credsQwTtl_Dlq = connect(EMX_SANDBOX_NAMESPACE, dlqName,
+        EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
+
+    // ensure the queue and the DLQ are clean
+    asbPurge(credsQwTtl);
+    asbPurge(credsQwTtl_Dlq);
+    pause(3);
+
+    // send a message to the queue
+    Map<String, Object> properties = Map.of("timestamp", getTimeStamp(), "specificKey",
+        "specificValue");
+    asbSend(credsQwTtl, createIMessage(defaultPayload, properties));
+    pause(3); // message expires in 10 seconds so don't wait too long
+    assertThat(messageCount(credsQwTtl, EMX_SANDBOX_FOREST_QUEUE_W_TTL)).isEqualTo(1);
+
+    // not sure what the poll cycle is when checking for expired messages, but my guess is >60 sec
+    pause(100);
+    // check queue to see if main queue is empty
+    assertThat(messageCount(credsQwTtl, EMX_SANDBOX_FOREST_QUEUE_W_TTL)).isEqualTo(0);
+
+    // check the DLQ message
+    var message = asbConsume(credsQwTtl_Dlq);
     var body = new String(message.getMessageBody().getBinaryData().get(0));
     assertThat(body).isEqualTo(defaultPayload);
     assertThat(message.getProperties().get("specificKey")).isEqualTo("specificValue");
