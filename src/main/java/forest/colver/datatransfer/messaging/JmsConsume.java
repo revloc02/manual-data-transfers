@@ -139,6 +139,7 @@ public class JmsConsume {
     LOG.info("Purged {} messages from {} queue.", counter, queueName);
   }
 
+  // todo: what is this method supposed to do? It doesn't look like it is being used. Figure it out and write a Javadoc.
   public static void listenForMessages(Environment env, String queueName) {
     LOG.info("Listening for messages on {} from {} queue.", env.name(), queueName);
     var cf = new JmsConnectionFactory(env.url());
