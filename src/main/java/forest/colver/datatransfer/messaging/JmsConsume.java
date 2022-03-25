@@ -173,13 +173,18 @@ public class JmsConsume {
   }
 
   public static Message consumeOneMessage(Environment env, String fromQueueName) {
+    Message message = null;
     var cf = new JmsConnectionFactory(env.url());
-    try (var ctx = cf.createContext(getUsername(), getPassword())) {
+    try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {
       var fromQ = ctx.createQueue(fromQueueName);
       try (var consumer = ctx.createConsumer(fromQ)) {
-        return consumer.receive(5_000L);
+        message = consumer.receive(5_000L);
+        message.acknowledge();
+      } catch (JMSException e) {
+        e.printStackTrace();
       }
     }
+    return message;
   }
 
   public static void moveSpecificMessage(
