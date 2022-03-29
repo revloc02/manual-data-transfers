@@ -157,22 +157,31 @@ public class MessagingIntTests {
   }
 
   @Test
-  public void testMoveOneSpecificMessage() {
+  public void testMoveOneSpecificMessage() throws JMSException {
     var env = STAGE;
     var fromQueueName = "forest-test";
     var toQueueName = "forest-test2";
+
+    // place some messages
     var numMessagesFrom = 3;
     sendMultipleSameMessage(env, fromQueueName, createMessage(), numMessagesFrom);
 
+    // now send a specific message
     var messageProps = Map.of("timestamp", getTimeStamp(), "specificKey", "specificValue");
     var numMessagesTo = 1;
     for (var i = 0; i < numMessagesTo; i++) {
       sendMessageAutoAck(env, fromQueueName, createTextMessage(getDefaultPayload(), messageProps));
     }
 
+    // now go move that specific message
     moveSpecificMessage(env, fromQueueName, "specificKey='specificValue'", toQueueName);
-    var deletedTo = deleteAllMessagesFromQueue(env, toQueueName);
-    assertThat(deletedTo).isEqualTo(numMessagesTo);
+
+    // check the moved message
+    var message = consumeOneMessage(STAGE, toQueueName);
+    assertThat(((TextMessage) message).getText()).contains("Default Payload");
+    assertThat(message.getStringProperty("specificKey")).isEqualTo("specificValue");
+
+    // cleanup
     var deletedFrom = deleteAllMessagesFromQueue(env, fromQueueName);
     assertThat(deletedFrom).isEqualTo(numMessagesFrom);
   }

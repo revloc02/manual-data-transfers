@@ -191,10 +191,11 @@ public class JmsConsume {
   public static void moveSpecificMessage(
       Environment env, String fromQueueName, String selector, String toQueueName) {
     var cf = new JmsConnectionFactory(env.url());
-    try (var ctx = cf.createContext(getUsername(), getPassword())) {
+    try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {
       var fromQ = ctx.createQueue(fromQueueName);
       try (var consumer = ctx.createConsumer(fromQ, selector)) {
         var message = consumer.receive(5_000L);
+        message.acknowledge(); // todo: should this go after the send?
         var toQ = ctx.createQueue(toQueueName);
         ctx.createProducer().send(toQ, message);
         LOG.info(
@@ -203,6 +204,8 @@ public class JmsConsume {
             fromQueueName,
             toQueueName,
             createStringFromMessage(message));
+      } catch (JMSException e) {
+        e.printStackTrace();
       }
     }
     LOG.info("Done.");
@@ -210,10 +213,11 @@ public class JmsConsume {
 
   public static void moveOneMessage(Environment env, String fromQueueName, String toQueueName) {
     var cf = new JmsConnectionFactory(env.url());
-    try (var ctx = cf.createContext(getUsername(), getPassword())) {
+    try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {
       var fromQ = ctx.createQueue(fromQueueName);
       try (var consumer = ctx.createConsumer(fromQ)) {
         var message = consumer.receive(5_000L);
+        message.acknowledge(); // todo: should this go after the send?
         var toQ = ctx.createQueue(toQueueName);
         ctx.createProducer().send(toQ, message);
         LOG.info(
@@ -222,6 +226,8 @@ public class JmsConsume {
             fromQueueName,
             toQueueName,
             createStringFromMessage(message));
+      } catch (JMSException e) {
+        e.printStackTrace();
       }
     }
     LOG.info("Done.");
