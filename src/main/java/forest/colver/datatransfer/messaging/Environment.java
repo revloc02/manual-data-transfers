@@ -1,6 +1,8 @@
 package forest.colver.datatransfer.messaging;
 
 import static forest.colver.datatransfer.config.Utils.QPID_DEV;
+import static forest.colver.datatransfer.config.Utils.QPID_PROD_HOST;
+import static forest.colver.datatransfer.config.Utils.QPID_STAGE_HOST;
 import static forest.colver.datatransfer.config.Utils.QPID_PROD;
 import static forest.colver.datatransfer.config.Utils.QPID_STAGE;
 import static forest.colver.datatransfer.config.Utils.QPID_TEST;
@@ -12,6 +14,8 @@ public enum Environment {
   TEST(QPID_TEST),
   STAGE(QPID_STAGE),
   PROD(QPID_PROD),
+  STAGE_HOST(QPID_STAGE_HOST),
+  PROD_HOST(QPID_PROD_HOST),
   TQSTAGE(TQ_STAGE),
   TQPROD(TQ_PROD),
   LOCALHOST("amqp://localhost:5672");

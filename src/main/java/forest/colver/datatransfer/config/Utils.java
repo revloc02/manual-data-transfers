@@ -36,6 +36,8 @@ public class Utils {
   public static final String QPID_TEST = userCreds.getProperty("qpid.test");
   public static final String QPID_STAGE = userCreds.getProperty("qpid.stage");
   public static final String QPID_PROD = userCreds.getProperty("qpid.prod");
+  public static final String QPID_STAGE_HOST = userCreds.getProperty("qpid.stage.host");
+  public static final String QPID_PROD_HOST = userCreds.getProperty("qpid.prod.host");
   // get Task Queues endpoints
   public static final String TQ_STAGE = userCreds.getProperty("tq.stage");
   public static final String TQ_PROD = userCreds.getProperty("tq.prod");
