@@ -226,6 +226,7 @@ public class JmsConsume {
             fromQueueName,
             toQueueName,
             createStringFromMessage(message));
+        message.acknowledge(); // the send ack is apparently optional
       } catch (JMSException e) {
         e.printStackTrace();
       }
@@ -235,7 +236,7 @@ public class JmsConsume {
 
   public static void moveAllMessages(Environment env, String fromQueueName, String toQueueName) {
     var cf = new JmsConnectionFactory(env.url());
-    try (var ctx = cf.createContext(getUsername(), getPassword())) {
+    try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {
       var fromQ = ctx.createQueue(fromQueueName);
       var counter = 0;
       try (var consumer = ctx.createConsumer(fromQ)) {
@@ -253,10 +254,13 @@ public class JmsConsume {
                 fromQueueName,
                 toQueueName,
                 counter);
+            message.acknowledge();
           } else {
             moreMessages = false;
           }
         }
+      } catch (JMSException e) {
+        e.printStackTrace();
       }
       LOG.info("Moved {} messages.", counter);
     }
