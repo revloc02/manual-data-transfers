@@ -5,6 +5,7 @@ import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStamp;
 import static forest.colver.datatransfer.messaging.DisplayUtils.createStringFromMessage;
 import static forest.colver.datatransfer.messaging.Environment.STAGE;
+import static forest.colver.datatransfer.messaging.JmsBrowse.browseAndCountMessages;
 import static forest.colver.datatransfer.messaging.JmsBrowse.copyAllMessages;
 import static forest.colver.datatransfer.messaging.JmsBrowse.queueDepth;
 import static forest.colver.datatransfer.messaging.JmsConsume.consumeOneMessage;
@@ -14,6 +15,7 @@ import static forest.colver.datatransfer.messaging.JmsConsume.deleteAllSpecificM
 import static forest.colver.datatransfer.messaging.JmsConsume.moveAllMessages;
 import static forest.colver.datatransfer.messaging.JmsConsume.moveAllSpecificMessages;
 import static forest.colver.datatransfer.messaging.JmsConsume.moveOneMessage;
+import static forest.colver.datatransfer.messaging.JmsConsume.moveSomeSpecificMessages;
 import static forest.colver.datatransfer.messaging.JmsConsume.moveSpecificMessage;
 import static forest.colver.datatransfer.messaging.JmsConsume.purgeQueue;
 import static forest.colver.datatransfer.messaging.JmsSend.createDefaultMessage;
@@ -130,33 +132,6 @@ public class MessagingIntTests {
   }
 
   @Test
-  public void testMoveSpecificMessages() {
-    var env = STAGE;
-    var fromQueueName = "forest-test";
-    var toQueueName = "forest-test2";
-
-    // send one kind of message
-    var numMessagesFrom = 5;
-    sendMultipleSameMessage(env, fromQueueName, createMessage(), numMessagesFrom);
-
-    // send some messages of a different kind
-    var messageProps = Map.of("timestamp", getTimeStamp(), "specificKey", "specificValue");
-    var numMessagesTo = 3;
-    for (var i = 0; i < numMessagesTo; i++) {
-      sendMessageAutoAck(env, fromQueueName, createTextMessage(getDefaultPayload(), messageProps));
-    }
-
-    // only move one kind of message
-    moveAllSpecificMessages(env, fromQueueName, "specificKey='specificValue'", toQueueName);
-
-    // check that the queues have the correct number of messages after the move
-    var deletedTo = deleteAllMessagesFromQueue(env, toQueueName);
-    assertThat(deletedTo).isEqualTo(numMessagesTo);
-    var deletedFrom = deleteAllMessagesFromQueue(env, fromQueueName);
-    assertThat(deletedFrom).isEqualTo(numMessagesFrom);
-  }
-
-  @Test
   public void testMoveOneSpecificMessage() throws JMSException {
     var env = STAGE;
     var fromQueueName = "forest-test";
@@ -182,6 +157,88 @@ public class MessagingIntTests {
     assertThat(message.getStringProperty("specificKey")).isEqualTo("specificValue");
 
     // cleanup
+    var deletedFrom = deleteAllMessagesFromQueue(env, fromQueueName);
+    assertThat(deletedFrom).isEqualTo(numMessagesFrom);
+  }
+
+  @Test
+  public void testMoveSomeSpecificMessages() {
+    var env = STAGE;
+    var fromQueueName = "forest-test";
+    var toQueueName = "forest-test2";
+
+    // send one kind of message
+    var numMsgsFrom = 4;
+    sendMultipleSameMessage(env, fromQueueName, createMessage(), numMsgsFrom);
+
+    // send some messages of a different kind
+    var messageProps = Map.of("timestamp", getTimeStamp(), "specificKey", "specificValue");
+    var numMsgsTo = 5;
+    for (var i = 0; i < numMsgsTo; i++) {
+      sendMessageAutoAck(env, fromQueueName, createTextMessage(getDefaultPayload(), messageProps));
+    }
+
+    // move some of one kind of message
+    var numMsgsToMove = 2;
+    moveSomeSpecificMessages(env, fromQueueName, "specificKey='specificValue'", toQueueName,
+        numMsgsToMove);
+
+    // check each queue has the correct number of specific messages after moving some
+    assertThat(browseAndCountMessages(env, fromQueueName, "specificKey='specificValue'")).isEqualTo(
+        numMsgsTo - numMsgsToMove);
+    assertThat(browseAndCountMessages(env, toQueueName, "specificKey='specificValue'")).isEqualTo(
+        numMsgsToMove);
+
+    // cleanup and check that the queues have the correct number of messages
+    var deletedTo = deleteAllMessagesFromQueue(env, toQueueName);
+    assertThat(deletedTo).isEqualTo(numMsgsToMove);
+    var deletedFrom = deleteAllMessagesFromQueue(env, fromQueueName);
+    assertThat(deletedFrom).isEqualTo(numMsgsFrom + numMsgsTo - numMsgsToMove);
+  }
+
+  @Test
+  public void testMoveAllSpecificMessages() {
+    var env = STAGE;
+    var fromQueueName = "forest-test";
+    var toQueueName = "forest-test2";
+
+    // send one kind of message
+    var numMessagesFrom = 5;
+    sendMultipleSameMessage(env, fromQueueName, createMessage(), numMessagesFrom);
+
+    // send some messages of a different kind
+    var messageProps = Map.of("timestamp", getTimeStamp(), "specificKey", "specificValue");
+    var numMessagesTo = 3;
+    for (var i = 0; i < numMessagesTo; i++) {
+      sendMessageAutoAck(env, fromQueueName, createTextMessage(getDefaultPayload(), messageProps));
+    }
+
+    // move all of one kind of message
+    moveAllSpecificMessages(env, fromQueueName, "specificKey='specificValue'", toQueueName);
+
+    // cleanup and check that the queues have the correct number of messages after the move
+    var deletedTo = deleteAllMessagesFromQueue(env, toQueueName);
+    assertThat(deletedTo).isEqualTo(numMessagesTo);
+    var deletedFrom = deleteAllMessagesFromQueue(env, fromQueueName);
+    assertThat(deletedFrom).isEqualTo(numMessagesFrom);
+  }
+
+  @Test
+  public void testMoveAllSpecificMessagesWhenNoneExist() {
+    var env = STAGE;
+    var fromQueueName = "forest-test";
+    var toQueueName = "forest-test2";
+
+    // send one kind of message
+    var numMessagesFrom = 5;
+    sendMultipleSameMessage(env, fromQueueName, createMessage(), numMessagesFrom);
+
+    // try to move specific messages that don't exist in the queue
+    moveAllSpecificMessages(env, fromQueueName, "specificKey='specificValue'", toQueueName);
+
+    // cleanup and check that the queues have the correct number of messages after the move
+    var deletedTo = deleteAllMessagesFromQueue(env, toQueueName);
+    assertThat(deletedTo).isEqualTo(0);
     var deletedFrom = deleteAllMessagesFromQueue(env, fromQueueName);
     assertThat(deletedFrom).isEqualTo(numMessagesFrom);
   }

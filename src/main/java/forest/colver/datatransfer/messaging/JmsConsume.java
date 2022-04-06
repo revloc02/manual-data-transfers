@@ -269,7 +269,7 @@ public class JmsConsume {
   public static void moveAllSpecificMessages(
       Environment env, String fromQueueName, String selector, String toQueueName) {
     var cf = new JmsConnectionFactory(env.url());
-    try (var ctx = cf.createContext(getUsername(), getPassword())) {
+    try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {
       var fromQ = ctx.createQueue(fromQueueName);
       var counter = 0;
       try (var consumer = ctx.createConsumer(fromQ, selector)) {
@@ -287,10 +287,13 @@ public class JmsConsume {
                 fromQueueName,
                 toQueueName,
                 counter);
+            message.acknowledge();
           } else {
             moreMessages = false;
           }
         }
+      } catch (JMSException e) {
+        e.printStackTrace();
       }
       LOG.info("Moved {} messages for selector={}.", counter, selector);
     }
@@ -299,7 +302,7 @@ public class JmsConsume {
   public static void moveSomeSpecificMessages(
       Environment env, String fromQueueName, String selector, String toQueueName, int amount) {
     var cf = new JmsConnectionFactory(env.url());
-    try (var ctx = cf.createContext(getUsername(), getPassword())) {
+    try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {
       var fromQ = ctx.createQueue(fromQueueName);
       var counter = 0;
       try (var consumer = ctx.createConsumer(fromQ, selector)) {
@@ -310,8 +313,11 @@ public class JmsConsume {
           if (message != null) {
             counter++;
             ctx.createProducer().send(toQ, message);
+            message.acknowledge();
           }
         }
+      } catch (JMSException e) {
+        e.printStackTrace();
       }
       LOG.info("Moved {} messages from {} to {}, for selector={}.", counter, fromQueueName,
           toQueueName, selector);

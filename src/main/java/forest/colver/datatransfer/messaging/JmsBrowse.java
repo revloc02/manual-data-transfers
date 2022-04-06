@@ -37,19 +37,22 @@ public class JmsBrowse {
     }
   }
 
-  public static void browseAndCountMessages(Environment env, String queueName, String selector) {
+  // todo: this needs a unit test, and write a javadoc for it while you at it
+  public static int browseAndCountMessages(Environment env, String queueName, String selector) {
     var cf = new JmsConnectionFactory(env.url());
+    var msgCount = 0;
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
       var q = ctx.createQueue(queueName);
       Enumeration msgs;
       try (var browser = ctx.createBrowser(q, selector)) {
         msgs = browser.getEnumeration();
-        var msgCount = Collections.list(msgs).size(); // this empties msgs Enumeration series
+        msgCount = Collections.list(msgs).size();
         LOG.info("Queue={}; MessageCountFromSelector={}\n", queueName, msgCount);
       } catch (JMSException e) {
         e.printStackTrace();
       }
     }
+    return msgCount;
   }
 
   public static int queueDepth(Environment env, String queueName) {
