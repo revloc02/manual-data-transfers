@@ -128,7 +128,7 @@ public class JmsConsume {
         for (var i = 0; i < amount; i++) {
           message = consumer.receiveNoWait();
           if (message != null) {
-            message.acknowledge();
+            message.acknowledge(); // todo: is this currently AUTO_ACK? yes. so is that causing the timeouts?
             counter++;
           }
         }
@@ -195,9 +195,9 @@ public class JmsConsume {
       var fromQ = ctx.createQueue(fromQueueName);
       try (var consumer = ctx.createConsumer(fromQ, selector)) {
         var message = consumer.receive(5_000L);
-        message.acknowledge(); // todo: should this go after the send?
         var toQ = ctx.createQueue(toQueueName);
         ctx.createProducer().send(toQ, message);
+        message.acknowledge();
         LOG.info(
             "Moved from Host={} Queue={} to Queue={}, Message->{}",
             env.name(),
@@ -217,16 +217,15 @@ public class JmsConsume {
       var fromQ = ctx.createQueue(fromQueueName);
       try (var consumer = ctx.createConsumer(fromQ)) {
         var message = consumer.receive(5_000L);
-        message.acknowledge(); // todo: should this go after the send?
         var toQ = ctx.createQueue(toQueueName);
         ctx.createProducer().send(toQ, message);
+        message.acknowledge();
         LOG.info(
             "Moved from Host={} Queue={} to Queue={}, Message->{}",
             env.name(),
             fromQueueName,
             toQueueName,
             createStringFromMessage(message));
-        message.acknowledge(); // the send ack is apparently optional
       } catch (JMSException e) {
         e.printStackTrace();
       }
@@ -248,13 +247,13 @@ public class JmsConsume {
           if (message != null) {
             counter++;
             ctx.createProducer().send(toQ, message);
+            message.acknowledge();
             LOG.info(
                 "Moved from Host={} Queue={} to Queue={}, counter={}",
                 env.name(),
                 fromQueueName,
                 toQueueName,
                 counter);
-            message.acknowledge();
           } else {
             moreMessages = false;
           }
@@ -281,13 +280,13 @@ public class JmsConsume {
           if (message != null) {
             counter++;
             ctx.createProducer().send(toQ, message);
+            message.acknowledge();
             LOG.info(
                 "Moved from Host={} Queue={} to Queue={}, counter={}",
                 env.name(),
                 fromQueueName,
                 toQueueName,
                 counter);
-            message.acknowledge();
           } else {
             moreMessages = false;
           }
