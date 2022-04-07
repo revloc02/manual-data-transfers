@@ -117,18 +117,17 @@ public class JmsConsume {
     return counter;
   }
 
-  // todo: i'd like to work on this one some more, I seem to get timeouts
   public static void deleteSomeMessagesFromQueue(Environment env, String queueName, int amount) {
     var cf = new JmsConnectionFactory(env.url());
     var counter = 0;
-    try (var ctx = cf.createContext(getUsername(), getPassword())) {
+    try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {
       var queue = ctx.createQueue(queueName);
       try (var consumer = ctx.createConsumer(queue)) {
         Message message;
         for (var i = 0; i < amount; i++) {
           message = consumer.receiveNoWait();
           if (message != null) {
-            message.acknowledge(); // todo: is this currently AUTO_ACK? yes. so is that causing the timeouts?
+            message.acknowledge();
             counter++;
           }
         }

@@ -12,6 +12,7 @@ import static forest.colver.datatransfer.messaging.JmsConsume.consumeOneMessage;
 import static forest.colver.datatransfer.messaging.JmsConsume.consumeSpecificMessage;
 import static forest.colver.datatransfer.messaging.JmsConsume.deleteAllMessagesFromQueue;
 import static forest.colver.datatransfer.messaging.JmsConsume.deleteAllSpecificMessagesFromQueue;
+import static forest.colver.datatransfer.messaging.JmsConsume.deleteSomeMessagesFromQueue;
 import static forest.colver.datatransfer.messaging.JmsConsume.moveAllMessages;
 import static forest.colver.datatransfer.messaging.JmsConsume.moveAllSpecificMessages;
 import static forest.colver.datatransfer.messaging.JmsConsume.moveOneMessage;
@@ -309,6 +310,28 @@ public class MessagingIntTests {
 
     // cleanup
     assertThat(deleteAllMessagesFromQueue(env, queue)).isEqualTo(num);
+  }
+
+  @Test
+  public void testDeleteSomeMessages() {
+    var queueName = "forest-test";
+    purgeQueue(STAGE, queueName); // start clean
+
+    var numMsgs = 50;
+    var uuids = generateUniqueStrings(numMsgs);
+    sendMultipleUniqueMessages(STAGE, queueName, uuids);
+    LOG.info("Sent {} messages.", numMsgs);
+
+    var numToDelete = 12;
+    deleteSomeMessagesFromQueue(STAGE, queueName, numToDelete);
+    // check the queue depth
+    assertThat(queueDepth(STAGE, queueName)).isEqualTo(numMsgs - numToDelete);
+
+    deleteSomeMessagesFromQueue(STAGE, queueName, numToDelete);
+    // check the queue depth
+    assertThat(queueDepth(STAGE, queueName)).isEqualTo(numMsgs - numToDelete - numToDelete);
+
+    purgeQueue(STAGE, queueName); // cleanup
   }
 
   @Test
