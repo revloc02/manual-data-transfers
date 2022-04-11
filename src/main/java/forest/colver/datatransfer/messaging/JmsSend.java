@@ -4,6 +4,7 @@ import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getPassword;
 import static forest.colver.datatransfer.config.Utils.getUsername;
 import static forest.colver.datatransfer.messaging.Environment.STAGE;
+import static javax.jms.JMSContext.AUTO_ACKNOWLEDGE;
 
 import forest.colver.datatransfer.config.Utils;
 import java.util.ArrayList;
@@ -12,7 +13,6 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.TextMessage;
 import org.apache.qpid.jms.JmsConnectionFactory;
-import org.apache.qpid.jms.JmsContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,26 +48,18 @@ public class JmsSend {
     return message;
   }
 
+  /**
+   * Sends a message to a queue. The AUTO_ACKNOWLEDGE is the default, but set explicitly here as a
+   * reminder. Acknowledgement on sending is not as critical as when receiving messages from the
+   * broker. https://jstobigdata.com/jms/guaranteed-delivery-using-jms-message-acknowledgement/
+   *
+   * @param env The environment of the Qpid broker.
+   * @param queueName The name of the queue.
+   * @param message The message to send.
+   */
   public static void sendMessageAutoAck(Environment env, String queueName, Message message) {
     var cf = new JmsConnectionFactory(env.url());
-    try (var ctx = cf.createContext(getUsername(), getPassword(), JmsContext.AUTO_ACKNOWLEDGE)) {
-      var queue = ctx.createQueue(queueName);
-      var producer = ctx.createProducer();
-      producer.send(queue, message);
-      LOG.info(
-          "Message sent to Host={}, Queue={}, Message->{}",
-          env.name(),
-          queueName,
-          DisplayUtils.createStringFromMessage(message));
-    }
-  }
-
-  public static void sendMessageClientAck(Environment env, String queueName, Message message) {
-    var cf = new JmsConnectionFactory(env.url());
-    // todo: I have a fundamental problem with my JMS code in that I am not using CLIENT_ACKNOWLEDGE, which could result in data loss. Fix it.
-    // JmsContext.AUTO_ACKNOWLEDGE is the default Acknowledgement mode. If I were to throw an exception while transferring data, and I retrieved data from a queue using AUTO_ACKNOWLEDGE, the data would be lost.
-    // here's a reference for CLIENT_ACKNOWLEDGE: https://jstobigdata.com/jms/guaranteed-delivery-using-jms-message-acknowledgement/
-    try (var ctx = cf.createContext(getUsername(), getPassword(), JmsContext.AUTO_ACKNOWLEDGE)) {
+    try (var ctx = cf.createContext(getUsername(), getPassword(), AUTO_ACKNOWLEDGE)) {
       var queue = ctx.createQueue(queueName);
       var producer = ctx.createProducer();
       producer.send(queue, message);
