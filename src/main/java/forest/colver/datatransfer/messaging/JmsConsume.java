@@ -127,7 +127,7 @@ public class JmsConsume {
         for (var i = 0; i < amount; i++) {
           message = consumer.receiveNoWait();
           if (message != null) {
-            message.acknowledge();
+            message.acknowledge(); // at least once delivery
             counter++;
           }
         }
