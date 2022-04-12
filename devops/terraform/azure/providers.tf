@@ -4,16 +4,3 @@ provider "azurerm" {
   skip_provider_registration = true
   features {}
 }
-
-//provider "azurerm" {
-//  alias                      = "log_subscription"
-//  subscription_id            = "b0d46910-956d-4f5e-afe5-c79784ac5af5"
-//  skip_provider_registration = true
-//  features {}
-//}
-
-//terraform {
-//  backend "azurerm" {
-//    #Please leave this empty
-//  }
-//}
