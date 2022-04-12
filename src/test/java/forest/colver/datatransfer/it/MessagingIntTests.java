@@ -90,7 +90,7 @@ public class MessagingIntTests {
   public void testPurgeQueue() {
     var env = STAGE;
     var queueName = "forest-test";
-    var numMessages = 30; // the purgeQueue method tends to timeout when over 1000 messages
+    var numMessages = 2000; // 2000 should run in about 45-50 seconds
     var message = createMessage();
     sendMultipleSameMessage(env, queueName, message, numMessages);
 

@@ -3,6 +3,7 @@ package forest.colver.datatransfer.messaging;
 import static forest.colver.datatransfer.config.Utils.getPassword;
 import static forest.colver.datatransfer.config.Utils.getUsername;
 import static forest.colver.datatransfer.messaging.DisplayUtils.createStringFromMessage;
+import static javax.jms.JMSContext.AUTO_ACKNOWLEDGE;
 import static javax.jms.JMSContext.CLIENT_ACKNOWLEDGE;
 
 import javax.jms.JMSException;
@@ -42,7 +43,7 @@ public class JmsConsume {
   public static int deleteAllMessagesFromQueue(Environment env, String queueName) {
     var cf = new JmsConnectionFactory(env.url());
     var counter = 0;
-    try (var ctx = cf.createContext(getUsername(), getPassword())) {
+    try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {
       var queue = ctx.createQueue(queueName);
       try (var consumer = ctx.createConsumer(queue)) {
         Message message;
@@ -52,7 +53,6 @@ public class JmsConsume {
             counter++;
             message.acknowledge();
           }
-
         } while (message != null);
       } catch (JMSException e) {
         e.printStackTrace();
@@ -73,7 +73,7 @@ public class JmsConsume {
   public static int purgeQueue(Environment env, String queueName) {
     var cf = new JmsConnectionFactory(env.url());
     var counter = 0;
-    try (var ctx = cf.createContext(getUsername(), getPassword())) {
+    try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {
       var queue = ctx.createQueue(queueName);
       try (var consumer = ctx.createConsumer(queue)) {
         Message message;
