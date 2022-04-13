@@ -37,8 +37,14 @@ public class JmsBrowse {
     }
   }
 
-  // todo: this needs a unit test, and write a javadoc for it while you at it
-  public static int browseAndCountMessages(Environment env, String queueName, String selector) {
+  /**
+   * Browse a queue and count the messages that result from a specific message selector.
+   * @param env The environment.
+   * @param queueName The queue.
+   * @param selector The selector to identify specific messages.
+   * @return The specific message count.
+   */
+  public static int browseAndCountSpecificMessages(Environment env, String queueName, String selector) {
     var cf = new JmsConnectionFactory(env.url());
     var msgCount = 0;
     try (var ctx = cf.createContext(getUsername(), getPassword())) {

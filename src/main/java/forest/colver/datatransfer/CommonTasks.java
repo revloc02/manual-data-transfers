@@ -1,7 +1,7 @@
 package forest.colver.datatransfer;
 
 import static forest.colver.datatransfer.messaging.Environment.PROD;
-import static forest.colver.datatransfer.messaging.JmsBrowse.browseAndCountMessages;
+import static forest.colver.datatransfer.messaging.JmsBrowse.browseAndCountSpecificMessages;
 import static forest.colver.datatransfer.messaging.JmsBrowse.browseForMessage;
 import static forest.colver.datatransfer.messaging.JmsConsume.deleteAllSpecificMessagesFromQueue;
 
@@ -32,7 +32,7 @@ public class CommonTasks {
         "emxTraceOnrampMessageName='CFISLDS-GTM-INDUS-05-ACH-20210817111659.xml'");
 
     // check how many messages are going to be deleted according to defined timestamp
-    browseAndCountMessages(PROD, "ops", "emxTraceSourceTimestamp<=" + timestamp);
+    browseAndCountSpecificMessages(PROD, "ops", "emxTraceSourceTimestamp<=" + timestamp);
 
     // actually delete the messages (uncomment and run, then re-comment the code)
     deleteAllSpecificMessagesFromQueue(PROD, "ops", "emxTraceSourceTimestamp<=" + timestamp);

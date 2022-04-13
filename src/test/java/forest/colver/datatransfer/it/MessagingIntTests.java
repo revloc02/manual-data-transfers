@@ -5,7 +5,7 @@ import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStamp;
 import static forest.colver.datatransfer.messaging.DisplayUtils.createStringFromMessage;
 import static forest.colver.datatransfer.messaging.Environment.STAGE;
-import static forest.colver.datatransfer.messaging.JmsBrowse.browseAndCountMessages;
+import static forest.colver.datatransfer.messaging.JmsBrowse.browseAndCountSpecificMessages;
 import static forest.colver.datatransfer.messaging.JmsBrowse.copyAllMessages;
 import static forest.colver.datatransfer.messaging.JmsBrowse.queueDepth;
 import static forest.colver.datatransfer.messaging.JmsConsume.consumeOneMessage;
@@ -163,6 +163,29 @@ public class MessagingIntTests {
   }
 
   @Test
+  public void testBrowseAndCountSpecificMessages() {
+    var env = STAGE;
+    var queueName = "forest-test";
+
+    // place one kind of message
+    sendMultipleSameMessage(env, queueName, createMessage(), 4);
+
+    // place some messages of a different kind
+    var messageProps = Map.of("timestamp", getTimeStamp(), "specificKey", "specificValue");
+    var numMsg = 5;
+    for (var i = 0; i < numMsg; i++) {
+      sendMessageAutoAck(env, queueName, createTextMessage(getDefaultPayload(), messageProps));
+    }
+
+    // check browseAndCountSpecificMessages() gets the correct number
+    assertThat(browseAndCountSpecificMessages(env, queueName, "specificKey='specificValue'")).isEqualTo(
+        numMsg);
+
+    // cleanup
+    purgeQueue(env, queueName);
+  }
+
+  @Test
   public void testMoveSomeSpecificMessages() {
     var env = STAGE;
     var fromQueueName = "forest-test";
@@ -185,9 +208,9 @@ public class MessagingIntTests {
         numMsgsToMove);
 
     // check each queue has the correct number of specific messages after moving some
-    assertThat(browseAndCountMessages(env, fromQueueName, "specificKey='specificValue'")).isEqualTo(
+    assertThat(browseAndCountSpecificMessages(env, fromQueueName, "specificKey='specificValue'")).isEqualTo(
         numMsgsTo - numMsgsToMove);
-    assertThat(browseAndCountMessages(env, toQueueName, "specificKey='specificValue'")).isEqualTo(
+    assertThat(browseAndCountSpecificMessages(env, toQueueName, "specificKey='specificValue'")).isEqualTo(
         numMsgsToMove);
 
     // cleanup and check that the queues have the correct number of messages
