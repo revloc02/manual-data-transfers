@@ -7,6 +7,7 @@ import static forest.colver.datatransfer.messaging.DisplayUtils.createStringFrom
 import static forest.colver.datatransfer.messaging.Environment.STAGE;
 import static forest.colver.datatransfer.messaging.JmsBrowse.browseAndCountSpecificMessages;
 import static forest.colver.datatransfer.messaging.JmsBrowse.copyAllMessages;
+import static forest.colver.datatransfer.messaging.JmsBrowse.copySpecificMessages;
 import static forest.colver.datatransfer.messaging.JmsBrowse.queueDepth;
 import static forest.colver.datatransfer.messaging.JmsConsume.consumeOneMessage;
 import static forest.colver.datatransfer.messaging.JmsConsume.consumeSpecificMessage;
@@ -178,7 +179,8 @@ public class MessagingIntTests {
     }
 
     // check browseAndCountSpecificMessages() gets the correct number
-    assertThat(browseAndCountSpecificMessages(env, queueName, "specificKey='specificValue'")).isEqualTo(
+    assertThat(
+        browseAndCountSpecificMessages(env, queueName, "specificKey='specificValue'")).isEqualTo(
         numMsg);
 
     // cleanup
@@ -208,9 +210,11 @@ public class MessagingIntTests {
         numMsgsToMove);
 
     // check each queue has the correct number of specific messages after moving some
-    assertThat(browseAndCountSpecificMessages(env, fromQueueName, "specificKey='specificValue'")).isEqualTo(
+    assertThat(browseAndCountSpecificMessages(env, fromQueueName,
+        "specificKey='specificValue'")).isEqualTo(
         numMsgsTo - numMsgsToMove);
-    assertThat(browseAndCountSpecificMessages(env, toQueueName, "specificKey='specificValue'")).isEqualTo(
+    assertThat(
+        browseAndCountSpecificMessages(env, toQueueName, "specificKey='specificValue'")).isEqualTo(
         numMsgsToMove);
 
     // cleanup and check that the queues have the correct number of messages
@@ -377,6 +381,36 @@ public class MessagingIntTests {
     deleteAllMessagesFromQueue(env, toQueue);
   }
 
+  @Test
+  public void testCopySpecificMessages() {
+    var env = STAGE;
+    var fromQueue = "forest-test2";
+    purgeQueue(env, fromQueue);
+
+    // send some messages
+    var num = 7;
+    sendMultipleSameMessage(env, fromQueue, createDefaultMessage(), num);
+    // send some specific messages
+    var messageProps = Map.of("timestamp", getTimeStamp(), "specificKey", "specificValue");
+    var numSpecific = 5;
+    sendMultipleSameMessage(env, fromQueue, createTextMessage(getDefaultPayload(), messageProps),
+        numSpecific);
+
+    // copy specific messages over
+    var toQueue = "forest-test";
+    purgeQueue(env, toQueue);
+    copySpecificMessages(STAGE, fromQueue, "specificKey='specificValue'", toQueue);
+
+    // check the queue depth on the new queue
+    assertThat(queueDepth(STAGE, toQueue)).isEqualTo(numSpecific);
+
+    // cleanup and ensure correct number of specific messages are deleted
+    assertThat(
+        deleteAllSpecificMessagesFromQueue(env, toQueue, "specificKey='specificValue'"))
+        .isEqualTo(numSpecific);
+    assertThat(deleteAllMessagesFromQueue(env, fromQueue)).isEqualTo(num + numSpecific);
+  }
+
   /**
    * The goal is to test that the queue allows competing consumers. Sets up a queue with a bunch of
    * unique messages. Then creates a number of threads to consume each of those messages and compare
@@ -407,12 +441,6 @@ public class MessagingIntTests {
       LOG.info("removed {}", future.get().getText());
     }
     assertThat(uuids.size()).isEqualTo(0);
-  }
-
-  // todo
-  @Test
-  public void testCopySpecificMessages() {
-
   }
 
   private Message createMessage() {
