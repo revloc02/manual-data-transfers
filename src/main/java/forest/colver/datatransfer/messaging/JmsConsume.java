@@ -97,7 +97,7 @@ public class JmsConsume {
       String selector) {
     var cf = new JmsConnectionFactory(env.url());
     var counter = 0;
-    try (var ctx = cf.createContext(getUsername(), getPassword())) {
+    try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {
       var queue = ctx.createQueue(queueName);
       try (var consumer = ctx.createConsumer(queue, selector)) {
         Message message;
