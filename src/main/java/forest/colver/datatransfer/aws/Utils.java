@@ -33,7 +33,6 @@ public class Utils {
   // todo: see if I can make a config file separate from the creds file to contain these queue names
   public static final String EMX_SANDBOX_TEST_SQS1 = userCreds.getProperty("aws-emx-sandbox-test-sqs1");
   public static final String EMX_SANDBOX_TEST_SQS2 = userCreds.getProperty("aws-emx-sandbox-test-sqs2");
-  // todo: can these s3 refs be consolidated? can we just use 1 or 2
   public static final String S3_INTERNAL = userCreds.getProperty("aws-enterprise-sandbox-test-s3-internal");
   public static final String S3_TARGET_CUSTOMER = userCreds.getProperty("aws-enterprise-sandbox-test-s3-target-customer");
   public static final String S3_SOURCE_CACHE = userCreds.getProperty("aws-enterprise-sandbox-test-s3-source-cache");
