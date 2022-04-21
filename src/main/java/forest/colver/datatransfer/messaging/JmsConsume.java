@@ -3,7 +3,6 @@ package forest.colver.datatransfer.messaging;
 import static forest.colver.datatransfer.config.Utils.getPassword;
 import static forest.colver.datatransfer.config.Utils.getUsername;
 import static forest.colver.datatransfer.messaging.DisplayUtils.createStringFromMessage;
-import static javax.jms.JMSContext.AUTO_ACKNOWLEDGE;
 import static javax.jms.JMSContext.CLIENT_ACKNOWLEDGE;
 
 import javax.jms.JMSException;
@@ -15,23 +14,6 @@ import org.slf4j.LoggerFactory;
 public class JmsConsume {
 
   private static final Logger LOG = LoggerFactory.getLogger(JmsConsume.class);
-
-  // todo: yeah so, this doesn't seem to work yet
-  public static void deleteSpecificMessages(Environment env, String queueName, String selector) {
-    var factory = new JmsConnectionFactory(getUsername(), getPassword(), env.url());
-    try (var context = factory.createContext()) {
-      var queue = context.createQueue(queueName);
-      LOG.info("consume from {}, with selector {}", queueName, selector);
-      final int[] deleteCounter = {0};
-      try (var consumer = context.createConsumer(queue, selector)) {
-        consumer.setMessageListener(
-            message -> {
-              deleteCounter[0]++;
-              LOG.info("Deleted Message {}", deleteCounter[0]);
-            });
-      }
-    }
-  }
 
   /**
    * Deletes all messages from the queue.
@@ -93,7 +75,7 @@ public class JmsConsume {
     return counter;
   }
 
-  public static int deleteAllSpecificMessagesFromQueue(Environment env, String queueName,
+  public static int deleteAllSpecificMessages(Environment env, String queueName,
       String selector) {
     var cf = new JmsConnectionFactory(env.url());
     var counter = 0;
@@ -117,7 +99,7 @@ public class JmsConsume {
     return counter;
   }
 
-  public static void deleteSomeMessagesFromQueue(Environment env, String queueName, int amount) {
+  public static void deleteSomeMessages(Environment env, String queueName, int amount) {
     var cf = new JmsConnectionFactory(env.url());
     var counter = 0;
     try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {

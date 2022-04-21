@@ -12,8 +12,8 @@ import static forest.colver.datatransfer.messaging.JmsBrowse.queueDepth;
 import static forest.colver.datatransfer.messaging.JmsConsume.consumeOneMessage;
 import static forest.colver.datatransfer.messaging.JmsConsume.consumeSpecificMessage;
 import static forest.colver.datatransfer.messaging.JmsConsume.deleteAllMessagesFromQueue;
-import static forest.colver.datatransfer.messaging.JmsConsume.deleteAllSpecificMessagesFromQueue;
-import static forest.colver.datatransfer.messaging.JmsConsume.deleteSomeMessagesFromQueue;
+import static forest.colver.datatransfer.messaging.JmsConsume.deleteAllSpecificMessages;
+import static forest.colver.datatransfer.messaging.JmsConsume.deleteSomeMessages;
 import static forest.colver.datatransfer.messaging.JmsConsume.moveAllMessages;
 import static forest.colver.datatransfer.messaging.JmsConsume.moveAllSpecificMessages;
 import static forest.colver.datatransfer.messaging.JmsConsume.moveOneMessage;
@@ -330,9 +330,8 @@ public class MessagingIntTests {
     // check the queue depth
     assertThat(queueDepth(STAGE, queue)).isEqualTo(num + numSpecific);
 
-    // ensure correct number of specific messages are deleted
-    assertThat(
-        deleteAllSpecificMessagesFromQueue(env, queue, "specificKey='specificValue'"))
+    // delete specific messages and ensure correct number were deleted
+    assertThat(deleteAllSpecificMessages(env, queue, "specificKey='specificValue'"))
         .isEqualTo(numSpecific);
 
     // cleanup
@@ -350,11 +349,11 @@ public class MessagingIntTests {
     LOG.info("Sent {} messages.", numMsgs);
 
     var numToDelete = 12;
-    deleteSomeMessagesFromQueue(STAGE, queueName, numToDelete);
+    deleteSomeMessages(STAGE, queueName, numToDelete);
     // check the queue depth
     assertThat(queueDepth(STAGE, queueName)).isEqualTo(numMsgs - numToDelete);
 
-    deleteSomeMessagesFromQueue(STAGE, queueName, numToDelete);
+    deleteSomeMessages(STAGE, queueName, numToDelete);
     // check the queue depth
     assertThat(queueDepth(STAGE, queueName)).isEqualTo(numMsgs - numToDelete - numToDelete);
 
@@ -406,7 +405,7 @@ public class MessagingIntTests {
 
     // cleanup and ensure correct number of specific messages are deleted
     assertThat(
-        deleteAllSpecificMessagesFromQueue(env, toQueue, "specificKey='specificValue'"))
+        deleteAllSpecificMessages(env, toQueue, "specificKey='specificValue'"))
         .isEqualTo(numSpecific);
     assertThat(deleteAllMessagesFromQueue(env, fromQueue)).isEqualTo(num + numSpecific);
   }

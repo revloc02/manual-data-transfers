@@ -3,7 +3,7 @@ package forest.colver.datatransfer;
 import static forest.colver.datatransfer.messaging.Environment.PROD;
 import static forest.colver.datatransfer.messaging.JmsBrowse.browseAndCountSpecificMessages;
 import static forest.colver.datatransfer.messaging.JmsBrowse.browseForMessage;
-import static forest.colver.datatransfer.messaging.JmsConsume.deleteAllSpecificMessagesFromQueue;
+import static forest.colver.datatransfer.messaging.JmsConsume.deleteAllSpecificMessages;
 
 /**
  * This defines methods that perform tasks I commonly use in my work or during watchman. They are
@@ -35,6 +35,6 @@ public class CommonTasks {
     browseAndCountSpecificMessages(PROD, "ops", "emxTraceSourceTimestamp<=" + timestamp);
 
     // actually delete the messages (uncomment and run, then re-comment the code)
-    deleteAllSpecificMessagesFromQueue(PROD, "ops", "emxTraceSourceTimestamp<=" + timestamp);
+    deleteAllSpecificMessages(PROD, "ops", "emxTraceSourceTimestamp<=" + timestamp);
   }
 }
