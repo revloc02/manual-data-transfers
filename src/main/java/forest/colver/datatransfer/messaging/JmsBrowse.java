@@ -29,7 +29,7 @@ public class JmsBrowse {
             env.name(),
             queueName,
             createStringFromMessage(message));
-        var msgCount = Collections.list(msgs).size()+1; // this empties msgs Enumeration series
+        var msgCount = Collections.list(msgs).size() + 1; // this empties msgs Enumeration series
         LOG.info("Queue={}; MessageCountFromSelector={}\n", queueName, msgCount);
       } catch (JMSException e) {
         e.printStackTrace();
@@ -39,12 +39,14 @@ public class JmsBrowse {
 
   /**
    * Browse a queue and count the messages that result from a specific message selector.
+   *
    * @param env The environment.
    * @param queueName The queue.
    * @param selector The selector to identify specific messages.
    * @return The specific message count.
    */
-  public static int browseAndCountSpecificMessages(Environment env, String queueName, String selector) {
+  public static int browseAndCountSpecificMessages(Environment env, String queueName,
+      String selector) {
     var cf = new JmsConnectionFactory(env.url());
     var msgCount = 0;
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
@@ -136,6 +138,47 @@ public class JmsBrowse {
         e.printStackTrace();
       }
       LOG.info("Copied {} messages.", count);
+    }
+  }
+
+  // todo: make integration tests for this
+  public static void copyAllMessagesAcrossEnvironments(Environment fromEnv, String fromQName,
+      Environment toEnv, String toQName) {
+    var fromCf = new JmsConnectionFactory(fromEnv.url());
+    try (var fromCtx = fromCf.createContext(getUsername(), getPassword())) {
+      var fromQ = fromCtx.createQueue(fromQName);
+      var toQ = fromCtx.createQueue(toQName);
+      Enumeration msgs;
+      int count = 0;
+      try (var browser = fromCtx.createBrowser(fromQ)) {
+        msgs = browser.getEnumeration();
+        var toCf = new JmsConnectionFactory(toEnv.url());
+        try (var toCtx = toCf.createContext(getUsername(), getPassword())) {
+          while (msgs.hasMoreElements()) {
+            var message = (Message) msgs.nextElement();
+            toCtx.createProducer().send(toQ, message);
+            count++;
+            LOG.info(
+                "Copied Message {}, from Host={} Queue={}, sent to Host={} Queue={}, Message->{}",
+                count,
+                fromEnv.name(),
+                fromQName,
+                toEnv.name(),
+                toQName,
+                createStringFromMessage(message));
+          }
+          if (count == 0) {
+            LOG.info("Could not find message to copy");
+          }
+        }
+      } catch (JMSException e) {
+        e.printStackTrace();
+      }
+      LOG.info("Copied {} messages. From Host={} Queue={}, sent to Host={} Queue={}", count,
+          fromEnv.name(),
+          fromQName,
+          toEnv.name(),
+          toQName);
     }
   }
 }
