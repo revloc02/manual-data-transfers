@@ -40,7 +40,7 @@ public class JmsConsume {
         e.printStackTrace();
       }
     }
-    LOG.info("Purged {} messages from {} queue.", counter, queueName);
+    LOG.info("Purged {} messages from {}:{} queue.", counter, env.name(), queueName);
     return counter;
   }
 
@@ -71,7 +71,7 @@ public class JmsConsume {
         e.printStackTrace();
       }
     }
-    LOG.info("Purged {} messages from {} queue.", counter, queueName);
+    LOG.info("Purged {} messages from {}:{} queue.", counter, env.name(), queueName);
     return counter;
   }
 
@@ -95,7 +95,7 @@ public class JmsConsume {
         e.printStackTrace();
       }
     }
-    LOG.info("Purged {} messages from {} queue in {}.", counter, queueName, env.name());
+    LOG.info("Purged {} messages from {}:{} queue.", counter, env.name(), queueName);
     return counter;
   }
 
@@ -117,7 +117,7 @@ public class JmsConsume {
         e.printStackTrace();
       }
     }
-    LOG.info("Purged {} messages from {} queue.", counter, queueName);
+    LOG.info("Purged {} messages from {}:{} queue.", counter, env.name(), queueName);
   }
 
   // todo: Figure out how to test this and also write a Javadoc for it.
@@ -142,7 +142,7 @@ public class JmsConsume {
       try (var consumer = ctx.createConsumer(fromQ, selector)) {
         message = consumer.receive(5_000L);
         LOG.info(
-            "Consumed from Host={} Queue={}, Message->{}",
+            "Consumed from Queue={}:{}, Message->{}",
             env.name(),
             fromQueueName,
             createStringFromMessage(message));
@@ -180,9 +180,10 @@ public class JmsConsume {
         ctx.createProducer().send(toQ, message);
         message.acknowledge();
         LOG.info(
-            "Moved from Host={} Queue={} to Queue={}, Message->{}",
+            "Moved from Queue={}:{} to Queue={}:{}, Message->{}",
             env.name(),
             fromQueueName,
+            env.name(),
             toQueueName,
             createStringFromMessage(message));
       } catch (JMSException e) {
@@ -202,9 +203,10 @@ public class JmsConsume {
         ctx.createProducer().send(toQ, message);
         message.acknowledge();
         LOG.info(
-            "Moved from Host={} Queue={} to Queue={}, Message->{}",
+            "Moved from Queue={}:{} to Queue={}:{}, Message->{}",
             env.name(),
             fromQueueName,
+            env.name(),
             toQueueName,
             createStringFromMessage(message));
       } catch (JMSException e) {
@@ -230,9 +232,10 @@ public class JmsConsume {
             ctx.createProducer().send(toQ, message);
             message.acknowledge();
             LOG.info(
-                "Moved from Host={} Queue={} to Queue={}, counter={}",
+                "Moved from Queue={}:{} to Queue={}:{}, counter={}",
                 env.name(),
                 fromQueueName,
+                env.name(),
                 toQueueName,
                 counter);
           } else {
@@ -263,9 +266,10 @@ public class JmsConsume {
             ctx.createProducer().send(toQ, message);
             message.acknowledge();
             LOG.info(
-                "Moved from Host={} Queue={} to Queue={}, counter={}",
+                "Moved from Queue={}:{} to Queue={}:{}, counter={}",
                 env.name(),
                 fromQueueName,
+                env.name(),
                 toQueueName,
                 counter);
           } else {
@@ -299,7 +303,8 @@ public class JmsConsume {
       } catch (JMSException e) {
         e.printStackTrace();
       }
-      LOG.info("Moved {} messages from {} to {}, for selector={}.", counter, fromQueueName,
+      LOG.info("Moved {} messages from {}:{} to {}:{}, for selector={}.", counter, env.name(),
+          fromQueueName, env.name(),
           toQueueName, selector);
     }
   }

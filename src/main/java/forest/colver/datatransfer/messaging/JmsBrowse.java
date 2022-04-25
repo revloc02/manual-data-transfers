@@ -30,7 +30,7 @@ public class JmsBrowse {
             queueName,
             createStringFromMessage(message));
         var msgCount = Collections.list(msgs).size() + 1; // this empties msgs Enumeration series
-        LOG.info("Queue={}; MessageCountFromSelector={}\n", queueName, msgCount);
+        LOG.info("Queue={}:{}; MessageCountFromSelector={}\n", env.name(), queueName, msgCount);
       } catch (JMSException e) {
         e.printStackTrace();
       }
@@ -55,7 +55,7 @@ public class JmsBrowse {
       try (var browser = ctx.createBrowser(q, selector)) {
         msgs = browser.getEnumeration();
         msgCount = Collections.list(msgs).size();
-        LOG.info("Queue={}; MessageCountFromSelector={}\n", queueName, msgCount);
+        LOG.info("Queue={}:{}; MessageCountFromSelector={}\n", env.name(), queueName, msgCount);
       } catch (JMSException e) {
         e.printStackTrace();
       }
@@ -72,7 +72,7 @@ public class JmsBrowse {
       try (var browser = ctx.createBrowser(q)) {
         msgs = browser.getEnumeration();
         queueDepth = Collections.list(msgs).size();
-        LOG.info("Queue {} Depth={}", queueName, queueDepth);
+        LOG.info("Queue={}:{} Depth={}", env.name(), queueName, queueDepth);
       } catch (JMSException e) {
         e.printStackTrace();
       }
@@ -95,7 +95,7 @@ public class JmsBrowse {
           ctx.createProducer().send(toQ, message);
           count++;
           LOG.info(
-              "Copied Message {}, sent to Host={}, Queue={}, Message->{}",
+              "Copied Message {}, sent to Queue={}:{}, Message->{}",
               count,
               env.name(),
               toQName,
@@ -125,7 +125,7 @@ public class JmsBrowse {
           ctx.createProducer().send(toQ, message);
           count++;
           LOG.info(
-              "Copied Message {}, sent to Host={}, Queue={}, Message->{}",
+              "Copied Message {}, sent to Queue={}:{}, Message->{}",
               count,
               env.name(),
               toQName,
@@ -141,7 +141,6 @@ public class JmsBrowse {
     }
   }
 
-  // todo: make integration tests for this
   public static void copyAllMessagesAcrossEnvironments(Environment fromEnv, String fromQName,
       Environment toEnv, String toQName) {
     var fromCf = new JmsConnectionFactory(fromEnv.url());
@@ -159,7 +158,7 @@ public class JmsBrowse {
             toCtx.createProducer().send(toQ, message);
             count++;
             LOG.info(
-                "Copied Message {}, from Host={} Queue={}, sent to Host={} Queue={}, Message->{}",
+                "Copied Message {}, from Queue={}:{}, sent to Queue={}:{}, Message->{}",
                 count,
                 fromEnv.name(),
                 fromQName,
@@ -174,7 +173,7 @@ public class JmsBrowse {
       } catch (JMSException e) {
         e.printStackTrace();
       }
-      LOG.info("Copied {} messages. From Host={} Queue={}, sent to Host={} Queue={}", count,
+      LOG.info("Copied {} messages. From Queue={}:{}, sent to Queue={}:{}", count,
           fromEnv.name(),
           fromQName,
           toEnv.name(),

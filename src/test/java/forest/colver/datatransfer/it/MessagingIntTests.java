@@ -4,9 +4,11 @@ import static forest.colver.datatransfer.config.Utils.generateUniqueStrings;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStamp;
 import static forest.colver.datatransfer.messaging.DisplayUtils.createStringFromMessage;
+import static forest.colver.datatransfer.messaging.Environment.PROD;
 import static forest.colver.datatransfer.messaging.Environment.STAGE;
 import static forest.colver.datatransfer.messaging.JmsBrowse.browseAndCountSpecificMessages;
 import static forest.colver.datatransfer.messaging.JmsBrowse.copyAllMessages;
+import static forest.colver.datatransfer.messaging.JmsBrowse.copyAllMessagesAcrossEnvironments;
 import static forest.colver.datatransfer.messaging.JmsBrowse.copySpecificMessages;
 import static forest.colver.datatransfer.messaging.JmsBrowse.queueDepth;
 import static forest.colver.datatransfer.messaging.JmsConsume.consumeOneMessage;
@@ -364,16 +366,16 @@ public class MessagingIntTests {
   public void testCopyAllMessages() {
     // send some messages
     var env = STAGE;
-    var fromQueue = "forest-test2";
+    var fromQueue = "forest-test";
     var num = 7;
     sendMultipleSameMessage(env, fromQueue, createDefaultMessage(), num);
 
     // copy the message over
-    var toQueue = "skim-forest";
-    copyAllMessages(STAGE, fromQueue, toQueue);
+    var toQueue = "forest-test2";
+    copyAllMessages(env, fromQueue, toQueue);
 
     // check the queue depth on the new queue
-    assertThat(queueDepth(STAGE, toQueue)).isEqualTo(num);
+    assertThat(queueDepth(env, toQueue)).isEqualTo(num);
 
     // cleanup
     deleteAllMessagesFromQueue(env, fromQueue);
@@ -408,6 +410,25 @@ public class MessagingIntTests {
         deleteAllSpecificMessages(env, toQueue, "specificKey='specificValue'"))
         .isEqualTo(numSpecific);
     assertThat(deleteAllMessagesFromQueue(env, fromQueue)).isEqualTo(num + numSpecific);
+  }
+
+  @Test
+  public void testCopyAllMessagesAcrossEnvironments() {
+    // send some messages
+    var fromQueue = "forest-test";
+    var num = 7;
+    sendMultipleSameMessage(PROD, fromQueue, createDefaultMessage(), num);
+
+    // copy the message over
+    var toQueue = "forest-test";
+    copyAllMessagesAcrossEnvironments(PROD, fromQueue, STAGE, toQueue);
+
+    // check the queue depth on the new queue
+    assertThat(queueDepth(STAGE, toQueue)).isEqualTo(num);
+
+    // cleanup
+    deleteAllMessagesFromQueue(PROD, fromQueue);
+    deleteAllMessagesFromQueue(STAGE, toQueue);
   }
 
   /**

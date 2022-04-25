@@ -64,7 +64,7 @@ public class JmsSend {
       var producer = ctx.createProducer();
       producer.send(queue, message);
       LOG.info(
-          "Message sent to Host={}, Queue={}, Message->{}",
+          "Message sent to Queue={}:{}, Message->{}",
           env.name(),
           queueName,
           DisplayUtils.createStringFromMessage(message));
@@ -82,7 +82,7 @@ public class JmsSend {
             .setProperty("datatype", "moreTesting")
             .setProperty("messageNumber", i)
             .send(queue, message);
-        LOG.info("Message {} sent to Host={}, Queue={}", i, env.name(), queueName);
+        LOG.info("Message {} sent to Queue={}:{}", i, env.name(), queueName);
       }
     }
   }
