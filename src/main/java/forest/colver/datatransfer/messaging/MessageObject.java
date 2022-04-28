@@ -1,7 +1,9 @@
 package forest.colver.datatransfer.messaging;
 
+import java.util.Enumeration;
 import java.util.Map;
 import javax.jms.BytesMessage;
+import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.jms.Message;
 import javax.jms.ObjectMessage;
@@ -16,7 +18,8 @@ public class MessageObject {
 
   private Message message;
   private String payload;
-  private Map<String, String> headers;
+  private Map<String, Object> jmsHeaders;
+  private Map<String, String> customHeaders;
 
   public MessageObject(Message message) {
     if (message != null) {
@@ -29,8 +32,35 @@ public class MessageObject {
       } else {
         LOG.info("Message Type: Unknown\n");
       }
+      getJmsProps(message);
+      getCustomHeaders(message);
     } else {
       LOG.info("Message is null.");
+    }
+  }
+
+  private void getJmsProps(Message message) {
+    try {
+      this.jmsHeaders.put("JMSMessageID", message.getJMSMessageID());
+      this.jmsHeaders.put("JMSPriority", message.getJMSPriority());
+      this.jmsHeaders.put("JMSRedelivered", message.getJMSRedelivered());
+      this.jmsHeaders.put("JMSDestination", message.getJMSDestination());
+      this.jmsHeaders.put("JMSDeliveryTime", message.getJMSDeliveryTime());
+      this.jmsHeaders.put("JMSExpiration", message.getJMSExpiration());
+      this.jmsHeaders.put("JMSCorrelationID", message.getJMSCorrelationID());
+    } catch (JMSException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private void getCustomHeaders(Message message) {
+    try {
+      for (Enumeration<String> e = message.getPropertyNames(); e.hasMoreElements(); ) {
+        var s = e.nextElement();
+        this.customHeaders.put(s, (String) message.getObjectProperty(s));
+      }
+    } catch (JMSException e) {
+      e.printStackTrace();
     }
   }
 
