@@ -25,12 +25,35 @@ public class MessageObject {
     if (message != null) {
       this.message = message;
       if (message instanceof TextMessage) {
+        LOG.info("Message Type: TextMessage");
+        try {
+          this.payload = ((TextMessage) message).getText();
+        } catch (JMSException e) {
+          e.printStackTrace();
+        }
       } else if (message instanceof BytesMessage) {
+        LOG.info("Message Type: BytesMessage");
+        byte[] bytes = null;
+        BytesMessage bytesMessage = (BytesMessage) message;
+        try {
+          // When the message is first created the body of the message is in write-only mode. After
+          // the first call to the reset method has been made, the message is in read-only mode.
+          bytesMessage.reset();
+          bytes = new byte[(int) bytesMessage.getBodyLength()];
+          bytesMessage.readBytes(bytes);
+        } catch (JMSException e) {
+          e.printStackTrace();
+        }
+        assert bytes != null;
+        this.payload = new String(bytes);
       } else if (message instanceof ObjectMessage) {
+        LOG.info("Message Type: ObjectMessage");
       } else if (message instanceof StreamMessage) {
+        LOG.info("Message Type: StreamMessage");
       } else if (message instanceof MapMessage) {
+        LOG.info("Message Type: MapMessage");
       } else {
-        LOG.info("Message Type: Unknown\n");
+        LOG.info("Message Type: Unknown");
       }
       getJmsProps(message);
       getCustomHeaders(message);
