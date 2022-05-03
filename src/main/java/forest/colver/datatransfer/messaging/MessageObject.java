@@ -56,7 +56,7 @@ public class MessageObject {
         this.messageType = "unknown";
       }
       getJmsProps(message);
-      getCustomHeaders(message);
+      this.customHeaders = getCustomHeaders(message);
     } else {
       LOG.info("Message is null.");
     }
@@ -76,18 +76,22 @@ public class MessageObject {
     }
   }
 
-  private void getCustomHeaders(Message message) {
+  private Map<String, String> getCustomHeaders(Message message) {
+    Map<String, String> map = new java.util.HashMap<>(Map.of());
     try {
       for (Enumeration<String> e = message.getPropertyNames(); e.hasMoreElements(); ) {
         var s = e.nextElement();
-        this.customHeaders.put(s, (String) message.getObjectProperty(s));
+        map.put(s, (String) message.getObjectProperty(s));
       }
     } catch (JMSException e) {
       e.printStackTrace();
     }
+    return map;
   }
 
   public void displayMessage() {
 
+    var sb = new StringBuilder("\n"); // always start with a newline
+    sb.append("Message Type: "+messageType+"\n");
   }
 }
