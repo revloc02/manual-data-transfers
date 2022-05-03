@@ -17,6 +17,7 @@ public class MessageObject {
   private static final Logger LOG = LoggerFactory.getLogger(MessageObject.class);
 
   private Message message;
+  private String messageType;
   private String payload;
   private Map<String, Object> jmsHeaders;
   private Map<String, String> customHeaders;
@@ -24,17 +25,16 @@ public class MessageObject {
   public MessageObject(Message message) {
     if (message != null) {
       this.message = message;
-      if (message instanceof TextMessage) {
-        LOG.info("Message Type: TextMessage");
+      if (message instanceof TextMessage textMessage) {
+        this.messageType = "Text";
         try {
-          this.payload = ((TextMessage) message).getText();
+          this.payload = textMessage.getText();
         } catch (JMSException e) {
           e.printStackTrace();
         }
-      } else if (message instanceof BytesMessage) {
-        LOG.info("Message Type: BytesMessage");
+      } else if (message instanceof BytesMessage bytesMessage) {
+        this.messageType = "Bytes";
         byte[] bytes = null;
-        BytesMessage bytesMessage = (BytesMessage) message;
         try {
           // When the message is first created the body of the message is in write-only mode. After
           // the first call to the reset method has been made, the message is in read-only mode.
@@ -47,13 +47,13 @@ public class MessageObject {
         assert bytes != null;
         this.payload = new String(bytes);
       } else if (message instanceof ObjectMessage) {
-        LOG.info("Message Type: ObjectMessage");
+        this.messageType = "Object";
       } else if (message instanceof StreamMessage) {
-        LOG.info("Message Type: StreamMessage");
+        this.messageType = "Stream";
       } else if (message instanceof MapMessage) {
-        LOG.info("Message Type: MapMessage");
+        this.messageType = "Map";
       } else {
-        LOG.info("Message Type: Unknown");
+        this.messageType = "unknown";
       }
       getJmsProps(message);
       getCustomHeaders(message);
