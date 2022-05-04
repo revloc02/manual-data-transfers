@@ -89,9 +89,36 @@ public class MessageObject {
     return map;
   }
 
-  public void displayMessage() {
-
+  public String displayMessage() {
     var sb = new StringBuilder("\n"); // always start with a newline
-    sb.append("Message Type: "+messageType+"\n");
+    sb.append("Message Type: ").append(messageType).append("\n");
+
+    var tab = "  ";
+    final String fmt = "%s%-20s = %s%n";
+    sb.append("JMS Properties:\n")
+        .append(String.format(fmt, tab, "JMSMessageID", jmsHeaders.get("JMSMessageID")))
+        .append(String.format(fmt, tab, "JMSPriority", jmsHeaders.get("JMSPriority")))
+        .append(String.format(fmt, tab, "JMSRedelivered", jmsHeaders.get("JMSRedelivered")))
+        .append(String.format(fmt, tab, "JMSDestination", jmsHeaders.get("JMSDestination")))
+        .append(String.format(fmt, tab, "JMSDeliveryTime", jmsHeaders.get("JMSDeliveryTime")))
+        .append(String.format(fmt, tab, "JMSExpiration", jmsHeaders.get("JMSExpiration")))
+        .append(String.format(fmt, tab, "JMSCorrelationID", jmsHeaders.get("JMSCorrelationID")));
+
+    sb.append("Custom Properties:\n");
+    for (Map.Entry<String, String> entry : customHeaders.entrySet()) {
+      sb.append(String.format(fmt, tab, entry.getKey(), entry.getValue()));
+    }
+
+    int payloadOutputTrunc = 100;
+    sb.append(
+        String.format(
+            "Payload (truncated to "
+                + payloadOutputTrunc
+                + " chars): %1."
+                + payloadOutputTrunc
+                + "s",
+            payload));
+
+    return sb.toString();
   }
 }
