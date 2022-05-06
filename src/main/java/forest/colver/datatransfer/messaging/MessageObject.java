@@ -19,7 +19,7 @@ public class MessageObject {
   private Message message;
   private String messageType;
   private String payload;
-  private Map<String, Object> jmsHeaders;
+  private Map<String, String> jmsHeaders;
   private Map<String, String> customHeaders;
 
   public MessageObject(Message message) {
@@ -55,25 +55,27 @@ public class MessageObject {
       } else {
         this.messageType = "unknown";
       }
-      getJmsProps(message);
+      this.jmsHeaders = getJmsProps(message);
       this.customHeaders = getCustomHeaders(message);
     } else {
       LOG.info("Message is null.");
     }
   }
 
-  private void getJmsProps(Message message) {
+  private Map<String, String> getJmsProps(Message message) {
+    Map<String, String> map = new java.util.HashMap<>(Map.of());
     try {
-      this.jmsHeaders.put("JMSMessageID", message.getJMSMessageID());
-      this.jmsHeaders.put("JMSPriority", message.getJMSPriority());
-      this.jmsHeaders.put("JMSRedelivered", message.getJMSRedelivered());
-      this.jmsHeaders.put("JMSDestination", message.getJMSDestination());
-      this.jmsHeaders.put("JMSDeliveryTime", message.getJMSDeliveryTime());
-      this.jmsHeaders.put("JMSExpiration", message.getJMSExpiration());
-      this.jmsHeaders.put("JMSCorrelationID", message.getJMSCorrelationID());
+      map.put("JMSMessageID", message.getJMSMessageID());
+      map.put("JMSPriority", String.valueOf(message.getJMSPriority()));
+      map.put("JMSRedelivered", String.valueOf(message.getJMSRedelivered()));
+      map.put("JMSDestination", String.valueOf(message.getJMSDestination()));
+      map.put("JMSDeliveryTime", String.valueOf(message.getJMSDeliveryTime()));
+      map.put("JMSExpiration", String.valueOf(message.getJMSExpiration()));
+      map.put("JMSCorrelationID", message.getJMSCorrelationID());
     } catch (JMSException e) {
       e.printStackTrace();
     }
+    return map;
   }
 
   private Map<String, String> getCustomHeaders(Message message) {
@@ -81,7 +83,8 @@ public class MessageObject {
     try {
       for (Enumeration<String> e = message.getPropertyNames(); e.hasMoreElements(); ) {
         var s = e.nextElement();
-        map.put(s, (String) message.getObjectProperty(s));
+//        LOG.info("key={}; val={}", s, message.getObjectProperty(s));
+        map.put(s, message.getObjectProperty(s).toString());
       }
     } catch (JMSException e) {
       e.printStackTrace();
@@ -94,25 +97,26 @@ public class MessageObject {
     sb.append("Message Type: ").append(messageType).append("\n");
 
     var tab = "  ";
-    final String fmt = "%s%-20s = %s%n";
-    sb.append("JMS Properties:\n")
-        .append(String.format(fmt, tab, "JMSMessageID", jmsHeaders.get("JMSMessageID")))
-        .append(String.format(fmt, tab, "JMSPriority", jmsHeaders.get("JMSPriority")))
-        .append(String.format(fmt, tab, "JMSRedelivered", jmsHeaders.get("JMSRedelivered")))
-        .append(String.format(fmt, tab, "JMSDestination", jmsHeaders.get("JMSDestination")))
-        .append(String.format(fmt, tab, "JMSDeliveryTime", jmsHeaders.get("JMSDeliveryTime")))
-        .append(String.format(fmt, tab, "JMSExpiration", jmsHeaders.get("JMSExpiration")))
-        .append(String.format(fmt, tab, "JMSCorrelationID", jmsHeaders.get("JMSCorrelationID")));
+    final String fmt = "%s%s%-20s = %s%n";
+    sb.append(tab).append("JMS Properties:\n")
+        .append(String.format(fmt, tab, tab, "JMSMessageID", jmsHeaders.get("JMSMessageID")))
+        .append(String.format(fmt, tab, tab, "JMSPriority", jmsHeaders.get("JMSPriority")))
+        .append(String.format(fmt, tab, tab, "JMSRedelivered", jmsHeaders.get("JMSRedelivered")))
+        .append(String.format(fmt, tab, tab, "JMSDestination", jmsHeaders.get("JMSDestination")))
+        .append(String.format(fmt, tab, tab, "JMSDeliveryTime", jmsHeaders.get("JMSDeliveryTime")))
+        .append(String.format(fmt, tab, tab, "JMSExpiration", jmsHeaders.get("JMSExpiration")))
+        .append(
+            String.format(fmt, tab, tab, "JMSCorrelationID", jmsHeaders.get("JMSCorrelationID")));
 
-    sb.append("Custom Properties:\n");
+    sb.append(tab).append("Custom Properties:\n");
     for (Map.Entry<String, String> entry : customHeaders.entrySet()) {
-      sb.append(String.format(fmt, tab, entry.getKey(), entry.getValue()));
+      sb.append(String.format(fmt, tab, tab, entry.getKey(), entry.getValue()));
     }
 
     int payloadOutputTrunc = 100;
     sb.append(
-        String.format(
-            "Payload (truncated to "
+        String.format(tab +
+                "Payload (truncated to "
                 + payloadOutputTrunc
                 + " chars): %1."
                 + payloadOutputTrunc

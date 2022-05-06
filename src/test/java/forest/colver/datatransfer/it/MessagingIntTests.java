@@ -463,7 +463,7 @@ public class MessagingIntTests {
     assertThat(uuids.size()).isEqualTo(0);
   }
 
-  private Message createMessage() {
+  public static Message createMessage() {
     var messageProps = Map.of("timestamp", getTimeStamp(), "key2", "value2", "key3", "value3");
     return createTextMessage(getDefaultPayload(), messageProps);
   }
