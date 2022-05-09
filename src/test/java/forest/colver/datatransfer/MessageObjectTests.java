@@ -1,5 +1,7 @@
 package forest.colver.datatransfer;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import forest.colver.datatransfer.it.MessagingIntTests;
 import forest.colver.datatransfer.messaging.MessageObject;
 import org.junit.jupiter.api.Test;
@@ -11,9 +13,15 @@ public class MessageObjectTests {
 
 
   @Test
-  public void testDisplayMessage() {
+  public void testTextMessageCreateString() {
     var message = MessagingIntTests.createMessage();
     var mo = new MessageObject(message);
-    LOG.info(mo.displayMessage());
+    var s = mo.createString();
+    LOG.info(s);
+    assertThat(s).contains("Message Type: Text");
+    assertThat(s).contains("Payload (truncated to 100 chars): Default Payload:");
+    // whitespace in this assert depends on string format in object
+    assertThat(s).contains("key2                 = value2");
+
   }
 }

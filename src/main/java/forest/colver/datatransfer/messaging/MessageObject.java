@@ -92,7 +92,11 @@ public class MessageObject {
     return map;
   }
 
-  public String displayMessage() {
+  /**
+   * Creates a string from the message payload and header properties.
+   * @return A multi-line string of the message properties and payload.
+   */
+  public String createString() {
     var sb = new StringBuilder("\n"); // always start with a newline
     sb.append("Message Type: ").append(messageType).append("\n");
 
@@ -124,5 +128,9 @@ public class MessageObject {
             payload));
 
     return sb.toString();
+  }
+
+  public void displayMessage(){
+    LOG.info(createString());
   }
 }
