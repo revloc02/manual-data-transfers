@@ -34,6 +34,20 @@ public class MessageObjectTests {
   }
 
   @Test
+  public void testCreateStringTruncatePayload() {
+    var message = MessagingIntTests.createMessage();
+    var mo = new MessageObject(message);
+    var s = mo.createString(10,false);
+    LOG.info(s);
+    assertThat(s).contains("Message Type: Text");
+    assertThat(s).contains("Payload (truncated to 10 chars): Default Pa"); //todo this isn't really a good truncation test because a trunc val of >10 would also pass this test
+    // whitespace in this assert depends on string format in object
+    assertThat(s).contains("key2                 = value2");
+  }
+
+  // todo: have one test the exact output. have another test a message with no custom properties. Also test JMS props output on and off.
+
+  @Test
   public void testDisplayMessage() {
     var message = MessagingIntTests.createMessage();
     var mo = new MessageObject(message);
