@@ -1,5 +1,6 @@
 package forest.colver.datatransfer;
 
+import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getPassword;
 import static forest.colver.datatransfer.config.Utils.getTimeStamp;
 import static forest.colver.datatransfer.config.Utils.getUsername;
@@ -11,6 +12,7 @@ import forest.colver.datatransfer.messaging.MessageObject;
 import java.util.Map;
 import javax.jms.BytesMessage;
 import javax.jms.JMSException;
+import javax.jms.TextMessage;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -22,7 +24,7 @@ public class MessageObjectTests {
 
 
   @Test
-  public void testTextMessageCreateString() {
+  public void testCreateStringTextMessage() {
     var message = MessagingIntTests.createMessage();
     var mo = new MessageObject(message);
     var s = mo.createString();
@@ -32,6 +34,23 @@ public class MessageObjectTests {
     // whitespace in this assert depends on string format in object
     assertThat(s).contains("key2                 = value2");
   }
+
+  @Test
+  public void testCreateStringSimpleTextMessage() {
+    TextMessage message;
+    var payload = getDefaultPayload();
+    var cf = new JmsConnectionFactory(STAGE.url());
+    try (var ctx = cf.createContext(getUsername(), getPassword())) {
+       message = ctx.createTextMessage(payload);
+      }
+    var mo = new MessageObject(message);
+    assertThat(mo.createString(10, false)).isEqualTo("\n"
+        + "Message Type: Text\n"
+        + "  Custom Properties:\n"
+        + "    JMSXDeliveryCount    = 1\n"
+        + "  Payload (truncated to 10 chars): Default Pa");
+    }
+
 
   @Test
   public void testCreateStringTruncatePayload() {
@@ -45,7 +64,7 @@ public class MessageObjectTests {
     assertThat(s).contains("key2                 = value2");
   }
 
-  // todo: have one test the exact output. have another test a message with no custom properties. Also test JMS props output on and off.
+  // todo: have another test a message with no custom properties. Also test JMS props output on and off.
 
   @Test
   public void testDisplayMessage() {
@@ -56,7 +75,7 @@ public class MessageObjectTests {
   }
 
   @Test
-  public void testBytesMessageCreateString() throws JMSException {
+  public void testCreateStringBytesMessage() throws JMSException {
     byte[] bytes = "payload".getBytes();
     BytesMessage message;
     var messageProps = Map.of("timestamp", getTimeStamp(), "key", "value", "datatype", "test.message");
