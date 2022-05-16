@@ -4,10 +4,11 @@ import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getPassword;
 import static forest.colver.datatransfer.config.Utils.getTimeStamp;
 import static forest.colver.datatransfer.config.Utils.getUsername;
+import static forest.colver.datatransfer.it.MessagingIntTests.createMessage;
 import static forest.colver.datatransfer.messaging.Environment.STAGE;
+import static forest.colver.datatransfer.messaging.JmsSend.createTextMessage;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import forest.colver.datatransfer.it.MessagingIntTests;
 import forest.colver.datatransfer.messaging.MessageObject;
 import java.util.Map;
 import javax.jms.BytesMessage;
@@ -25,7 +26,7 @@ public class MessageObjectTests {
 
   @Test
   public void testCreateStringTextMessage() {
-    var message = MessagingIntTests.createMessage();
+    var message = createMessage();
     var mo = new MessageObject(message);
     var s = mo.createString();
     mo.displayMessage();
@@ -41,36 +42,36 @@ public class MessageObjectTests {
     var payload = getDefaultPayload();
     var cf = new JmsConnectionFactory(STAGE.url());
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
-       message = ctx.createTextMessage(payload);
-      }
+      message = ctx.createTextMessage(payload);
+    }
     var mo = new MessageObject(message);
     assertThat(mo.createString(10, false)).isEqualTo("\n"
         + "Message Type: Text\n"
         + "  Custom Properties:\n"
         + "    JMSXDeliveryCount    = 1\n"
         + "  Payload (truncated to 10 chars): Default Pa");
-    }
+  }
 
 
   @Test
   public void testCreateStringTruncatePayload() {
-    var message = MessagingIntTests.createMessage();
+    var message = createTextMessage("This is the body, and part of it should be truncated.",
+        Map.of());
     var mo = new MessageObject(message);
-    var s = mo.createString(10,false);
+    var s = mo.createString(16, false);
     LOG.info(s);
     assertThat(s).contains("Message Type: Text");
-    assertThat(s).contains("Payload (truncated to 10 chars): Default Pa"); //todo this isn't really a good truncation test because a trunc val of >10 would also pass this test
-    // whitespace in this assert depends on string format in object
-    assertThat(s).contains("key2                 = value2");
+    assertThat(s).contains("Payload (truncated to 16 chars): This is the body");
+    assertThat(s).doesNotContain(", and part of it should be truncated.");
   }
 
   // todo: have another test a message with no custom properties. Also test JMS props output on and off.
 
   @Test
   public void testDisplayMessage() {
-    var message = MessagingIntTests.createMessage();
+    var message = createMessage();
     var mo = new MessageObject(message);
-    // nothing really to assert here, but I do want to test display message buy displaying it
+    // nothing really to assert here, but I do want to test display message by displaying it
     mo.displayMessage();
   }
 
@@ -78,7 +79,8 @@ public class MessageObjectTests {
   public void testCreateStringBytesMessage() throws JMSException {
     byte[] bytes = "payload".getBytes();
     BytesMessage message;
-    var messageProps = Map.of("timestamp", getTimeStamp(), "key", "value", "datatype", "test.message");
+    var messageProps = Map.of("timestamp", getTimeStamp(), "key", "value", "datatype",
+        "test.message");
     var cf = new JmsConnectionFactory(STAGE.url());
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
       message = ctx.createBytesMessage();
