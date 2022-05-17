@@ -63,9 +63,24 @@ public class MessageObjectTests {
     assertThat(s).contains("Message Type: Text");
     assertThat(s).contains("Payload (truncated to 16 chars): This is the body");
     assertThat(s).doesNotContain(", and part of it should be truncated.");
+    assertThat(s).doesNotContain("JMSMessageID");
+    assertThat(s).doesNotContain("JMSPriority");
+    assertThat(s).doesNotContain("JMSRedelivered");
+    assertThat(s).doesNotContain("JMSDestination");
   }
 
-  // todo: have another test a message with no custom properties. Also test JMS props output on and off.
+  @Test
+  public void testCreateStringWithJmsProps() {
+    var message = createMessage();
+    var mo = new MessageObject(message);
+    var s = mo.createString(100, true);
+    LOG.info(s);
+    assertThat(s).contains("Message Type: Text");
+    assertThat(s).contains("Payload (truncated to 100 chars): Default Payload:");
+    assertThat(s).contains("JMSPriority          = 4");
+    assertThat(s).contains("JMSRedelivered       = false");
+    assertThat(s).contains("JMSExpiration        = 0");
+  }
 
   @Test
   public void testDisplayMessage() {
