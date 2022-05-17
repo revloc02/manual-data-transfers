@@ -39,3 +39,24 @@ module "simple_sub" {
   protocol  = "sqs"
   endpoint  = module.my_queue.arn
 }
+
+// S3
+module "s3" {
+  source  = "app.terraform.io/ICS/s3/aws"
+  version = "1.6.2"
+
+  s3bucketname = "source-customer"
+
+  # To enable versioning, uncomment the following line
+  # versioning_enabled = true
+
+  # Tags
+  sn_tags    = {}
+  other_tags = {}
+
+}
+
+resource "aws_cloudwatch_log_group" "archive_test" {
+  name = "archive_test"
+  retention_in_days = 731
+}
