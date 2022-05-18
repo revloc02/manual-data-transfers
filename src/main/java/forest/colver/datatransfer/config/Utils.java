@@ -84,10 +84,15 @@ public class Utils {
   public static ArrayList<String> generateUniqueStrings(int num) {
     var uuids = new ArrayList<String>();
     for (int i = 0; i < num; i++) {
-      var uuid = randomUUID().toString();
+      String uuid = getUuid();
       uuids.add(uuid);
     }
     return uuids;
+  }
+
+  public static String getUuid() {
+    var uuid = randomUUID().toString();
+    return uuid;
   }
 
   /**
