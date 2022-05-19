@@ -21,11 +21,19 @@ public class CloudWatchLogsOps {
   public static PutLogEventsResponse putCWLogEvents(AwsCredentialsProvider awsCp,
       String logGroupName,
       String streamName, String message) {
-    PutLogEventsResponse response;
+    String sequenceToken;
     try (var logsClient = getCloudWatchLogsClient(awsCp)) {
       createLogStream(logsClient, logGroupName, streamName);
-      var sequenceToken = getSequenceToken(logsClient, logGroupName, streamName);
+      sequenceToken = getSequenceToken(logsClient, logGroupName, streamName);
+    }
+    return putCWLogEvents(awsCp, logGroupName, streamName, sequenceToken, message);
+  }
 
+  public static PutLogEventsResponse putCWLogEvents(AwsCredentialsProvider awsCp,
+      String logGroupName,
+      String streamName, String sequenceToken, String message) {
+    PutLogEventsResponse response;
+    try (var logsClient = getCloudWatchLogsClient(awsCp)) {
       // Build an input log message to put to CloudWatch.
       InputLogEvent inputLogEvent = InputLogEvent.builder()
           .message(message)
@@ -43,7 +51,7 @@ public class CloudWatchLogsOps {
           .build();
 
       response = logsClient.putLogEvents(putLogEventsRequest);
-      LOG.info("Successfully put CloudWatch log event");
+      LOG.info("Successfully put CloudWatch log event: {}", response);
     }
     return response;
   }
