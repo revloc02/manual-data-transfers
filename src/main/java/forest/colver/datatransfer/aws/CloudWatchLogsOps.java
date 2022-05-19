@@ -2,7 +2,8 @@ package forest.colver.datatransfer.aws;
 
 import static forest.colver.datatransfer.aws.Utils.getCloudWatchLogsClient;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
@@ -20,31 +21,35 @@ public class CloudWatchLogsOps {
 
   public static PutLogEventsResponse putCWLogEvents(AwsCredentialsProvider awsCp,
       String logGroupName,
-      String streamName, String message) {
+      String streamName, List<String> messages) {
     String sequenceToken;
     try (var logsClient = getCloudWatchLogsClient(awsCp)) {
       createLogStream(logsClient, logGroupName, streamName);
       sequenceToken = getSequenceToken(logsClient, logGroupName, streamName);
     }
-    return putCWLogEvents(awsCp, logGroupName, streamName, sequenceToken, message);
+    return putCWLogEvents(awsCp, logGroupName, streamName, sequenceToken, messages);
   }
 
   public static PutLogEventsResponse putCWLogEvents(AwsCredentialsProvider awsCp,
       String logGroupName,
-      String streamName, String sequenceToken, String message) {
+      String streamName, String sequenceToken, List<String> messages) {
     PutLogEventsResponse response;
     try (var logsClient = getCloudWatchLogsClient(awsCp)) {
-      // Build an input log message to put to CloudWatch.
-      InputLogEvent inputLogEvent = InputLogEvent.builder()
-          .message(message)
-          .timestamp(System.currentTimeMillis())
-          .build();
+      List<InputLogEvent> inputLogEvents = new ArrayList<>();
+      for (String s : messages) {
+        // Build an input log message to put to CloudWatch.
+        InputLogEvent inputLogEvent = InputLogEvent.builder()
+            .message(s)
+            .timestamp(System.currentTimeMillis())
+            .build();
+        inputLogEvents.add(inputLogEvent);
+      }
 
       // Specify the request parameters.
       // Sequence token is required so that the log can be written to the
       // latest location in the stream.
       PutLogEventsRequest putLogEventsRequest = PutLogEventsRequest.builder()
-          .logEvents(Arrays.asList(inputLogEvent))
+          .logEvents(inputLogEvents)
           .logGroupName(logGroupName)
           .logStreamName(streamName)
           .sequenceToken(sequenceToken)
