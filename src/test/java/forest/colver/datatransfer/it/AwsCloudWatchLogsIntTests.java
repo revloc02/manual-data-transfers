@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 
 public class AwsCloudWatchLogsIntTests {
 
+  public static final String LOG_GROUP_NAME = "archive_test";
+  public static final String STREAM_PREFIX = "streamPrefix";
   private static final Logger LOG = LoggerFactory.getLogger(AwsCloudWatchLogsIntTests.class);
 
   /**
@@ -22,66 +24,57 @@ public class AwsCloudWatchLogsIntTests {
    */
   @Test
   public void testCloudWatchLogEvents() {
-    var logGroupName = "archive_test";
-    var streamPrefix = "streamPrefix";
     var message = "This is the log message.";
-    var creds = getPrsnlSbCreds();
 
-    var streamName = streamPrefix + "-" + getUuid();
+    var streamName = STREAM_PREFIX + "-" + getUuid();
     LOG.info("streamName={}", streamName);
-    putCWLogEvents(creds, logGroupName, streamName, List.of(message));
+    putCWLogEvents(getPrsnlSbCreds(), LOG_GROUP_NAME, streamName, List.of(message));
   }
 
   @Test
   public void testTwoCallsCloudWatchLogEvents() {
-    var logGroupName = "archive_test";
-    var streamPrefix = "streamPrefix";
     var message = "testMultipleCloudWatchLogEvents: This is the log message.";
     var anotherMessage = "{ \"key1\": \"value1\", \"key2\": \"value2\" }";
-    var creds = getPrsnlSbCreds();
 
-    var streamName = streamPrefix + "-" + getUuid();
+    var streamName = STREAM_PREFIX + "-" + getUuid();
     LOG.info("streamName={}", streamName);
-    var putLogEventsResponse = putCWLogEvents(creds, logGroupName, streamName, List.of(message));
-    putCWLogEvents(creds, logGroupName, streamName, putLogEventsResponse.nextSequenceToken(),
+    var putLogEventsResponse = putCWLogEvents(getPrsnlSbCreds(), LOG_GROUP_NAME, streamName,
+        List.of(message));
+    putCWLogEvents(getPrsnlSbCreds(), LOG_GROUP_NAME, streamName,
+        putLogEventsResponse.nextSequenceToken(),
         List.of(anotherMessage));
   }
 
   @Test
   public void testMultipleCallsCloudWatchLogEvents() {
-    var logGroupName = "archive_test";
-    var streamPrefix = "streamPrefix";
     var messagePrefix = "Multi-Calls message prefix: ";
-    var creds = getPrsnlSbCreds();
 
-    var streamName = streamPrefix + "-" + getUuid();
+    var streamName = STREAM_PREFIX + "-" + getUuid();
     LOG.info("streamName={}", streamName);
     var message = messagePrefix + getUuid();
-    var putLogEventsResponse = putCWLogEvents(creds, logGroupName, streamName, List.of(message));
+    var putLogEventsResponse = putCWLogEvents(getPrsnlSbCreds(), LOG_GROUP_NAME, streamName,
+        List.of(message));
 
     for (int i = 0; i < 100; i++) {
       message = messagePrefix + getUuid();
-      putLogEventsResponse = putCWLogEvents(creds, logGroupName, streamName,
+      putLogEventsResponse = putCWLogEvents(getPrsnlSbCreds(), LOG_GROUP_NAME, streamName,
           putLogEventsResponse.nextSequenceToken(),
           List.of(message));
     }
   }
 
-
   @Test
   public void testMultipleCloudWatchLogEvents() {
-    var logGroupName = "archive_test";
-    var streamPrefix = "streamPrefix";
     var messagePrefix = "Multiple messages, one call prefix: ";
-    var creds = getPrsnlSbCreds();
 
-    var streamName = streamPrefix + "-" + getUuid();
+    var streamName = STREAM_PREFIX + "-" + getUuid();
     LOG.info("streamName={}", streamName);
+
     List<String> messages = new ArrayList<>();
     for (int i = 0; i < 100; i++) {
       var message = messagePrefix + getUuid();
       messages.add(message);
     }
-    putCWLogEvents(creds, logGroupName, streamName, messages);
+    putCWLogEvents(getPrsnlSbCreds(), LOG_GROUP_NAME, streamName, messages);
   }
 }

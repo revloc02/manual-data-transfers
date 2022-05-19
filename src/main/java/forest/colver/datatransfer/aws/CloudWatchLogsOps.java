@@ -38,7 +38,7 @@ public class CloudWatchLogsOps {
       List<InputLogEvent> inputLogEvents = new ArrayList<>();
       for (String s : messages) {
         // Build an input log message to put to CloudWatch.
-        InputLogEvent inputLogEvent = InputLogEvent.builder()
+        var inputLogEvent = InputLogEvent.builder()
             .message(s)
             .timestamp(System.currentTimeMillis())
             .build();
@@ -48,7 +48,7 @@ public class CloudWatchLogsOps {
       // Specify the request parameters.
       // Sequence token is required so that the log can be written to the
       // latest location in the stream.
-      PutLogEventsRequest putLogEventsRequest = PutLogEventsRequest.builder()
+      var putLogEventsRequest = PutLogEventsRequest.builder()
           .logEvents(inputLogEvents)
           .logGroupName(logGroupName)
           .logStreamName(streamName)
