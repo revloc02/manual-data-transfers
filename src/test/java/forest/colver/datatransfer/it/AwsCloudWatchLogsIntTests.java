@@ -31,7 +31,7 @@ public class AwsCloudWatchLogsIntTests {
   }
 
   @Test
-  public void testMultipleCloudWatchLogEvents() {
+  public void testTwoCallsCloudWatchLogEvents() {
     var logGroupName = "archive_test";
     var streamPrefix = "streamPrefix";
     var message = "testMultipleCloudWatchLogEvents: This is the log message.";
@@ -44,4 +44,25 @@ public class AwsCloudWatchLogsIntTests {
     putCWLogEvents(creds, logGroupName, streamName, putLogEventsResponse.nextSequenceToken(),
         anotherMessage);
   }
+
+  @Test
+  public void testMultipleCallsCloudWatchLogEvents() {
+    var logGroupName = "archive_test";
+    var streamPrefix = "streamPrefix";
+    var messagePrefix = "Multi-message prefix: ";
+    var creds = getPrsnlSbCreds();
+
+    var streamName = streamPrefix + "-" + getUuid();
+    LOG.info("streamName={}", streamName);
+    var message = messagePrefix + getUuid();
+    var putLogEventsResponse = putCWLogEvents(creds, logGroupName, streamName, message);
+    for (int i = 0; i < 100; i++) {
+      message = messagePrefix + getUuid();
+      putLogEventsResponse = putCWLogEvents(creds, logGroupName, streamName,
+          putLogEventsResponse.nextSequenceToken(),
+          message);
+    }
+  }
+
+  // todo: test sending a list of logs
 }
