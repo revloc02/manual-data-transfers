@@ -55,7 +55,7 @@ public class AwsCloudWatchLogsIntTests {
     var putLogEventsResponse = putCWLogEvents(getPrsnlSbCreds(), LOG_GROUP_NAME, streamName,
         List.of(message));
 
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 35; i++) {
       message = messagePrefix + getUuid();
       putLogEventsResponse = putCWLogEvents(getPrsnlSbCreds(), LOG_GROUP_NAME, streamName,
           putLogEventsResponse.nextSequenceToken(),
@@ -71,7 +71,7 @@ public class AwsCloudWatchLogsIntTests {
     LOG.info("streamName={}", streamName);
 
     List<String> messages = new ArrayList<>();
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 1000; i++) {
       var message = messagePrefix + getUuid();
       messages.add(message);
     }
