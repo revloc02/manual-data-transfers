@@ -12,8 +12,6 @@ import static forest.colver.datatransfer.messaging.JmsConsume.deleteAllSpecificM
 public class CommonTasks {
   // todo: a way to clean up sftp-error sqs removing only certain messages e.g. all health check errors and not interchange errors
 
-  // todo: common watchman tasks
-
   /**
    * This will clean up messages from the ops queue that are older than a defined threshold. The ops
    * queue is used so the ops team can easily find and retrieve message payloads for remediation.
