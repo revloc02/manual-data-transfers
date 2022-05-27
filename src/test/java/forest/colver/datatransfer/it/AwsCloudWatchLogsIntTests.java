@@ -65,7 +65,7 @@ public class AwsCloudWatchLogsIntTests {
 
   @Test
   public void testMultipleCloudWatchLogEvents() {
-    var messagePrefix = "Multiple messages, one call prefix: ";
+    var messagePrefix = "Multiple-messages-one-call, message prefix: ";
 
     var streamName = STREAM_PREFIX + "-" + getUuid();
     LOG.info("streamName={}", streamName);
