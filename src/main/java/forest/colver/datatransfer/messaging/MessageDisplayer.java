@@ -12,9 +12,12 @@ import javax.jms.TextMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MessageObject {
+/**
+ * The purpose of this object is to make displaying the details (various headers and payload) of the message easy.
+ */
+public class MessageDisplayer {
 
-  private static final Logger LOG = LoggerFactory.getLogger(MessageObject.class);
+  private static final Logger LOG = LoggerFactory.getLogger(MessageDisplayer.class);
   private static final int DEFAULT_PAYLOAD_OUTPUT_LEN = 100;
 
   private Message message;
@@ -23,7 +26,7 @@ public class MessageObject {
   private Map<String, String> jmsHeaders;
   private Map<String, String> customHeaders;
 
-  public MessageObject(Message message) {
+  public MessageDisplayer(Message message) {
     if (message != null) {
       this.message = message;
       if (message instanceof TextMessage textMessage) {
@@ -56,14 +59,14 @@ public class MessageObject {
       } else {
         this.messageType = "unknown";
       }
-      this.jmsHeaders = getJmsProps(message);
-      this.customHeaders = getCustomHeaders(message);
+      this.jmsHeaders = constructJmsProps(message);
+      this.customHeaders = constructCustomHeaders(message);
     } else {
       LOG.info("Message is null.");
     }
   }
 
-  private Map<String, String> getJmsProps(Message message) {
+  private Map<String, String> constructJmsProps(Message message) {
     Map<String, String> map = new java.util.HashMap<>(Map.of());
     try {
       map.put("JMSMessageID", message.getJMSMessageID());
@@ -79,7 +82,7 @@ public class MessageObject {
     return map;
   }
 
-  private Map<String, String> getCustomHeaders(Message message) {
+  private Map<String, String> constructCustomHeaders(Message message) {
     Map<String, String> map = new java.util.HashMap<>(Map.of());
     try {
       for (Enumeration<String> e = message.getPropertyNames(); e.hasMoreElements(); ) {
@@ -143,5 +146,25 @@ public class MessageObject {
 
   public void displayMessage() {
     LOG.info(createString());
+  }
+
+  public Message getMessage() {
+    return message;
+  }
+
+  public String getMessageType() {
+    return messageType;
+  }
+
+  public String getPayload() {
+    return payload;
+  }
+
+  public Map<String, String> getJmsHeaders() {
+    return jmsHeaders;
+  }
+
+  public Map<String, String> getCustomHeaders() {
+    return customHeaders;
   }
 }

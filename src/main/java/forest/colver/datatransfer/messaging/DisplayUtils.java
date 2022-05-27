@@ -17,7 +17,6 @@ public class DisplayUtils {
 
   public static StringBuilder stringFromTextMessage(
       Message message, int payloadOutputTrunc, boolean listJmsProps) {
-    // todo: Instead of gathering the message aspects (headers, payload) into a StringBuilder, the data could be collected into an object which could then have a method for converting it all to a String. Separate collecting data from formatting the data.
     var sb = new StringBuilder();
     sb.append("Message Type: TextMessage\n");
     appendMessageProps(message, listJmsProps, sb);

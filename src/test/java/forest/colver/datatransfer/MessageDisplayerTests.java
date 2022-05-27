@@ -9,7 +9,7 @@ import static forest.colver.datatransfer.messaging.Environment.STAGE;
 import static forest.colver.datatransfer.messaging.JmsSend.createTextMessage;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import forest.colver.datatransfer.messaging.MessageObject;
+import forest.colver.datatransfer.messaging.MessageDisplayer;
 import java.util.Map;
 import javax.jms.BytesMessage;
 import javax.jms.JMSException;
@@ -19,15 +19,15 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MessageObjectTests {
+public class MessageDisplayerTests {
 
-  private static final Logger LOG = LoggerFactory.getLogger(MessageObjectTests.class);
+  private static final Logger LOG = LoggerFactory.getLogger(MessageDisplayerTests.class);
 
 
   @Test
   public void testCreateStringTextMessage() {
     var message = createMessage();
-    var mo = new MessageObject(message);
+    var mo = new MessageDisplayer(message);
     var s = mo.createString();
     mo.displayMessage();
     assertThat(s).contains("Message Type: Text");
@@ -44,7 +44,7 @@ public class MessageObjectTests {
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
       message = ctx.createTextMessage(payload);
     }
-    var mo = new MessageObject(message);
+    var mo = new MessageDisplayer(message);
     assertThat(mo.createString(10, false)).isEqualTo("\n"
         + "Message Type: Text\n"
         + "  Custom Properties:\n"
@@ -57,7 +57,7 @@ public class MessageObjectTests {
   public void testCreateStringTruncatePayload() {
     var message = createTextMessage("This is the body, and part of it should be truncated.",
         Map.of());
-    var mo = new MessageObject(message);
+    var mo = new MessageDisplayer(message);
     var s = mo.createString(16, false);
     LOG.info(s);
     assertThat(s).contains("Message Type: Text");
@@ -72,7 +72,7 @@ public class MessageObjectTests {
   @Test
   public void testCreateStringWithJmsProps() {
     var message = createMessage();
-    var mo = new MessageObject(message);
+    var mo = new MessageDisplayer(message);
     var s = mo.createString(100, true);
     LOG.info(s);
     assertThat(s).contains("Message Type: Text");
@@ -85,7 +85,7 @@ public class MessageObjectTests {
   @Test
   public void testDisplayMessage() {
     var message = createMessage();
-    var mo = new MessageObject(message);
+    var mo = new MessageDisplayer(message);
     // nothing really to assert here, but I do want to test display message by displaying it
     mo.displayMessage();
   }
@@ -104,7 +104,7 @@ public class MessageObjectTests {
         message.setStringProperty(entry.getKey(), entry.getValue());
       }
     }
-    var mo = new MessageObject(message);
+    var mo = new MessageDisplayer(message);
     var s = mo.createString();
     assertThat(s).contains("Message Type: Bytes");
     assertThat(s).contains("Payload (truncated to 100 chars): payload");
