@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 /**
  * The purpose of this object is to make displaying the details (various headers and payload) of the message easy.
  */
-public class MessageDisplayer {
+public class MessageDisplayer { // todo: question, do I make a Builder for this?
 
   private static final Logger LOG = LoggerFactory.getLogger(MessageDisplayer.class);
   private static final int DEFAULT_PAYLOAD_OUTPUT_LEN = 100;
