@@ -23,13 +23,12 @@ public class MessageDisplayerTests {
 
   private static final Logger LOG = LoggerFactory.getLogger(MessageDisplayerTests.class);
 
-
   @Test
   public void testCreateStringTextMessage() {
     var message = createMessage();
-    var mo = new MessageDisplayer(message);
-    var s = mo.createString();
-    mo.displayMessage();
+    var md = new MessageDisplayer(message);
+    var s = md.createString();
+    md.displayMessage();
     assertThat(s).contains("Message Type: Text");
     assertThat(s).contains("Payload (truncated to 100 chars): Default Payload:");
     // whitespace in this assert depends on string format in object
@@ -44,8 +43,8 @@ public class MessageDisplayerTests {
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
       message = ctx.createTextMessage(payload);
     }
-    var mo = new MessageDisplayer(message);
-    assertThat(mo.createString(10, false)).isEqualTo("\n"
+    var md = new MessageDisplayer(message);
+    assertThat(md.createString(10, false)).isEqualTo("\n"
         + "Message Type: Text\n"
         + "  Custom Properties:\n"
         + "    JMSXDeliveryCount    = 1\n"
@@ -57,8 +56,8 @@ public class MessageDisplayerTests {
   public void testCreateStringTruncatePayload() {
     var message = createTextMessage("This is the body, and part of it should be truncated.",
         Map.of());
-    var mo = new MessageDisplayer(message);
-    var s = mo.createString(16, false);
+    var md = new MessageDisplayer(message);
+    var s = md.createString(16, false);
     LOG.info(s);
     assertThat(s).contains("Message Type: Text");
     assertThat(s).contains("Payload (truncated to 16 chars): This is the body");
@@ -72,8 +71,8 @@ public class MessageDisplayerTests {
   @Test
   public void testCreateStringWithJmsProps() {
     var message = createMessage();
-    var mo = new MessageDisplayer(message);
-    var s = mo.createString(100, true);
+    var md = new MessageDisplayer(message);
+    var s = md.createString(100, true);
     LOG.info(s);
     assertThat(s).contains("Message Type: Text");
     assertThat(s).contains("Payload (truncated to 100 chars): Default Payload:");
@@ -85,9 +84,9 @@ public class MessageDisplayerTests {
   @Test
   public void testDisplayMessage() {
     var message = createMessage();
-    var mo = new MessageDisplayer(message);
+    var md = new MessageDisplayer(message);
     // nothing really to assert here, but I do want to test display message by displaying it
-    mo.displayMessage();
+    md.displayMessage();
   }
 
   @Test
@@ -104,8 +103,8 @@ public class MessageDisplayerTests {
         message.setStringProperty(entry.getKey(), entry.getValue());
       }
     }
-    var mo = new MessageDisplayer(message);
-    var s = mo.createString();
+    var md = new MessageDisplayer(message);
+    var s = md.createString();
     assertThat(s).contains("Message Type: Bytes");
     assertThat(s).contains("Payload (truncated to 100 chars): payload");
     // whitespace in this assert depends on string format in object
