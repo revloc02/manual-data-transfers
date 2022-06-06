@@ -11,6 +11,16 @@ public class DisplayUtils {
 
   private static final int DEFAULT_PAYLOAD_OUTPUT_LEN = 100;
 
+  public static String stringFromMessage(Message message) {
+    var md = new MessageDisplayer(message);
+    return md.createString();
+  }
+
+  public static String stringFromMessage(Message message, int payloadOutputTrunc, boolean listJmsProps) {
+    var md = new MessageDisplayer(message);
+    return md.createString(payloadOutputTrunc, listJmsProps);
+  }
+
   public static String createStringFromMessage(Message message) {
     return createStringFromMessage(message, DEFAULT_PAYLOAD_OUTPUT_LEN, true);
   }

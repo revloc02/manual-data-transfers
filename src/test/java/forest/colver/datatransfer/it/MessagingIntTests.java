@@ -4,6 +4,7 @@ import static forest.colver.datatransfer.config.Utils.generateUniqueStrings;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStamp;
 import static forest.colver.datatransfer.messaging.DisplayUtils.createStringFromMessage;
+import static forest.colver.datatransfer.messaging.DisplayUtils.stringFromMessage;
 import static forest.colver.datatransfer.messaging.Environment.PROD;
 import static forest.colver.datatransfer.messaging.Environment.STAGE;
 import static forest.colver.datatransfer.messaging.JmsBrowse.browseAndCountSpecificMessages;
@@ -60,7 +61,7 @@ public class MessagingIntTests {
         "Consumed from Host={} Queue={}, Message->{}",
         env.name(),
         fromQueueName,
-        createStringFromMessage(message));
+        stringFromMessage(message));
     assertThat(((TextMessage) message).getText()).contains("Default Payload");
     assertThat(message.getStringProperty("defaultKey")).isEqualTo("defaultValue");
   }
