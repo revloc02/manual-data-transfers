@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 
 public class AwsCloudWatchLogsIntTests {
 
-  public static final String LOG_GROUP_NAME = "archive_test";
+  public static final String LOG_GROUP_NAME = "archive-trace-lambda-test";
   public static final String STREAM_PREFIX = "streamPrefix";
   private static final Logger LOG = LoggerFactory.getLogger(AwsCloudWatchLogsIntTests.class);
 
@@ -71,7 +71,7 @@ public class AwsCloudWatchLogsIntTests {
     LOG.info("streamName={}", streamName);
 
     List<String> messages = new ArrayList<>();
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < 4_000; i++) {
       var message = messagePrefix + getUuid();
       messages.add(message);
     }
