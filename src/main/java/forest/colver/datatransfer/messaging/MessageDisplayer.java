@@ -13,9 +13,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The purpose of this object is to make displaying the details (various headers and payload) of the message easy.
+ * The purpose of this object is to make displaying the details (various headers and payload) of the
+ * message easy.
  */
-public class MessageDisplayer { // todo: question, do I make a Builder for this?
+public class MessageDisplayer {
 
   private static final Logger LOG = LoggerFactory.getLogger(MessageDisplayer.class);
   private static final int DEFAULT_PAYLOAD_OUTPUT_LEN = 100;
@@ -31,31 +32,19 @@ public class MessageDisplayer { // todo: question, do I make a Builder for this?
       this.message = message;
       if (message instanceof TextMessage textMessage) {
         this.messageType = "Text";
-        try {
-          this.payload = textMessage.getText();
-        } catch (JMSException e) {
-          e.printStackTrace();
-        }
+        this.payload = payloadFromTextMessage(textMessage);
       } else if (message instanceof BytesMessage bytesMessage) {
         this.messageType = "Bytes";
-        byte[] bytes = null;
-        try {
-          // When the message is first created the body of the message is in write-only mode. After
-          // the first call to the reset method has been made, the message is in read-only mode.
-          bytesMessage.reset();
-          bytes = new byte[(int) bytesMessage.getBodyLength()];
-          bytesMessage.readBytes(bytes);
-        } catch (JMSException e) {
-          e.printStackTrace();
-        }
-        assert bytes != null;
-        this.payload = new String(bytes);
-      } else if (message instanceof ObjectMessage) {
+        this.payload = payloadFromBytesMessage(bytesMessage);
+      } else if (message instanceof ObjectMessage objectMessage) {
         this.messageType = "Object";
+        this.payload = payloadFromObjectMessage(objectMessage);
       } else if (message instanceof StreamMessage) {
         this.messageType = "Stream";
+        this.payload = "ERROR: Extracting payload from a StreamMessage is not implemented yet.";
       } else if (message instanceof MapMessage) {
         this.messageType = "Map";
+        this.payload = "ERROR: Extracting payload from a MapMessage is not implemented yet.";
       } else {
         this.messageType = "unknown";
       }
@@ -64,6 +53,41 @@ public class MessageDisplayer { // todo: question, do I make a Builder for this?
     } else {
       LOG.info("Message is null.");
     }
+  }
+
+  private String payloadFromTextMessage(TextMessage textMessage) {
+    var payload = "";
+    try {
+      payload = textMessage.getText();
+    } catch (JMSException e) {
+      e.printStackTrace();
+    }
+    return payload;
+  }
+
+  private String payloadFromBytesMessage(BytesMessage bytesMessage) {
+    byte[] bytes = null;
+    try {
+      // When the message is first created the body of the message is in write-only mode. After
+      // the first call to the reset method has been made, the message is in read-only mode.
+      bytesMessage.reset();
+      bytes = new byte[(int) bytesMessage.getBodyLength()];
+      bytesMessage.readBytes(bytes);
+    } catch (JMSException e) {
+      e.printStackTrace();
+    }
+    assert bytes != null;
+    return new String(bytes);
+  }
+
+  private String payloadFromObjectMessage(ObjectMessage objectMessage) {
+    var payload = "";
+    try {
+      payload = objectMessage.getObject().toString();
+    } catch (JMSException e) {
+      e.printStackTrace();
+    }
+    return payload;
   }
 
   private Map<String, String> constructJmsProps(Message message) {
