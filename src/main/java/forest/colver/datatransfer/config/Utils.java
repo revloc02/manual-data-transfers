@@ -95,6 +95,10 @@ public class Utils {
     return uuid;
   }
 
+  public static int getRandomNumber(int min, int max) {
+    return (int) ((Math.random() * (max - min)) + min);
+  }
+
   /**
    * Gets credentials from local credentials file.
    *
