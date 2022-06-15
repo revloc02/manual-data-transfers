@@ -13,6 +13,7 @@ import forest.colver.datatransfer.messaging.MessageDisplayer;
 import java.util.Map;
 import javax.jms.BytesMessage;
 import javax.jms.JMSException;
+import javax.jms.ObjectMessage;
 import javax.jms.TextMessage;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.junit.jupiter.api.Test;
@@ -107,6 +108,27 @@ public class MessageDisplayerTests {
     var s = md.createString();
     assertThat(s).contains("Message Type: Bytes");
     assertThat(s).contains("Payload (truncated to 100 chars): payload");
+    // whitespace in this assert depends on string format in object
+    assertThat(s).contains("datatype             = test.message");
+  }
+
+  @Test
+  public void testCreateStringObjectMessage() throws JMSException {
+    var payload = "using a String for the payload in this case";
+    ObjectMessage message;
+    var messageProps = Map.of("timestamp", getTimeStamp(), "key", "value", "datatype",
+        "test.message");
+    var cf = new JmsConnectionFactory(STAGE.url());
+    try (var ctx = cf.createContext(getUsername(), getPassword())) {
+      message = ctx.createObjectMessage(payload);
+      for (Map.Entry<String, String> entry : messageProps.entrySet()) {
+        message.setStringProperty(entry.getKey(), entry.getValue());
+      }
+    }
+    var md = new MessageDisplayer(message);
+    var s = md.createString();
+    assertThat(s).contains("Message Type: Object");
+    assertThat(s).contains("Payload (truncated to 100 chars): " + payload);
     // whitespace in this assert depends on string format in object
     assertThat(s).contains("datatype             = test.message");
   }
