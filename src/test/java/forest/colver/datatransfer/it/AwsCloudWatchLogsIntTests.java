@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 
 public class AwsCloudWatchLogsIntTests {
 
-  public static final String LOG_GROUP_NAME = "archive-trace-lambda-test";
+  public static final String LOG_GROUP_NAME = "archive-trace-data-test";
   public static final String STREAM_PREFIX = "streamPrefix";
   private static final Logger LOG = LoggerFactory.getLogger(AwsCloudWatchLogsIntTests.class);
 
