@@ -167,6 +167,11 @@ public class MessagingIntTests {
   }
 
   @Test
+  public void testBrowseForSpecificMessage() {
+
+  }
+
+  @Test
   public void testBrowseAndCountSpecificMessages() {
     var env = STAGE;
     var queueName = "forest-test";

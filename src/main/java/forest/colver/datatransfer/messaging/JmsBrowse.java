@@ -16,7 +16,28 @@ public class JmsBrowse {
 
   private static final Logger LOG = LoggerFactory.getLogger(JmsBrowse.class);
 
-  public static void browseForMessage(Environment env, String queueName, String selector) {
+  public static void browseNextMessage(Environment env, String queueName) {
+    var cf = new JmsConnectionFactory(env.url());
+    try (var ctx = cf.createContext(getUsername(), getPassword())) {
+      var q = ctx.createQueue(queueName);
+      Enumeration msgs;
+      try (var browser = ctx.createBrowser(q)) {
+        msgs = browser.getEnumeration();
+        var message = (Message) msgs.nextElement();
+        LOG.info(
+            "Next message BROWSED Host={}, Queue={}, Message->{}",
+            env.name(),
+            queueName,
+            createStringFromMessage(message));
+        var msgCount = Collections.list(msgs).size() + 1; // this empties msgs Enumeration series
+        LOG.info("Queue={}:{}; MessageCountFromSelector={}\n", env.name(), queueName, msgCount);
+      } catch (JMSException e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+  public static void browseForSpecificMessage(Environment env, String queueName, String selector) {
     var cf = new JmsConnectionFactory(env.url());
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
       var q = ctx.createQueue(queueName);

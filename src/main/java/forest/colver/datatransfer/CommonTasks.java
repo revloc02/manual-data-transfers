@@ -2,7 +2,7 @@ package forest.colver.datatransfer;
 
 import static forest.colver.datatransfer.messaging.Environment.PROD;
 import static forest.colver.datatransfer.messaging.JmsBrowse.browseAndCountSpecificMessages;
-import static forest.colver.datatransfer.messaging.JmsBrowse.browseForMessage;
+import static forest.colver.datatransfer.messaging.JmsBrowse.browseForSpecificMessage;
 import static forest.colver.datatransfer.messaging.JmsConsume.deleteAllSpecificMessages;
 
 /**
@@ -26,7 +26,7 @@ public class CommonTasks {
     var timestamp = "1638297326591"; // messages older than ~ 30Nov2021
 
     // find a timestamp to use in the "timestamp" var, use whatever selector is helpful
-    browseForMessage(PROD, "ops",
+    browseForSpecificMessage(PROD, "ops",
         "emxTraceOnrampMessageName='CFISLDS-GTM-INDUS-05-ACH-20210817111659.xml'");
 
     // check how many messages are going to be deleted according to defined timestamp
