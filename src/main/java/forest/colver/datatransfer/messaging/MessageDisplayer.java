@@ -30,6 +30,7 @@ public class MessageDisplayer {
   public MessageDisplayer(Message message) {
     if (message != null) {
       this.message = message;
+      // todo: can I display the size of the message?
       if (message instanceof TextMessage textMessage) {
         this.messageType = "Text";
         this.payload = payloadFromTextMessage(textMessage);
