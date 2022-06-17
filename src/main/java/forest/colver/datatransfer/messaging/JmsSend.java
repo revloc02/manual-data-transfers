@@ -34,6 +34,7 @@ public class JmsSend {
   public static TextMessage createTextMessage(String body, Map<String, String> properties) {
     TextMessage message = null;
     var cf = new JmsConnectionFactory(STAGE.url());
+    // todo: does this have to have a username and pass, can it be empty? if so, probably get rid of next todo below
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
       // todo: yeah so, is there a better way to create a message without using a cf and ctx?
       message = ctx.createTextMessage(body);

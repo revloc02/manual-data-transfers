@@ -52,6 +52,18 @@ public class MessagingIntTests {
   private static final Logger LOG = LoggerFactory.getLogger(MessagingIntTests.class);
 
   @Test
+  public void testCreateTextMessage() throws JMSException {
+    var payload = "this is the payload, yo";
+    // todo: finish this by adding and asserting properties
+    var msg = createTextMessage(payload, Map.of());
+
+    // todo: ...the heck? why this class and not javax.jms.TextMessage?
+    assertThat(msg).isExactlyInstanceOf(org.apache.qpid.jms.message.JmsTextMessage.class);
+//    assertThat(msg).hasSameClassAs(org.apache.qpid.jms.message.JmsTextMessage.class);
+    assertThat(msg.getText()).isEqualTo(payload);
+  }
+
+  @Test
   public void testDefaultSend() throws JMSException {
     var env = STAGE;
     var fromQueueName = "forest-test";
