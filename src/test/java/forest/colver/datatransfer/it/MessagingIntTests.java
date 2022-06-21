@@ -3,7 +3,6 @@ package forest.colver.datatransfer.it;
 import static forest.colver.datatransfer.config.Utils.generateUniqueStrings;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStamp;
-import static forest.colver.datatransfer.messaging.DisplayUtils.createStringFromMessage;
 import static forest.colver.datatransfer.messaging.DisplayUtils.stringFromMessage;
 import static forest.colver.datatransfer.messaging.Environment.PROD;
 import static forest.colver.datatransfer.messaging.Environment.STAGE;
@@ -51,16 +50,20 @@ public class MessagingIntTests {
 
   private static final Logger LOG = LoggerFactory.getLogger(MessagingIntTests.class);
 
+  public static Message createMessage() {
+    var messageProps = Map.of("timestamp", getTimeStamp(), "key2", "value2", "key3", "value3");
+    return createTextMessage(getDefaultPayload(), messageProps);
+  }
+
   @Test
   public void testCreateTextMessage() throws JMSException {
     var payload = "this is the payload, yo";
-    // todo: finish this by adding and asserting properties
-    var msg = createTextMessage(payload, Map.of());
+    var messageProps = Map.of("timestamp", getTimeStamp(), "specificKey", "specificValue");
+    var msg = createTextMessage(payload, messageProps);
 
-    // todo: ...the heck? why this class and not javax.jms.TextMessage?
     assertThat(msg).isExactlyInstanceOf(org.apache.qpid.jms.message.JmsTextMessage.class);
-//    assertThat(msg).hasSameClassAs(org.apache.qpid.jms.message.JmsTextMessage.class);
     assertThat(msg.getText()).isEqualTo(payload);
+    assertThat(msg.getStringProperty("specificKey")).isEqualTo("specificValue");
   }
 
   @Test
@@ -480,11 +483,6 @@ public class MessagingIntTests {
       LOG.info("removed {}", future.get().getText());
     }
     assertThat(uuids.size()).isEqualTo(0);
-  }
-
-  public static Message createMessage() {
-    var messageProps = Map.of("timestamp", getTimeStamp(), "key2", "value2", "key3", "value3");
-    return createTextMessage(getDefaultPayload(), messageProps);
   }
 
 }
