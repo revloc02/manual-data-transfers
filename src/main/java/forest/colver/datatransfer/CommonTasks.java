@@ -25,14 +25,13 @@ public class CommonTasks {
   public static void cleanupOpsQueue() {
     var timestamp = "1638297326591"; // messages older than ~ 30Nov2021
 
-    // find a timestamp to use in the "timestamp" var, use whatever selector is helpful
-    browseForSpecificMessage(PROD, "ops",
-        "emxTraceOnrampMessageName='CFISLDS-GTM-INDUS-05-ACH-20210817111659.xml'");
+    // 1. find a timestamp to use in the "timestamp" var above, get this from the list of messages in the queue. Use whatever selector is helpful to do this.
+    browseForSpecificMessage(PROD, "ops", "emxTraceOnrampMessageName='CFISLDS-GTM-INDUS-05-ACH-20210817111659.xml'");
 
-    // check how many messages are going to be deleted according to defined timestamp
+    // 2. Once you have set the timestamp var above, check how many messages are going to be deleted according that timestamp
     browseAndCountSpecificMessages(PROD, "ops", "emxTraceSourceTimestamp<=" + timestamp);
 
-    // actually delete the messages (uncomment and run, then re-comment the code)
-    deleteAllSpecificMessages(PROD, "ops", "emxTraceSourceTimestamp<=" + timestamp);
+    // 3. If those results look good, actually delete the messages (uncomment and run, then re-comment the code)
+//    deleteAllSpecificMessages(PROD, "ops", "emxTraceSourceTimestamp<=" + timestamp);
   }
 }
