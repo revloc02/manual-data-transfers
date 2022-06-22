@@ -7,6 +7,7 @@ import static forest.colver.datatransfer.messaging.DisplayUtils.stringFromMessag
 import static forest.colver.datatransfer.messaging.Environment.PROD;
 import static forest.colver.datatransfer.messaging.Environment.STAGE;
 import static forest.colver.datatransfer.messaging.JmsBrowse.browseAndCountSpecificMessages;
+import static forest.colver.datatransfer.messaging.JmsBrowse.browseForSpecificMessage;
 import static forest.colver.datatransfer.messaging.JmsBrowse.copyAllMessages;
 import static forest.colver.datatransfer.messaging.JmsBrowse.copyAllMessagesAcrossEnvironments;
 import static forest.colver.datatransfer.messaging.JmsBrowse.copySpecificMessages;
@@ -181,10 +182,28 @@ public class MessagingIntTests {
     assertThat(deletedFrom).isEqualTo(numMessagesFrom);
   }
 
-  // todo: this
+  // todo: finish this
   @Test
   public void testBrowseForSpecificMessage() {
+    var env = STAGE;
+    var queueName = "forest-test";
 
+    // place one kind of message
+    sendMultipleSameMessage(env, queueName, createMessage(), 3);
+
+    // place some messages of a different kind
+    var messageProps = Map.of("timestamp", getTimeStamp(), "specificKey", "specificValue");
+    var numMsg = 2;
+    for (var i = 0; i < numMsg; i++) {
+      sendMessageAutoAck(env, queueName, createTextMessage(getDefaultPayload(), messageProps));
+    }
+
+    // check
+    // todo: should this method return the message?
+    browseForSpecificMessage(STAGE, queueName, "specificKey='specificValue'");
+
+    // cleanup
+    purgeQueue(env, queueName);
   }
 
   @Test
