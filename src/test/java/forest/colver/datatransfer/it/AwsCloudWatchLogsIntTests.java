@@ -8,6 +8,7 @@ import static forest.colver.datatransfer.config.Utils.getUuid;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -74,18 +75,27 @@ public class AwsCloudWatchLogsIntTests {
     LOG.info("streamName={}", streamName);
 
     List<String> messages = new ArrayList<>();
-    for (int i = 0; i < 2_000; i++) {
+    for (int i = 0; i < 2; i++) {
       var jsonString = new JSONObject()
           .put("name", messagePrefix)
           .put("trace", getUuid())
           .put("time", getTimeStamp())
-          .put("key1", "value1")
+          .put("keys", new JSONArray()
+              .put("value1").put("value2").put("value3"))
           .put("kind", getRandomNumber(1, 5))
+          .put("arrayOfObjects", new JSONArray()
+              .put(new JSONObject()
+                  .put("firstName", "Anna")
+                  .put("lastName", "Smith"))
+              .put(new JSONObject()
+                  .put("firstName", "Pete")
+                  .put("lastName", "Jones")))
           .put("attr", new JSONObject()
               .put("key2", "value2")
               .put("messaging.message_id", getUuid())
               .put("size", getRandomNumber(20, 45)))
           .toString();
+      LOG.info("message={}", jsonString);
       messages.add(jsonString);
     }
     putCWLogEvents(getPrsnlSbCreds(), LOG_GROUP_NAME, streamName, messages);
