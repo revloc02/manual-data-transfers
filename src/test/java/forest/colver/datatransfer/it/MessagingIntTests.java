@@ -182,9 +182,8 @@ public class MessagingIntTests {
     assertThat(deletedFrom).isEqualTo(numMessagesFrom);
   }
 
-  // todo: finish this
   @Test
-  public void testBrowseForSpecificMessage() {
+  public void testBrowseForSpecificMessage() throws JMSException {
     var env = STAGE;
     var queueName = "forest-test";
 
@@ -199,8 +198,9 @@ public class MessagingIntTests {
     }
 
     // check
-    // todo: should this method return the message?
-    browseForSpecificMessage(STAGE, queueName, "specificKey='specificValue'");
+    var message = browseForSpecificMessage(STAGE, queueName, "specificKey='specificValue'");
+    assertThat(((TextMessage) message).getText()).contains("Default Payload");
+    assertThat(message.getStringProperty("specificKey")).isEqualTo("specificValue");
 
     // cleanup
     purgeQueue(env, queueName);
