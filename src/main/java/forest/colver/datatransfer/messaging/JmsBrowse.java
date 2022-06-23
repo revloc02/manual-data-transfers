@@ -37,14 +37,16 @@ public class JmsBrowse {
     }
   }
 
-  public static void browseForSpecificMessage(Environment env, String queueName, String selector) {
+  public static Message browseForSpecificMessage(Environment env, String queueName,
+      String selector) {
+    Message message = null;
     var cf = new JmsConnectionFactory(env.url());
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
       var q = ctx.createQueue(queueName);
       Enumeration msgs;
       try (var browser = ctx.createBrowser(q, selector)) {
         msgs = browser.getEnumeration();
-        var message = (Message) msgs.nextElement();
+        message = (Message) msgs.nextElement();
         LOG.info(
             "Next message BROWSED Host={}, Queue={}, Message->{}",
             env.name(),
@@ -56,6 +58,7 @@ public class JmsBrowse {
         e.printStackTrace();
       }
     }
+    return message;
   }
 
   /**
