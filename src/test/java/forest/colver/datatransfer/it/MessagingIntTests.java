@@ -110,7 +110,7 @@ public class MessagingIntTests {
   public void testPurgeQueue() {
     var env = STAGE;
     var queueName = "forest-test";
-    var numMessages = 2000; // 2000 should run in about 45-50 seconds
+    var numMessages = 200;
     var message = createMessage();
     sendMultipleSameMessage(env, queueName, message, numMessages);
 
