@@ -75,7 +75,7 @@ public class AwsCloudWatchLogsIntTests {
     LOG.info("streamName={}", streamName);
 
     List<String> messages = new ArrayList<>();
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 2_000; i++) {
       var jsonString = new JSONObject()
           .put("name", messagePrefix)
           .put("trace", getUuid())
@@ -94,8 +94,13 @@ public class AwsCloudWatchLogsIntTests {
               .put("key2", "value2")
               .put("messaging.message_id", getUuid())
               .put("size", getRandomNumber(20, 45)))
+          .put("resource", new JSONObject()
+              .put("attr", new JSONObject()
+                  .put("emx_env", "prod")
+                  .put("app.env", "prod")
+                  .put("interchange", "cars"))
+              .put("test", "testing"))
           .toString();
-      LOG.info("message={}", jsonString);
       messages.add(jsonString);
     }
     putCWLogEvents(getPrsnlSbCreds(), LOG_GROUP_NAME, streamName, messages);
