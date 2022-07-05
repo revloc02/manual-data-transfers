@@ -114,7 +114,7 @@ public class AwsSqsIntTests {
         "value2");
     assertThat(response.messages().get(0).messageAttributes().get("key3").stringValue()).isEqualTo(
         "value3");
-    assertThat(response.messages().get(0).body()).isEqualTo(payload);
+
     // cleanup
     sqsDelete(creds, response, SQS1);
   }
