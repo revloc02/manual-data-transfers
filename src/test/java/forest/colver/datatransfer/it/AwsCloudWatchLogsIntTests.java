@@ -74,8 +74,16 @@ public class AwsCloudWatchLogsIntTests {
     var streamName = STREAM_PREFIX + "-" + getUuid();
     LOG.info("streamName={}", streamName);
 
+    List<String> messages = generateLogs(messagePrefix, 1_000, 20, 45);
+    putCWLogEvents(getPrsnlSbCreds(), LOG_GROUP_NAME, streamName, messages);
+
+    List<String> messages2 = generateLogs(messagePrefix, 500, 150, 160);
+    putCWLogEvents(getPrsnlSbCreds(), LOG_GROUP_NAME + "2", streamName, messages2);
+  }
+
+  private List<String> generateLogs(String messagePrefix, int numOfLogs, int sizeMin, int sizeMax) {
     List<String> messages = new ArrayList<>();
-    for (int i = 0; i < 2_000; i++) {
+    for (int i = 0; i < numOfLogs; i++) {
       var jsonString = new JSONObject()
           .put("name", messagePrefix)
           .put("trace", getUuid())
@@ -83,17 +91,18 @@ public class AwsCloudWatchLogsIntTests {
           .put("keys", new JSONArray()
               .put("value1").put("value2").put("value3"))
           .put("kind", getRandomNumber(1, 5))
-          .put("arrayOfObjects", new JSONArray()
+          .put("events", new JSONArray()
               .put(new JSONObject()
-                  .put("firstName", "Anna")
-                  .put("lastName", "Smith"))
-              .put(new JSONObject()
-                  .put("firstName", "Pete")
-                  .put("lastName", "Jones")))
+                  .put("attr", new JSONObject()
+                      .put("exception.stacktrace",
+                          "l.e.Destination$EmxSendException: Bad request returned status 400, see logs for response body")
+                      .put("exception.type", "lds.emx.Destination$EmxSendException"))
+                  .put("name", "exception")
+                  .put("time", "1656629552188")))
           .put("attr", new JSONObject()
               .put("key2", "value2")
               .put("messaging.message_id", getUuid())
-              .put("size", getRandomNumber(20, 45)))
+              .put("size", getRandomNumber(sizeMin, sizeMax)))
           .put("resource", new JSONObject()
               .put("attr", new JSONObject()
                   .put("emx_env", "prod")
@@ -103,6 +112,6 @@ public class AwsCloudWatchLogsIntTests {
           .toString();
       messages.add(jsonString);
     }
-    putCWLogEvents(getPrsnlSbCreds(), LOG_GROUP_NAME, streamName, messages);
+    return messages;
   }
 }
