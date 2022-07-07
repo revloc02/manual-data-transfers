@@ -6,7 +6,7 @@ import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.config.Utils.generateUniqueStrings;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
-import static forest.colver.datatransfer.config.Utils.getTimeStamp;
+import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
 import static forest.colver.datatransfer.messaging.DisplayUtils.stringFromMessage;
 import static forest.colver.datatransfer.messaging.Environment.PROD;
 import static forest.colver.datatransfer.messaging.Environment.STAGE;
@@ -36,7 +36,6 @@ import static forest.colver.datatransfer.messaging.JmsSend.sendMultipleSameMessa
 import static forest.colver.datatransfer.messaging.JmsSend.sendMultipleUniqueMessages;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import forest.colver.datatransfer.Main;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -58,14 +57,14 @@ public class MessagingIntTests {
   private static final Logger LOG = LoggerFactory.getLogger(MessagingIntTests.class);
 
   public static Message createMessage() {
-    var messageProps = Map.of("timestamp", getTimeStamp(), "key2", "value2", "key3", "value3");
+    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3", "value3");
     return createTextMessage(getDefaultPayload(), messageProps);
   }
 
   @Test
   public void testCreateTextMessage() throws JMSException {
     var payload = "this is the payload, yo";
-    var messageProps = Map.of("timestamp", getTimeStamp(), "specificKey", "specificValue");
+    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
     var msg = createTextMessage(payload, messageProps);
 
     assertThat(msg).isExactlyInstanceOf(org.apache.qpid.jms.message.JmsTextMessage.class);
@@ -169,7 +168,7 @@ public class MessagingIntTests {
     sendMultipleSameMessage(env, fromQueueName, createMessage(), numMessagesFrom);
 
     // now send a specific message
-    var messageProps = Map.of("timestamp", getTimeStamp(), "specificKey", "specificValue");
+    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
     var numMessagesTo = 1;
     for (var i = 0; i < numMessagesTo; i++) {
       sendMessageAutoAck(env, fromQueueName, createTextMessage(getDefaultPayload(), messageProps));
@@ -197,7 +196,7 @@ public class MessagingIntTests {
     sendMultipleSameMessage(env, queueName, createMessage(), 3);
 
     // place some messages of a different kind
-    var messageProps = Map.of("timestamp", getTimeStamp(), "specificKey", "specificValue");
+    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
     var numMsg = 2;
     for (var i = 0; i < numMsg; i++) {
       sendMessageAutoAck(env, queueName, createTextMessage(getDefaultPayload(), messageProps));
@@ -221,7 +220,7 @@ public class MessagingIntTests {
     sendMultipleSameMessage(env, queueName, createMessage(), 4);
 
     // place some messages of a different kind
-    var messageProps = Map.of("timestamp", getTimeStamp(), "specificKey", "specificValue");
+    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
     var numMsg = 5;
     for (var i = 0; i < numMsg; i++) {
       sendMessageAutoAck(env, queueName, createTextMessage(getDefaultPayload(), messageProps));
@@ -247,7 +246,7 @@ public class MessagingIntTests {
     sendMultipleSameMessage(env, fromQueueName, createMessage(), numMsgsFrom);
 
     // send some messages of a different kind
-    var messageProps = Map.of("timestamp", getTimeStamp(), "specificKey", "specificValue");
+    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
     var numMsgsTo = 5;
     for (var i = 0; i < numMsgsTo; i++) {
       sendMessageAutoAck(env, fromQueueName, createTextMessage(getDefaultPayload(), messageProps));
@@ -284,7 +283,7 @@ public class MessagingIntTests {
     sendMultipleSameMessage(env, fromQueueName, createMessage(), numMessagesFrom);
 
     // send some messages of a different kind
-    var messageProps = Map.of("timestamp", getTimeStamp(), "specificKey", "specificValue");
+    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
     var numMessagesTo = 3;
     for (var i = 0; i < numMessagesTo; i++) {
       sendMessageAutoAck(env, fromQueueName, createTextMessage(getDefaultPayload(), messageProps));
@@ -326,7 +325,7 @@ public class MessagingIntTests {
     sendDefaultMessage();
     var env = STAGE;
     var queue = "forest-test";
-    var messageProps = Map.of("timestamp", getTimeStamp(), "specificKey", "specificValue");
+    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
     // send a specific message
     sendMessageAutoAck(env, queue, createTextMessage(getDefaultPayload(), messageProps));
 
@@ -371,7 +370,7 @@ public class MessagingIntTests {
     var num = 4;
     sendMultipleSameMessage(env, queue, createDefaultMessage(), num);
     // send some specific messages
-    var messageProps = Map.of("timestamp", getTimeStamp(), "specificKey", "specificValue");
+    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
     var numSpecific = 5;
     sendMultipleSameMessage(env, queue, createTextMessage(getDefaultPayload(), messageProps),
         numSpecific);
@@ -439,7 +438,7 @@ public class MessagingIntTests {
     var num = 7;
     sendMultipleSameMessage(env, fromQueue, createDefaultMessage(), num);
     // send some specific messages
-    var messageProps = Map.of("timestamp", getTimeStamp(), "specificKey", "specificValue");
+    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
     var numSpecific = 5;
     sendMultipleSameMessage(env, fromQueue, createTextMessage(getDefaultPayload(), messageProps),
         numSpecific);
@@ -516,7 +515,7 @@ public class MessagingIntTests {
   @Test
   public void testMoveJmsToSqs() {
     var payload = "this is the payload";
-    var messageProps = Map.of("timestamp", getTimeStamp(), "key2", "value2", "key3", "value3");
+    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3", "value3");
     var queueName = "forest-test";
     sendMessageAutoAck(STAGE, queueName, createTextMessage(payload, messageProps));
 

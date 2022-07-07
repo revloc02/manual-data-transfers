@@ -2,7 +2,7 @@ package forest.colver.datatransfer;
 
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getPassword;
-import static forest.colver.datatransfer.config.Utils.getTimeStamp;
+import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
 import static forest.colver.datatransfer.config.Utils.getUsername;
 import static forest.colver.datatransfer.it.MessagingIntTests.createMessage;
 import static forest.colver.datatransfer.messaging.Environment.STAGE;
@@ -94,7 +94,7 @@ public class MessageDisplayerTests {
   public void testCreateStringBytesMessage() throws JMSException {
     byte[] bytes = "payload".getBytes();
     BytesMessage message;
-    var messageProps = Map.of("timestamp", getTimeStamp(), "key", "value", "datatype",
+    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key", "value", "datatype",
         "test.message");
     var cf = new JmsConnectionFactory(STAGE.url());
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
@@ -116,7 +116,7 @@ public class MessageDisplayerTests {
   public void testCreateStringObjectMessage() throws JMSException {
     var payload = "using a String for the payload in this case";
     ObjectMessage message;
-    var messageProps = Map.of("timestamp", getTimeStamp(), "key", "value", "datatype",
+    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key", "value", "datatype",
         "test.message");
     var cf = new JmsConnectionFactory(STAGE.url());
     try (var ctx = cf.createContext(getUsername(), getPassword())) {

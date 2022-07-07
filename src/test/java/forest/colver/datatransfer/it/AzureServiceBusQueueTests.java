@@ -18,7 +18,7 @@ import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE_SHARE
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY;
 import static forest.colver.datatransfer.azure.Utils.createIMessage;
 import static forest.colver.datatransfer.config.Utils.defaultPayload;
-import static forest.colver.datatransfer.config.Utils.getTimeStamp;
+import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
 import static forest.colver.datatransfer.config.Utils.pause;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -39,7 +39,7 @@ public class AzureServiceBusQueueTests {
   @Test
   public void testSend() {
     // send a message
-    Map<String, Object> properties = Map.of("timestamp", getTimeStamp(), "specificKey",
+    Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
         "specificValue");
     asbSend(creds, createIMessage(defaultPayload, properties));
     pause(2);
@@ -60,7 +60,7 @@ public class AzureServiceBusQueueTests {
   @Test
   public void testMove() throws ServiceBusException, InterruptedException {
     // send a message
-    Map<String, Object> properties = Map.of("timestamp", getTimeStamp(), "specificKey",
+    Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
         "specificValue");
     asbSend(creds, createIMessage(defaultPayload, properties));
     pause(2);
@@ -88,7 +88,7 @@ public class AzureServiceBusQueueTests {
   @Test
   public void testConsume() {
     // send a message
-    Map<String, Object> properties = Map.of("timestamp", getTimeStamp(), "specificKey",
+    Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
         "specificValue");
     asbSend(creds, createIMessage(defaultPayload, properties));
     pause(2);
@@ -138,7 +138,7 @@ public class AzureServiceBusQueueTests {
     pause(3);
 
     // send a message to the queue
-    Map<String, Object> properties = Map.of("timestamp", getTimeStamp(), "specificKey",
+    Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
         "specificValue");
     asbSend(credsQwDlq, createIMessage(defaultPayload, properties));
     pause(3);
@@ -182,7 +182,7 @@ public class AzureServiceBusQueueTests {
     pause(3);
 
     // send a message to the queue
-    Map<String, Object> properties = Map.of("timestamp", getTimeStamp(), "specificKey",
+    Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
         "specificValue");
     asbSend(credsQwTtl, createIMessage(defaultPayload, properties));
     pause(3); // message expires in 10 seconds so don't wait too long
@@ -211,7 +211,7 @@ public class AzureServiceBusQueueTests {
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
 
     // send a message
-    Map<String, Object> properties = Map.of("timestamp", getTimeStamp(), "specificKey",
+    Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
         "specificValue");
     asbSend(credsQwForward, createIMessage(defaultPayload, properties));
 

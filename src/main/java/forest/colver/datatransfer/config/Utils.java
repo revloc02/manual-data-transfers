@@ -8,6 +8,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Properties;
@@ -21,9 +22,10 @@ public class Utils {
 
   private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
 
-  public static final String TIME_STAMP =
+  public static final long TIMESTAMP = Instant.now().toEpochMilli();
+  public static final String TIME_STAMP_FORMATTED =
       new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss.SSS").format(new Date());
-  public static String defaultPayload = "Default Payload: " + TIME_STAMP;
+  public static String defaultPayload = "Default Payload: " + TIME_STAMP_FORMATTED;
 
   static final long DEFAULT_TTL = 60_000L; // time to live in milliseconds
   // user cred file
@@ -128,13 +130,11 @@ public class Utils {
     return getCredentials(fullPath);
   }
 
-  public static String getDefaultPayload() {
-    return defaultPayload;
-  }
+  public static String getDefaultPayload() { return defaultPayload; }
 
-  public static String getTimeStamp() {
-    return TIME_STAMP;
-  }
+  public static String getTimeStampFormatted() { return TIME_STAMP_FORMATTED; }
+
+  public static long getTimeStamp() { return TIMESTAMP; }
 
   public static String getUsername() {
     return username;

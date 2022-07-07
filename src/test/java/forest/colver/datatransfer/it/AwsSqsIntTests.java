@@ -11,7 +11,7 @@ import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS2;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
-import static forest.colver.datatransfer.config.Utils.getTimeStamp;
+import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
 import static forest.colver.datatransfer.config.Utils.readFile;
 import static forest.colver.datatransfer.config.Utils.pause;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -103,7 +103,7 @@ public class AwsSqsIntTests {
     LOG.info("Interacting with: sqs={}", SQS1);
     // send some stuff
     var creds = getEmxSbCreds();
-    var messageProps = Map.of("timestamp", getTimeStamp(), "key2", "value2", "key3", "value3");
+    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3", "value3");
     var payload = getDefaultPayload();
     sqsSend(creds, SQS1, payload, messageProps);
     // check that it arrived

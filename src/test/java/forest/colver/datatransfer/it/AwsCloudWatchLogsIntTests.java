@@ -3,6 +3,7 @@ package forest.colver.datatransfer.it;
 import static forest.colver.datatransfer.aws.CloudWatchLogsOps.putCWLogEvents;
 import static forest.colver.datatransfer.aws.Utils.getPrsnlSbCreds;
 import static forest.colver.datatransfer.config.Utils.getRandomNumber;
+import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
 import static forest.colver.datatransfer.config.Utils.getTimeStamp;
 import static forest.colver.datatransfer.config.Utils.getUuid;
 
@@ -87,7 +88,8 @@ public class AwsCloudWatchLogsIntTests {
       var jsonString = new JSONObject()
           .put("name", messagePrefix)
           .put("trace", getUuid())
-          .put("time", getTimeStamp())
+          .put("time", getTimeStampFormatted())
+          .put("start", getTimeStamp())
           .put("keys", new JSONArray()
               .put("value1").put("value2").put("value3"))
           .put("kind", getRandomNumber(1, 5))

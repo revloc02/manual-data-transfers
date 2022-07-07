@@ -77,7 +77,7 @@ public class JmsSend {
       var queue = ctx.createQueue(queueName);
       for (int i = 0; i < num; i++) {
         ctx.createProducer()
-            .setProperty("sentTimestamp", Utils.TIME_STAMP)
+            .setProperty("sentTimestamp", Utils.TIME_STAMP_FORMATTED)
             .setProperty("datatype", "moreTesting")
             .setProperty("messageNumber", i)
             .send(queue, message);
@@ -101,7 +101,7 @@ public class JmsSend {
       var queue = ctx.createQueue(queueName);
       for (String payload : payloads) {
         ctx.createProducer()
-            .setProperty("sentTimestamp", Utils.TIME_STAMP)
+            .setProperty("sentTimestamp", Utils.TIME_STAMP_FORMATTED)
             .setProperty("datatype", "moreTesting")
             .send(queue, ctx.createTextMessage(payload));
       }
