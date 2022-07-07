@@ -4,9 +4,9 @@ import static forest.colver.datatransfer.aws.CloudWatchLogsOps.putCWLogEvents;
 import static forest.colver.datatransfer.aws.Utils.getPrsnlSbCreds;
 import static forest.colver.datatransfer.config.Utils.getRandomNumber;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
-import static forest.colver.datatransfer.config.Utils.getTimeStamp;
 import static forest.colver.datatransfer.config.Utils.getUuid;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import org.json.JSONArray;
@@ -89,7 +89,7 @@ public class AwsCloudWatchLogsIntTests {
           .put("name", messagePrefix)
           .put("trace", getUuid())
           .put("time", getTimeStampFormatted())
-          .put("start", getTimeStamp())
+          .put("start", Instant.now().toEpochMilli())
           .put("keys", new JSONArray()
               .put("value1").put("value2").put("value3"))
           .put("kind", getRandomNumber(1, 5))
@@ -100,7 +100,7 @@ public class AwsCloudWatchLogsIntTests {
                           "l.e.Destination$EmxSendException: Bad request returned status 400, see logs for response body")
                       .put("exception.type", "lds.emx.Destination$EmxSendException"))
                   .put("name", "exception")
-                  .put("time", "1656629552188")))
+                  .put("time", Instant.now().toEpochMilli())))
           .put("attr", new JSONObject()
               .put("key2", "value2")
               .put("messaging.message_id", getUuid())
