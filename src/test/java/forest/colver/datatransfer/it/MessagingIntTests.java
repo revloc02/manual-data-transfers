@@ -23,6 +23,7 @@ import static forest.colver.datatransfer.messaging.JmsConsume.deleteAllSpecificM
 import static forest.colver.datatransfer.messaging.JmsConsume.deleteSomeMessages;
 import static forest.colver.datatransfer.messaging.JmsConsume.moveAllMessages;
 import static forest.colver.datatransfer.messaging.JmsConsume.moveAllSpecificMessages;
+import static forest.colver.datatransfer.messaging.JmsConsume.moveJmsToSqs;
 import static forest.colver.datatransfer.messaging.JmsConsume.moveOneMessage;
 import static forest.colver.datatransfer.messaging.JmsConsume.moveSomeSpecificMessages;
 import static forest.colver.datatransfer.messaging.JmsConsume.moveSpecificMessage;
@@ -520,7 +521,7 @@ public class MessagingIntTests {
     sendMessageAutoAck(STAGE, queueName, createTextMessage(payload, messageProps));
 
     var creds = getEmxSbCreds();
-    Main.moveJmsToSqs(STAGE, queueName, creds, EMX_SANDBOX_TEST_SQS1);
+    moveJmsToSqs(STAGE, queueName, creds, EMX_SANDBOX_TEST_SQS1);
 
     // check that it arrived
     var response = sqsGet(creds, EMX_SANDBOX_TEST_SQS1);
