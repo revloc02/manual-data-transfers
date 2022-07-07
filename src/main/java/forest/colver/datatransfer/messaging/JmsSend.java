@@ -1,12 +1,12 @@
 package forest.colver.datatransfer.messaging;
 
+import static forest.colver.datatransfer.config.Utils.TIME_STAMP_FORMATTED;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getPassword;
 import static forest.colver.datatransfer.config.Utils.getUsername;
 import static forest.colver.datatransfer.messaging.Environment.STAGE;
 import static javax.jms.JMSContext.AUTO_ACKNOWLEDGE;
 
-import forest.colver.datatransfer.config.Utils;
 import java.util.ArrayList;
 import java.util.Map;
 import javax.jms.JMSException;
@@ -77,7 +77,7 @@ public class JmsSend {
       var queue = ctx.createQueue(queueName);
       for (int i = 0; i < num; i++) {
         ctx.createProducer()
-            .setProperty("sentTimestamp", Utils.TIME_STAMP_FORMATTED)
+            .setProperty("sentTimestamp", TIME_STAMP_FORMATTED)
             .setProperty("datatype", "moreTesting")
             .setProperty("messageNumber", i)
             .send(queue, message);
@@ -101,7 +101,7 @@ public class JmsSend {
       var queue = ctx.createQueue(queueName);
       for (String payload : payloads) {
         ctx.createProducer()
-            .setProperty("sentTimestamp", Utils.TIME_STAMP_FORMATTED)
+            .setProperty("sentTimestamp", TIME_STAMP_FORMATTED)
             .setProperty("datatype", "moreTesting")
             .send(queue, ctx.createTextMessage(payload));
       }
