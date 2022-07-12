@@ -4,7 +4,7 @@ import static forest.colver.datatransfer.aws.LambdaOps.lambdaInvoke;
 import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
 import static forest.colver.datatransfer.aws.S3Operations.s3Put;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDelete;
-import static forest.colver.datatransfer.aws.SqsOperations.sqsGet;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsRead;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
 import static forest.colver.datatransfer.aws.Utils.S3_SOURCE_CACHE;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
@@ -40,7 +40,7 @@ public class AwsLambdaIntTests {
     s3Put(creds, S3_SOURCE_CACHE, objectKey, contents);
 
     // The initial placement triggered the bridge lambda, so verify that...
-    var messageResp = sqsGet(creds, SQS1);
+    var messageResp = sqsRead(creds, SQS1);
     assertThat(messageResp.hasMessages()).isTrue();
     assertThat(messageResp.messages().get(0).body()).contains(
         "\"key\": \"ext-aiko1/outbound/dev/flox/dd/1test.txt\"");
@@ -57,7 +57,7 @@ public class AwsLambdaIntTests {
     pause(1);
 
     // ...and ensure the SQS got the new message.
-    messageResp = sqsGet(creds, SQS1);
+    messageResp = sqsRead(creds, SQS1);
     assertThat(messageResp.hasMessages()).isTrue();
     assertThat(messageResp.messages().get(0).body()).contains(
         "\"key\": \"ext-aiko1/outbound/dev/flox/dd/1test.txt\"");

@@ -3,7 +3,7 @@ package forest.colver.datatransfer.it;
 import static forest.colver.datatransfer.aws.SnsOperations.getSnsTopicAttributes;
 import static forest.colver.datatransfer.aws.SnsOperations.publishTopic;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDelete;
-import static forest.colver.datatransfer.aws.SqsOperations.sqsGet;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsRead;
 import static forest.colver.datatransfer.aws.Utils.PERSONAL_SANDBOX_SQS_SUB_SNS;
 import static forest.colver.datatransfer.aws.Utils.PERSONAL_SANDBOX_TEST_SNS_TOPIC_ARN;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
@@ -48,7 +48,7 @@ public class AwsSnsIntTests {
 
     pause(2);
     // check that it arrived
-    var response = sqsGet(creds, SQS);
+    var response = sqsRead(creds, SQS);
     LOG.info("response.messages().get(0).body():{}", response.messages().get(0).body());
     var jo = new JSONObject(response.messages().get(0).body());
     assertThat(jo.getString("Type")).isEqualTo("Notification");

@@ -1,8 +1,9 @@
 package forest.colver.datatransfer.it;
 
+import static forest.colver.datatransfer.aws.SqsOperations.sqsConsume;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsCopy;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDelete;
-import static forest.colver.datatransfer.aws.SqsOperations.sqsGet;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsRead;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsGetQueueAttributes;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMove;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
@@ -51,7 +52,7 @@ public class AwsSqsIntTests {
     assertThat(attributes.attributesAsStrings().get("ApproximateNumberOfMessages")).isEqualTo("5");
 
     // assert the queue was cleared
-    var messages = sqsGet(creds, SQS1);
+    var messages = sqsRead(creds, SQS1);
     assertThat(messages.hasMessages()).isFalse();
   }
 
@@ -64,7 +65,7 @@ public class AwsSqsIntTests {
     sqsSend(creds, SQS1, payload);
 
     // verify message is on the queue
-    var fromQResponse = sqsGet(creds, SQS1);
+    var fromQResponse = sqsRead(creds, SQS1);
     var body = fromQResponse.messages().get(0).body();
     assertThat(body).isEqualTo(payload);
 
@@ -76,7 +77,7 @@ public class AwsSqsIntTests {
     sqsDelete(creds, fromQResponse, SQS1);
 
     // verify the message is on the other queue
-    var toQResponse = sqsGet(creds, SQS2);
+    var toQResponse = sqsRead(creds, SQS2);
     body = toQResponse.messages().get(0).body();
     assertThat(body).isEqualTo(payload);
 
@@ -92,10 +93,29 @@ public class AwsSqsIntTests {
     var payload = "message with payload only, no headers";
     sqsSend(creds, SQS1, payload);
     // check that it arrived
-    var response = sqsGet(creds, SQS1);
+    var response = sqsRead(creds, SQS1);
     assertThat(response.messages().get(0).body()).isEqualTo(payload);
     // cleanup
     sqsDelete(creds, response, SQS1);
+  }
+
+  @Test
+  public void testSqsConsume() {
+    LOG.info("Interacting with: sqs={}", SQS1);
+    // send a message
+    var creds = getEmxSbCreds();
+    var payload = "message with payload only, no headers";
+    sqsSend(creds, SQS1, payload);
+    // check that it arrived
+    var responseGet = sqsRead(creds, SQS1);
+    assertThat(responseGet.messages().get(0).body()).isEqualTo(payload);
+    pause(5);
+    // consume the message
+    var respConsume = sqsConsume(creds, SQS1);
+    assertThat(respConsume.messages().get(0).body()).isEqualTo(payload);
+    // assert the queue was cleared
+    var messages = sqsRead(creds, SQS1);
+    assertThat(messages.hasMessages()).isFalse();
   }
 
   @Test
@@ -107,7 +127,7 @@ public class AwsSqsIntTests {
     var payload = getDefaultPayload();
     sqsSend(creds, SQS1, payload, messageProps);
     // check that it arrived
-    var response = sqsGet(creds, SQS1);
+    var response = sqsRead(creds, SQS1);
     assertThat(response.messages().get(0).body()).isEqualTo(payload);
     assertThat(response.messages().get(0).hasMessageAttributes()).isEqualTo(true);
     assertThat(response.messages().get(0).messageAttributes().get("key2").stringValue()).isEqualTo(
@@ -128,7 +148,7 @@ public class AwsSqsIntTests {
     sqsSend(creds, SQS1, payload);
 
     // verify message is on the queue
-    var fromQResponse = sqsGet(creds, SQS1);
+    var fromQResponse = sqsRead(creds, SQS1);
     var body = fromQResponse.messages().get(0).body();
     assertThat(body).isEqualTo(payload);
 
@@ -137,7 +157,7 @@ public class AwsSqsIntTests {
     sqsMove(creds, SQS1, SQS2);
 
     // verify the message is on the other queue
-    var toQResponse = sqsGet(creds, SQS2);
+    var toQResponse = sqsRead(creds, SQS2);
     body = toQResponse.messages().get(0).body();
     assertThat(body).isEqualTo(payload);
 

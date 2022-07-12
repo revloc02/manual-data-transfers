@@ -63,7 +63,7 @@ public class SqsOperations {
    * Then it also goes and deletes that message off of the SQS.
    */
   public static ReceiveMessageResponse sqsConsume(AwsCredentialsProvider awsCP, String queueName) {
-    var response = sqsGet(awsCP, queueName);
+    var response = sqsRead(awsCP, queueName);
     displayMessageAttributes(response);
     sqsDelete(awsCP, response, queueName);
     LOG.info("======== SQSCONSUME: Consumed a message from SQS: {}.=======\n", queueName);
@@ -74,7 +74,7 @@ public class SqsOperations {
    * Reads one message from the SQS, and displays the data.
    */
   public static void sqsReadOne(AwsCredentialsProvider awsCP, String queueName) {
-    var response = sqsGet(awsCP, queueName);
+    var response = sqsRead(awsCP, queueName);
     displayMessageAttributes(response);
     LOG.info("SQSREAD: Read a message from SQS: {}.\n", queueName);
   }
@@ -110,9 +110,9 @@ public class SqsOperations {
   }
 
   /**
-   * Gets one message from the SQS.
+   * Reads one message from the SQS.
    */
-  public static ReceiveMessageResponse sqsGet(
+  public static ReceiveMessageResponse sqsRead(
       AwsCredentialsProvider awsCP, String queueName) {
     try (var sqsClient = getSqsClient(awsCP)) {
       var receiveMessageReqest =
@@ -126,7 +126,7 @@ public class SqsOperations {
               .build();
       var response = sqsClient.receiveMessage(receiveMessageReqest);
       awsResponseValidation(response);
-      LOG.info("GETSQSMESSAGE: {} has messages: {}", queueName, response.hasMessages());
+      LOG.info("READSQSMESSAGE: {} has messages: {}", queueName, response.hasMessages());
       return response;
     }
   }
@@ -211,7 +211,7 @@ public class SqsOperations {
    * Copy a message from one SQS queue to another.
    */
   public static void sqsCopy(AwsCredentialsProvider awsCP, String fromQueue, String toQueue) {
-    var response = sqsGet(awsCP, fromQueue);
+    var response = sqsRead(awsCP, fromQueue);
     for (Message message : response.messages()) {
       sqsSend(awsCP, toQueue, message.body());
     }
