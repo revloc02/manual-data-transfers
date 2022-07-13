@@ -59,24 +59,36 @@ public class SqsOperations {
   }
 
   /**
-   * This receives one message from the SQS queue, and then displays the data and properties of it.
-   * Then it also goes and deletes that message off of the SQS.
+   * This receives one message from the SQS queue, then deletes that message off of the SQS.
    */
   public static ReceiveMessageResponse sqsConsume(AwsCredentialsProvider awsCP, String queueName) {
     var response = sqsRead(awsCP, queueName);
-    displayMessageAttributes(response);
     sqsDelete(awsCP, response, queueName);
     LOG.info("======== SQSCONSUME: Consumed a message from SQS: {}.=======\n", queueName);
     return response;
   }
 
   /**
-   * Reads one message from the SQS, and displays the data.
+   * Reads one message from the SQS, and then displays the data and properties of it.
    */
-  public static void sqsReadOne(AwsCredentialsProvider awsCP, String queueName) {
-    var response = sqsRead(awsCP, queueName);
-    displayMessageAttributes(response);
-    LOG.info("SQSREAD: Read a message from SQS: {}.\n", queueName);
+  public static ReceiveMessageResponse sqsRead(
+      AwsCredentialsProvider awsCP, String queueName) {
+    try (var sqsClient = getSqsClient(awsCP)) {
+      var receiveMessageReqest =
+          ReceiveMessageRequest.builder()
+              .waitTimeSeconds(2)
+              .messageAttributeNames("All")
+              .attributeNames(QueueAttributeName.ALL)
+              .queueUrl(qUrl(sqsClient, queueName))
+              .maxNumberOfMessages(1)
+              .visibilityTimeout(3) // default 30 sec
+              .build();
+      var response = sqsClient.receiveMessage(receiveMessageReqest);
+      awsResponseValidation(response);
+      LOG.info("SQSREAD: {} has messages: {}", queueName, response.hasMessages());
+      displayMessageAttributes(response);
+      return response;
+    }
   }
 
   /**
@@ -93,7 +105,7 @@ public class SqsOperations {
   }
 
   /**
-   * Displays the data and message properties of messages.
+   * Displays the data and message properties of SQS messages.
    */
   public static void displayMessageAttributes(ReceiveMessageResponse response) {
     for (Message message : response.messages()) {
@@ -106,28 +118,6 @@ public class SqsOperations {
         LOG.info("MessageAttribute: {}={}", entry.getKey(), entry.getValue());
       }
       LOG.info("\n");
-    }
-  }
-
-  /**
-   * Reads one message from the SQS.
-   */
-  public static ReceiveMessageResponse sqsRead(
-      AwsCredentialsProvider awsCP, String queueName) {
-    try (var sqsClient = getSqsClient(awsCP)) {
-      var receiveMessageReqest =
-          ReceiveMessageRequest.builder()
-              .waitTimeSeconds(2)
-              .messageAttributeNames("All")
-              .attributeNames(QueueAttributeName.ALL)
-              .queueUrl(qUrl(sqsClient, queueName))
-              .maxNumberOfMessages(1)
-              .visibilityTimeout(3) // default 30 sec
-              .build();
-      var response = sqsClient.receiveMessage(receiveMessageReqest);
-      awsResponseValidation(response);
-      LOG.info("READSQSMESSAGE: {} has messages: {}", queueName, response.hasMessages());
-      return response;
     }
   }
 
