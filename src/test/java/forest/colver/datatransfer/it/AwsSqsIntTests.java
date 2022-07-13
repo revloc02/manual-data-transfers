@@ -90,7 +90,7 @@ public class AwsSqsIntTests {
     LOG.info("Interacting with: sqs={}", SQS1);
     // send some stuff
     var creds = getEmxSbCreds();
-    var payload = "message with payload only, no headers";
+    var payload = "message with payload only, no MessageAttributes";
     sqsSend(creds, SQS1, payload);
     // check that it arrived
     var response = sqsRead(creds, SQS1);
@@ -104,7 +104,7 @@ public class AwsSqsIntTests {
     LOG.info("Interacting with: sqs={}", SQS1);
     // send a message
     var creds = getEmxSbCreds();
-    var payload = "message with payload only, no headers";
+    var payload = "message with payload only, no MessageAttributes";
     sqsSend(creds, SQS1, payload);
     // check that it arrived
     var responseGet = sqsRead(creds, SQS1);
