@@ -1,7 +1,7 @@
 package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDelete;
-import static forest.colver.datatransfer.aws.SqsOperations.sqsGet;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsRead;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
@@ -21,17 +21,19 @@ public class HybridJmsAndSqsIntTests {
    */
   @Test
   public void testMoveJmsToSqs() {
+    // place a message on Qpid
     var payload = "this is the payload";
     var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3",
         "value3");
     var queueName = "forest-test";
     sendMessageAutoAck(STAGE, queueName, createTextMessage(payload, messageProps));
 
+    // move it to SQS
     var creds = getEmxSbCreds();
     moveJmsToSqs(STAGE, queueName, creds, EMX_SANDBOX_TEST_SQS1);
 
     // check that it arrived
-    var response = sqsGet(creds, EMX_SANDBOX_TEST_SQS1);
+    var response = sqsRead(creds, EMX_SANDBOX_TEST_SQS1);
     assertThat(response.messages().get(0).body()).isEqualTo(payload);
     assertThat(response.messages().get(0).hasMessageAttributes()).isEqualTo(true);
     assertThat(response.messages().get(0).messageAttributes().get("key2").stringValue()).isEqualTo(
@@ -41,5 +43,16 @@ public class HybridJmsAndSqsIntTests {
 
     // cleanup
     sqsDelete(creds, response, EMX_SANDBOX_TEST_SQS1);
+  }
+
+  @Test
+  public void testMoveSqsToJms() {
+    // place a message on SQS
+
+    // move it to Qpid
+
+    // check that it arrived
+
+    // cleanup
   }
 }
