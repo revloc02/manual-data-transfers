@@ -3,18 +3,18 @@ package forest.colver.datatransfer.it;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsConsume;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsCopy;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDelete;
-import static forest.colver.datatransfer.aws.SqsOperations.sqsRead;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsGetQueueAttributes;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMove;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsRead;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS2;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
-import static forest.colver.datatransfer.config.Utils.readFile;
 import static forest.colver.datatransfer.config.Utils.pause;
+import static forest.colver.datatransfer.config.Utils.readFile;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
@@ -123,7 +123,8 @@ public class AwsSqsIntTests {
     LOG.info("Interacting with: sqs={}", SQS1);
     // send some stuff
     var creds = getEmxSbCreds();
-    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3", "value3");
+    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3",
+        "value3");
     var payload = getDefaultPayload();
     sqsSend(creds, SQS1, payload, messageProps);
     // check that it arrived
