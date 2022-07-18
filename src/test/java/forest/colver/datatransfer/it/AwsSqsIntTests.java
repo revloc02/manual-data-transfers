@@ -51,7 +51,7 @@ public class AwsSqsIntTests {
         SQS1); // purge before asserting depth in case it's wrong, thus a rerun will work
     assertThat(attributes.attributesAsStrings().get("ApproximateNumberOfMessages")).isEqualTo("5");
 
-    // assert the queue was cleared
+    // assert the sqs was cleared
     var messages = sqsRead(creds, SQS1);
     assertThat(messages.hasMessages()).isFalse();
   }
@@ -59,12 +59,12 @@ public class AwsSqsIntTests {
   @Test
   public void testSqsCopy() {
     LOG.info("Interacting with: sqs={}; sqs={}", SQS1, SQS2);
-    // put message on queue
+    // put message on sqs
     var creds = getEmxSbCreds();
     var payload = getDefaultPayload();
     sqsSend(creds, SQS1, payload);
 
-    // verify message is on the queue
+    // verify message is on the sqs
     var fromQResponse = sqsRead(creds, SQS1);
     var body = fromQResponse.messages().get(0).body();
     assertThat(body).isEqualTo(payload);
@@ -73,10 +73,10 @@ public class AwsSqsIntTests {
     pause(4); // waiting for the visibility timeout from the sqsGet()
     sqsCopy(creds, SQS1, SQS2);
 
-    // remove message from source queue
+    // remove message from source sqs
     sqsDelete(creds, fromQResponse, SQS1);
 
-    // verify the message is on the other queue
+    // verify the message is on the other sqs
     var toQResponse = sqsRead(creds, SQS2);
     body = toQResponse.messages().get(0).body();
     assertThat(body).isEqualTo(payload);
@@ -113,7 +113,7 @@ public class AwsSqsIntTests {
     // consume the message
     var respConsume = sqsConsume(creds, SQS1);
     assertThat(respConsume.messages().get(0).body()).isEqualTo(payload);
-    // assert the queue was cleared
+    // assert the sqs was cleared
     var messages = sqsRead(creds, SQS1);
     assertThat(messages.hasMessages()).isFalse();
   }
@@ -142,12 +142,12 @@ public class AwsSqsIntTests {
   @Test
   public void testSqsMove() {
     LOG.info("Interacting with: sqs={}; sqs={}", SQS1, SQS2);
-    // put message on queue
+    // put message on sqs
     var creds = getEmxSbCreds();
     var payload = getDefaultPayload();
     sqsSend(creds, SQS1, payload);
 
-    // verify message is on the queue
+    // verify message is on the sqs
     var fromQResponse = sqsRead(creds, SQS1);
     var body = fromQResponse.messages().get(0).body();
     assertThat(body).isEqualTo(payload);
@@ -156,7 +156,7 @@ public class AwsSqsIntTests {
     pause(4); // waiting for the visibility timeout from the sqsGet()
     sqsMove(creds, SQS1, SQS2);
 
-    // verify the message is on the other queue
+    // verify the message is on the other sqs
     var toQResponse = sqsRead(creds, SQS2);
     body = toQResponse.messages().get(0).body();
     assertThat(body).isEqualTo(payload);
