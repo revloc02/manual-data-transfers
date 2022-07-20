@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 public class AwsCloudWatchLogsIntTests {
 
-  public static final String LOG_GROUP_NAME = "archive-trace-data-test";
+  public static final String LOG_GROUP_NAME = "/emx-trace-data";
   public static final String STREAM_PREFIX = "streamPrefix";
   private static final Logger LOG = LoggerFactory.getLogger(AwsCloudWatchLogsIntTests.class);
 
@@ -78,8 +78,8 @@ public class AwsCloudWatchLogsIntTests {
     List<String> messages = generateLogs(messagePrefix, 1_000, 20, 45);
     putCWLogEvents(getPrsnlSbCreds(), LOG_GROUP_NAME, streamName, messages);
 
-    List<String> messages2 = generateLogs(messagePrefix, 500, 150, 160);
-    putCWLogEvents(getPrsnlSbCreds(), LOG_GROUP_NAME + "2", streamName, messages2);
+//    List<String> messages2 = generateLogs(messagePrefix, 500, 150, 160);
+//    putCWLogEvents(getPrsnlSbCreds(), LOG_GROUP_NAME + "2", streamName, messages2);
   }
 
   private List<String> generateLogs(String messagePrefix, int numOfLogs, int sizeMin, int sizeMax) {
