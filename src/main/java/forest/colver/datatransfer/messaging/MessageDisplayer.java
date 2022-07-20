@@ -28,6 +28,7 @@ public class MessageDisplayer {
   private Map<String, String> customHeaders;
 
   public MessageDisplayer(Message message) {
+    // todo: note that much of this is copied into messaging.Utils and as such is duplicated, that should be reconciled.
     if (message != null) {
       this.message = message;
       // todo: can I display the size of the message?
