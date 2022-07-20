@@ -7,8 +7,8 @@ import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
-import static forest.colver.datatransfer.hybrid.JmsAndSqs.moveJmsToSqs;
-import static forest.colver.datatransfer.hybrid.JmsAndSqs.moveSqsToJms;
+import static forest.colver.datatransfer.hybrid.JmsAndSqs.moveOneJmsToSqs;
+import static forest.colver.datatransfer.hybrid.JmsAndSqs.moveOneSqsToJms;
 import static forest.colver.datatransfer.messaging.Environment.STAGE;
 import static forest.colver.datatransfer.messaging.JmsConsume.consumeOneMessage;
 import static forest.colver.datatransfer.messaging.JmsSend.createTextMessage;
@@ -41,7 +41,7 @@ public class HybridJmsAndSqsIntTests {
 
     // move it to SQS
     var creds = getEmxSbCreds();
-    moveJmsToSqs(STAGE, queueName, creds, EMX_SANDBOX_TEST_SQS1);
+    moveOneJmsToSqs(STAGE, queueName, creds, EMX_SANDBOX_TEST_SQS1);
 
     // check that it arrived
     var response = sqsRead(creds, EMX_SANDBOX_TEST_SQS1);
@@ -68,7 +68,7 @@ public class HybridJmsAndSqsIntTests {
 
     // move it to Qpid
     var queue = "forest-test";
-    moveSqsToJms(creds, SQS1, STAGE, queue);
+    moveOneSqsToJms(creds, SQS1, STAGE, queue);
 
     // assert the SQS was cleared
     var messages = sqsRead(creds, SQS1);
