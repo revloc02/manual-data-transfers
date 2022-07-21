@@ -1,5 +1,7 @@
 package forest.colver.datatransfer.messaging;
 
+import java.util.Enumeration;
+import java.util.Map;
 import javax.jms.BytesMessage;
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
@@ -17,6 +19,13 @@ public class Utils {
 
   private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
 
+  /**
+   * Retrieves the payload of the message as a String. The message type is checked, and then the
+   * payload is extracted accordingly.
+   *
+   * @param message A javax.jms.Message.
+   * @return The payload of the message as a String.
+   */
   public static String getMessagePayload(Message message) {
     var payload = "";
     if (message != null) {
@@ -72,5 +81,24 @@ public class Utils {
       e.printStackTrace();
     }
     return payload;
+  }
+
+  /**
+   * Retrieves the user added properties (not JMS properties) from a message.
+   *
+   * @param message A javax.jms.Message.
+   * @return A HashMap of the custom properties.
+   */
+  public Map<String, String> getCustomProperties(Message message) {
+    Map<String, String> map = new java.util.HashMap<>(Map.of());
+    try {
+      for (Enumeration<String> e = message.getPropertyNames(); e.hasMoreElements(); ) {
+        var s = e.nextElement();
+        map.put(s, message.getObjectProperty(s).toString());
+      }
+    } catch (JMSException e) {
+      e.printStackTrace();
+    }
+    return map;
   }
 }
