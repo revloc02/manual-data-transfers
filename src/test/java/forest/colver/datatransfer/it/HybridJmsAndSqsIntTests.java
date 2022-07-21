@@ -31,7 +31,7 @@ public class HybridJmsAndSqsIntTests {
    * This tests moving a message from Qpid to AWS SQS.
    */
   @Test
-  public void testMoveJmsToSqs() {
+  public void testMoveOneJmsToSqs() {
     // place a message on Qpid
     var payload = "this is the payload";
     var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3",

@@ -48,6 +48,26 @@ public class Utils {
     return payload;
   }
 
+  /**
+   * Retrieves the user added properties (not JMS properties) from a message.
+   *
+   * @param message A javax.jms.Message.
+   * @return A HashMap of the custom properties.
+   */
+  public static Map<String, String> getCustomProperties(Message message) {
+    Map<String, String> properties = new java.util.HashMap<>(Map.of());
+    try {
+      for (Enumeration<String> e = message.getPropertyNames(); e.hasMoreElements(); ) {
+        var s = e.nextElement();
+        properties.put(s, message.getObjectProperty(s).toString());
+      }
+    } catch (JMSException e) {
+      e.printStackTrace();
+    }
+    LOG.info("Number of properties (map size)={}", properties.size());
+    return properties;
+  }
+
   private static String payloadFromTextMessage(TextMessage textMessage) {
     var payload = "";
     try {
@@ -81,24 +101,5 @@ public class Utils {
       e.printStackTrace();
     }
     return payload;
-  }
-
-  /**
-   * Retrieves the user added properties (not JMS properties) from a message.
-   *
-   * @param message A javax.jms.Message.
-   * @return A HashMap of the custom properties.
-   */
-  public Map<String, String> getCustomProperties(Message message) {
-    Map<String, String> map = new java.util.HashMap<>(Map.of());
-    try {
-      for (Enumeration<String> e = message.getPropertyNames(); e.hasMoreElements(); ) {
-        var s = e.nextElement();
-        map.put(s, message.getObjectProperty(s).toString());
-      }
-    } catch (JMSException e) {
-      e.printStackTrace();
-    }
-    return map;
   }
 }

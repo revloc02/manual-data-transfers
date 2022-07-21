@@ -7,6 +7,8 @@ import static forest.colver.datatransfer.config.Utils.getUsername;
 import static forest.colver.datatransfer.messaging.JmsConsume.consumeOneMessage;
 import static forest.colver.datatransfer.messaging.JmsSend.createTextMessage;
 import static forest.colver.datatransfer.messaging.JmsSend.sendMessageAutoAck;
+import static forest.colver.datatransfer.messaging.Utils.getCustomProperties;
+import static forest.colver.datatransfer.messaging.Utils.getMessagePayload;
 import static javax.jms.JMSContext.CLIENT_ACKNOWLEDGE;
 
 import forest.colver.datatransfer.messaging.Environment;
@@ -40,20 +42,9 @@ public class JmsAndSqs {
   public static void moveOneJmsToSqs(Environment qpidEnv, String qpidQ,
       AwsCredentialsProvider awsCreds, String sqs) {
     TextMessage msg = (TextMessage) consumeOneMessage(qpidEnv, qpidQ);
-    var payload = "";
-    Map<String, String> properties = new java.util.HashMap<>(Map.of());
-    try {
-      payload = msg.getText();
-      for (Enumeration<String> e = msg.getPropertyNames(); e.hasMoreElements(); ) {
-        var s = e.nextElement();
-        properties.put(s, msg.getObjectProperty(s).toString());
-      }
-    } catch (JMSException e) {
-      e.printStackTrace();
-    }
+
     // SQS messages are limited to 10 attributes of up to 256 characters each
-    LOG.info("Number of properties (map size)={}", properties.size());
-    sqsSend(awsCreds, sqs, payload, properties);
+    sqsSend(awsCreds, sqs, getMessagePayload(msg), getCustomProperties(msg));
   }
 
   public static void moveOneSqsToJms(AwsCredentialsProvider awsCreds, String sqs, Environment env,
@@ -70,7 +61,8 @@ public class JmsAndSqs {
   }
 
   // todo: this.
-  public static void moveAllSpecificMessagesFromJmsToSqs(Environment env, String queue, String selector, AwsCredentialsProvider awsCreds, String sqs) {
+  public static void moveAllSpecificMessagesFromJmsToSqs(Environment env, String queue,
+      String selector, AwsCredentialsProvider awsCreds, String sqs) {
     var cf = new JmsConnectionFactory(env.url());
     try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {
       var fromQ = ctx.createQueue(queue);
