@@ -6,7 +6,7 @@ import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
 import static forest.colver.datatransfer.config.Utils.getUsername;
 import static forest.colver.datatransfer.it.MessagingIntTests.createMessage;
 import static forest.colver.datatransfer.messaging.Environment.STAGE;
-import static forest.colver.datatransfer.messaging.JmsSend.createTextMessage;
+import static forest.colver.datatransfer.messaging.Utils.createTextMessage;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import forest.colver.datatransfer.messaging.MessageDisplayer;

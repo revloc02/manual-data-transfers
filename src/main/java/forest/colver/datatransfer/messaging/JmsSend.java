@@ -9,9 +9,7 @@ import static javax.jms.JMSContext.AUTO_ACKNOWLEDGE;
 
 import java.util.ArrayList;
 import java.util.Map;
-import javax.jms.JMSException;
 import javax.jms.Message;
-import javax.jms.TextMessage;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,27 +22,7 @@ public class JmsSend {
   public static void sendDefaultMessage() {
     sendMessageAutoAck(
         STAGE, "forest-test",
-        createTextMessage(getDefaultPayload(), Map.of("defaultKey", "defaultValue")));
-  }
-
-  public static TextMessage createDefaultMessage() {
-    return createTextMessage(getDefaultPayload(), null);
-  }
-
-  public static TextMessage createTextMessage(String body, Map<String, String> properties) {
-    TextMessage message = null;
-    var cf = new JmsConnectionFactory(getUsername(), getPassword(), STAGE.url());
-    try (var ctx = cf.createContext()) {
-      message = ctx.createTextMessage(body);
-      if (properties != null) {
-        for (Map.Entry<String, String> entry : properties.entrySet()) {
-          message.setStringProperty(entry.getKey(), entry.getValue());
-        }
-      }
-    } catch (JMSException e) {
-      e.printStackTrace();
-    }
-    return message;
+        Utils.createTextMessage(getDefaultPayload(), Map.of("defaultKey", "defaultValue")));
   }
 
   /**

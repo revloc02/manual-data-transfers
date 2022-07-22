@@ -1,5 +1,10 @@
 package forest.colver.datatransfer.messaging;
 
+import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
+import static forest.colver.datatransfer.config.Utils.getPassword;
+import static forest.colver.datatransfer.config.Utils.getUsername;
+import static forest.colver.datatransfer.messaging.Environment.STAGE;
+
 import java.util.Enumeration;
 import java.util.Map;
 import javax.jms.BytesMessage;
@@ -9,6 +14,7 @@ import javax.jms.Message;
 import javax.jms.ObjectMessage;
 import javax.jms.StreamMessage;
 import javax.jms.TextMessage;
+import org.apache.qpid.jms.JmsConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +32,7 @@ public class Utils {
    * @param message A javax.jms.Message.
    * @return The payload of the message as a String.
    */
-  public static String getMessagePayload(Message message) {
+  public static String getJmsMsgPayload(Message message) {
     var payload = "";
     if (message != null) {
       if (message instanceof TextMessage textMessage) {
@@ -54,7 +60,7 @@ public class Utils {
    * @param message A javax.jms.Message.
    * @return A HashMap of the custom properties.
    */
-  public static Map<String, String> getCustomProperties(Message message) {
+  public static Map<String, String> getJmsMsgProperties(Message message) {
     Map<String, String> properties = new java.util.HashMap<>(Map.of());
     try {
       for (Enumeration<String> e = message.getPropertyNames(); e.hasMoreElements(); ) {
@@ -101,5 +107,25 @@ public class Utils {
       e.printStackTrace();
     }
     return payload;
+  }
+
+  public static TextMessage createDefaultMessage() {
+    return createTextMessage(getDefaultPayload(), null);
+  }
+
+  public static TextMessage createTextMessage(String body, Map<String, String> properties) {
+    TextMessage message = null;
+    var cf = new JmsConnectionFactory(getUsername(), getPassword(), STAGE.url());
+    try (var ctx = cf.createContext()) {
+      message = ctx.createTextMessage(body);
+      if (properties != null) {
+        for (Map.Entry<String, String> entry : properties.entrySet()) {
+          message.setStringProperty(entry.getKey(), entry.getValue());
+        }
+      }
+    } catch (JMSException e) {
+      e.printStackTrace();
+    }
+    return message;
   }
 }

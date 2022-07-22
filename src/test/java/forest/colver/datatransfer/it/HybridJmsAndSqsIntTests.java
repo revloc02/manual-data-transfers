@@ -7,12 +7,16 @@ import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
+import static forest.colver.datatransfer.hybrid.JmsAndSqs.moveAllSpecificMessagesFromJmsToSqs;
 import static forest.colver.datatransfer.hybrid.JmsAndSqs.moveOneJmsToSqs;
 import static forest.colver.datatransfer.hybrid.JmsAndSqs.moveOneSqsToJms;
 import static forest.colver.datatransfer.messaging.Environment.STAGE;
 import static forest.colver.datatransfer.messaging.JmsConsume.consumeOneMessage;
-import static forest.colver.datatransfer.messaging.JmsSend.createTextMessage;
+import static forest.colver.datatransfer.messaging.JmsConsume.deleteAllMessagesFromQueue;
 import static forest.colver.datatransfer.messaging.JmsSend.sendMessageAutoAck;
+import static forest.colver.datatransfer.messaging.JmsSend.sendMultipleSameMessage;
+import static forest.colver.datatransfer.messaging.Utils.createDefaultMessage;
+import static forest.colver.datatransfer.messaging.Utils.createTextMessage;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
@@ -41,10 +45,10 @@ public class HybridJmsAndSqsIntTests {
 
     // move it to SQS
     var creds = getEmxSbCreds();
-    moveOneJmsToSqs(STAGE, queueName, creds, EMX_SANDBOX_TEST_SQS1);
+    moveOneJmsToSqs(STAGE, queueName, creds, SQS1);
 
     // check that it arrived
-    var response = sqsRead(creds, EMX_SANDBOX_TEST_SQS1);
+    var response = sqsRead(creds, SQS1);
     assertThat(response.messages().get(0).body()).isEqualTo(payload);
     assertThat(response.messages().get(0).hasMessageAttributes()).isEqualTo(true);
     assertThat(response.messages().get(0).messageAttributes().get("key2").stringValue()).isEqualTo(
@@ -53,7 +57,7 @@ public class HybridJmsAndSqsIntTests {
         "value3");
 
     // cleanup
-    sqsDelete(creds, response, EMX_SANDBOX_TEST_SQS1);
+    sqsDelete(creds, response, SQS1);
   }
 
   @Test
@@ -79,5 +83,42 @@ public class HybridJmsAndSqsIntTests {
     assertThat(((TextMessage) message).getText()).contains(payload);
     assertThat(message.getStringProperty("key2")).isEqualTo("value2");
     assertThat(message.getStringProperty("key3")).isEqualTo("value3");
+  }
+
+  @Test
+  public void testMoveAllSpecificMessages() {
+    var env = STAGE;
+    var queue = "forest-test";
+    var creds = getEmxSbCreds();
+
+    // send one kind of message
+    var numMessagesFrom = 5;
+    sendMultipleSameMessage(env, queue, createDefaultMessage(), numMessagesFrom);
+
+    // send some messages of a different kind
+    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
+    var numMessagesTo = 3;
+    var payload = "payload";
+    for (var i = 0; i < numMessagesTo; i++) {
+      sendMessageAutoAck(env, queue, createTextMessage(payload, messageProps));
+    }
+
+    // move all one kind of message
+    moveAllSpecificMessagesFromJmsToSqs(env, queue, "specificKey='specificValue'", creds, SQS1);
+
+    // check that it arrived //todo: does this just check for one message? Should it be checking for all that were moved? Maybe rethink this
+    var response = sqsRead(creds, SQS1);
+    assertThat(response.messages().get(0).body()).isEqualTo(payload);
+    assertThat(response.messages().get(0).hasMessageAttributes()).isEqualTo(true);
+    assertThat(
+        response.messages().get(0).messageAttributes().get("specificKey").stringValue()).isEqualTo(
+        "specificValue");
+
+    // cleanup and check that the queue had the correct number of messages after the move
+    var deletedFrom = deleteAllMessagesFromQueue(env, queue);
+    assertThat(deletedFrom).isEqualTo(numMessagesFrom);
+
+    // cleanup SQS
+    sqsDelete(creds, response, SQS1);
   }
 }

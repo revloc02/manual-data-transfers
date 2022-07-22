@@ -5,19 +5,17 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.config.Utils.getPassword;
 import static forest.colver.datatransfer.config.Utils.getUsername;
 import static forest.colver.datatransfer.messaging.JmsConsume.consumeOneMessage;
-import static forest.colver.datatransfer.messaging.JmsSend.createTextMessage;
+import static forest.colver.datatransfer.messaging.Utils.createTextMessage;
 import static forest.colver.datatransfer.messaging.JmsSend.sendMessageAutoAck;
-import static forest.colver.datatransfer.messaging.Utils.getCustomProperties;
-import static forest.colver.datatransfer.messaging.Utils.getMessagePayload;
+import static forest.colver.datatransfer.messaging.Utils.getJmsMsgPayload;
+import static forest.colver.datatransfer.messaging.Utils.getJmsMsgProperties;
 import static javax.jms.JMSContext.CLIENT_ACKNOWLEDGE;
 
 import forest.colver.datatransfer.messaging.Environment;
-import java.util.Enumeration;
 import java.util.Map;
 import java.util.Map.Entry;
 import javax.jms.JMSException;
 import javax.jms.Message;
-import javax.jms.TextMessage;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,10 +39,10 @@ public class JmsAndSqs {
    */
   public static void moveOneJmsToSqs(Environment qpidEnv, String qpidQ,
       AwsCredentialsProvider awsCreds, String sqs) {
-    TextMessage msg = (TextMessage) consumeOneMessage(qpidEnv, qpidQ);
+    Message msg = consumeOneMessage(qpidEnv, qpidQ);
 
     // SQS messages are limited to 10 attributes of up to 256 characters each
-    sqsSend(awsCreds, sqs, getMessagePayload(msg), getCustomProperties(msg));
+    sqsSend(awsCreds, sqs, getJmsMsgPayload(msg), getJmsMsgProperties(msg));
   }
 
   public static void moveOneSqsToJms(AwsCredentialsProvider awsCreds, String sqs, Environment env,
@@ -60,7 +58,6 @@ public class JmsAndSqs {
     sendMessageAutoAck(env, queue, message);
   }
 
-  // todo: this.
   public static void moveAllSpecificMessagesFromJmsToSqs(Environment env, String queue,
       String selector, AwsCredentialsProvider awsCreds, String sqs) {
     var cf = new JmsConnectionFactory(env.url());
@@ -69,20 +66,18 @@ public class JmsAndSqs {
       var counter = 0;
       try (var consumer = ctx.createConsumer(fromQ, selector)) {
         var moreMessages = true;
-//        var toQ = ctx.createQueue(toQueueName);
         Message message;
         while (moreMessages) {
           message = consumer.receive(2_000L);
           if (message != null) {
             counter++;
-//            ctx.createProducer().send(toQ, message);
+            sqsSend(awsCreds, sqs, getJmsMsgPayload(message), getJmsMsgProperties(message));
             message.acknowledge();
             LOG.info(
-                "Moved from Queue={}:{} to Queue={}:{}, counter={}",
+                "Moved from Queue={}:{} to SQS={}, counter={}",
                 env.name(),
                 queue,
-                env.name(),
-//                toQueueName,
+                sqs,
                 counter);
           } else {
             moreMessages = false;
@@ -94,5 +89,5 @@ public class JmsAndSqs {
       LOG.info("Moved {} messages for selector={}.", counter, selector);
     }
   }
-  //todo: probably should have a move all, and a move specific
+  //todo: probably should have a move all
 }
