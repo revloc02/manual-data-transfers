@@ -5,6 +5,7 @@ import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getPassword;
 import static forest.colver.datatransfer.config.Utils.getUsername;
 import static forest.colver.datatransfer.messaging.Environment.STAGE;
+import static forest.colver.datatransfer.messaging.Utils.createTextMessage;
 import static javax.jms.JMSContext.AUTO_ACKNOWLEDGE;
 
 import java.util.ArrayList;
@@ -22,7 +23,7 @@ public class JmsSend {
   public static void sendDefaultMessage() {
     sendMessageAutoAck(
         STAGE, "forest-test",
-        Utils.createTextMessage(getDefaultPayload(), Map.of("defaultKey", "defaultValue")));
+        createTextMessage(getDefaultPayload(), Map.of("defaultKey", "defaultValue")));
   }
 
   /**

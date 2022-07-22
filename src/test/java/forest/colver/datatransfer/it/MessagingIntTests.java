@@ -23,12 +23,12 @@ import static forest.colver.datatransfer.messaging.JmsConsume.moveOneMessage;
 import static forest.colver.datatransfer.messaging.JmsConsume.moveSomeSpecificMessages;
 import static forest.colver.datatransfer.messaging.JmsConsume.moveSpecificMessage;
 import static forest.colver.datatransfer.messaging.JmsConsume.purgeQueue;
-import static forest.colver.datatransfer.messaging.Utils.createDefaultMessage;
-import static forest.colver.datatransfer.messaging.Utils.createTextMessage;
 import static forest.colver.datatransfer.messaging.JmsSend.sendDefaultMessage;
 import static forest.colver.datatransfer.messaging.JmsSend.sendMessageAutoAck;
 import static forest.colver.datatransfer.messaging.JmsSend.sendMultipleSameMessage;
 import static forest.colver.datatransfer.messaging.JmsSend.sendMultipleUniqueMessages;
+import static forest.colver.datatransfer.messaging.Utils.createDefaultMessage;
+import static forest.colver.datatransfer.messaging.Utils.createTextMessage;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
