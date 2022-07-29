@@ -63,7 +63,7 @@ public class HybridJmsAndSqsIntTests {
   }
 
   @Test
-  public void testMoveSqsToJms() throws JMSException {
+  public void testMoveOneSqsToJms() throws JMSException {
     // place a message on SQS
     LOG.info("Interacting with: sqs={}", SQS1);
     var creds = getEmxSbCreds();
@@ -88,16 +88,16 @@ public class HybridJmsAndSqsIntTests {
   }
 
   @Test
-  public void testMoveAllSpecificMessages() {
+  public void testMoveAllSpecificMessagesJmsToSqs() {
     var env = STAGE;
     var queue = "forest-test";
     var creds = getEmxSbCreds();
 
-    // send one kind of message
+    // send one kind of message to Qpid
     var numMessagesFrom = 5;
     sendMultipleSameMessage(env, queue, createDefaultMessage(), numMessagesFrom);
 
-    // send some messages of a different kind
+    // send some messages of a different kind to Qpid
     var messageProps = Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
     var numMessagesToMove = 3;
     var payload = "payload";
@@ -105,10 +105,10 @@ public class HybridJmsAndSqsIntTests {
       sendMessageAutoAck(env, queue, createTextMessage(payload, messageProps));
     }
 
-    // move all the different kind of messages
+    // move all the different kind of messages to SQS
     moveAllSpecificMessagesFromJmsToSqs(env, queue, "specificKey='specificValue'", creds, SQS1);
 
-    // check that each arrived
+    // check that each arrived on SQS
     for (var i = 0; i < numMessagesToMove; i++) {
       var response = sqsConsume(creds, SQS1);
       assertThat(response.messages().get(0).body()).isEqualTo(payload);
@@ -119,11 +119,13 @@ public class HybridJmsAndSqsIntTests {
           "specificValue");
     }
 
-    // cleanup and check that the queue had the correct number of messages after the move
+    // cleanup and check that the Qpid queue had the correct number of messages after the move
     var deletedFrom = deleteAllMessagesFromQueue(env, queue);
     assertThat(deletedFrom).isEqualTo(numMessagesFrom);
 
     // cleanup SQS (should be empty already, but just being thorough)
     sqsPurge(creds, SQS1);
   }
+
+  // todo: test to move all specific messages from SQS to JMS
 }
