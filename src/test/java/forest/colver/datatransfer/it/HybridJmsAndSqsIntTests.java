@@ -1,6 +1,8 @@
 package forest.colver.datatransfer.it;
 
+import static forest.colver.datatransfer.aws.SqsOperations.sqsConsume;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDelete;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsRead;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
@@ -97,28 +99,31 @@ public class HybridJmsAndSqsIntTests {
 
     // send some messages of a different kind
     var messageProps = Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
-    var numMessagesTo = 3;
+    var numMessagesToMove = 3;
     var payload = "payload";
-    for (var i = 0; i < numMessagesTo; i++) {
+    for (var i = 0; i < numMessagesToMove; i++) {
       sendMessageAutoAck(env, queue, createTextMessage(payload, messageProps));
     }
 
-    // move all one kind of message
+    // move all the different kind of messages
     moveAllSpecificMessagesFromJmsToSqs(env, queue, "specificKey='specificValue'", creds, SQS1);
 
-    // check that it arrived //todo: does this just check for one message? Should it be checking for all that were moved? Maybe rethink this
-    var response = sqsRead(creds, SQS1);
-    assertThat(response.messages().get(0).body()).isEqualTo(payload);
-    assertThat(response.messages().get(0).hasMessageAttributes()).isEqualTo(true);
-    assertThat(
-        response.messages().get(0).messageAttributes().get("specificKey").stringValue()).isEqualTo(
-        "specificValue");
+    // check that each arrived
+    for (var i = 0; i < numMessagesToMove; i++) {
+      var response = sqsConsume(creds, SQS1);
+      assertThat(response.messages().get(0).body()).isEqualTo(payload);
+      assertThat(response.messages().get(0).hasMessageAttributes()).isEqualTo(true);
+      assertThat(
+          response.messages().get(0).messageAttributes().get("specificKey")
+              .stringValue()).isEqualTo(
+          "specificValue");
+    }
 
     // cleanup and check that the queue had the correct number of messages after the move
     var deletedFrom = deleteAllMessagesFromQueue(env, queue);
     assertThat(deletedFrom).isEqualTo(numMessagesFrom);
 
-    // cleanup SQS
-    sqsDelete(creds, response, SQS1);
+    // cleanup SQS (should be empty already, but just being thorough)
+    sqsPurge(creds, SQS1);
   }
 }
