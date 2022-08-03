@@ -66,9 +66,8 @@ public class JmsAndSqs {
       var counter = 0;
       try (var consumer = ctx.createConsumer(fromQ, selector)) {
         var moreMessages = true;
-        Message message;
         while (moreMessages) {
-          message = consumer.receive(2_000L);
+          var message = consumer.receive(2_000L);
           if (message != null) {
             counter++;
             sqsSend(awsCreds, sqs, getJmsMsgPayload(message), getJmsMsgProperties(message));
