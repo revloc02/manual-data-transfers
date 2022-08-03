@@ -108,7 +108,7 @@ public class HybridJmsAndSqsIntTests {
     // move all the different kind of messages to SQS
     moveAllSpecificMessagesFromJmsToSqs(env, queue, "specificKey='specificValue'", creds, SQS1);
 
-    // check that each arrived on SQS
+    // check that each arrived on the SQS
     for (var i = 0; i < numMessagesToMove; i++) {
       var response = sqsConsume(creds, SQS1);
       assertThat(response.messages().get(0).body()).isEqualTo(payload);
