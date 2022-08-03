@@ -70,7 +70,7 @@ public class AwsSqsIntTests {
     assertThat(body).isEqualTo(payload);
 
     // copy the message
-    pause(4); // waiting for the visibility timeout from the sqsGet()
+    pause(4); // waiting for the visibility timeout from the sqsRead()
     sqsCopy(creds, SQS1, SQS2);
 
     // remove message from source sqs
