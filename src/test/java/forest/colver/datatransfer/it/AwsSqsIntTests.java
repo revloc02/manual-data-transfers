@@ -164,6 +164,5 @@ public class AwsSqsIntTests {
 
     // cleanup
     sqsDelete(creds, toQResponse, SQS2);
-
   }
 }
