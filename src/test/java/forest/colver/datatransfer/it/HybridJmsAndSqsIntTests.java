@@ -9,6 +9,8 @@ import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
+import static forest.colver.datatransfer.config.Utils.pause;
+import static forest.colver.datatransfer.hybrid.JmsAndSqs.moveAllMessagesFromSqsToJms;
 import static forest.colver.datatransfer.hybrid.JmsAndSqs.moveAllSpecificMessagesFromJmsToSqs;
 import static forest.colver.datatransfer.hybrid.JmsAndSqs.moveOneJmsToSqs;
 import static forest.colver.datatransfer.hybrid.JmsAndSqs.moveOneSqsToJms;
@@ -131,5 +133,38 @@ public class HybridJmsAndSqsIntTests {
     sqsPurge(creds, SQS1);
   }
 
-  // todo: test to move all specific messages from SQS to JMS
+  @Test
+  public void testMoveAllSqsToJms() throws JMSException {
+    LOG.info("Interacting with: sqs={}", SQS1);
+    // place some messages
+    var creds = getEmxSbCreds();
+    var payload = getDefaultPayload();
+    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3",
+        "value3");
+    var numMsgs = 5;
+    for (var i = 0; i < numMsgs; i++) {
+      sqsSend(creds, SQS1, payload, messageProps);
+    }
+    pause(8);
+
+    // move them to Qpid
+    var queue = "forest-test";
+    moveAllMessagesFromSqsToJms(creds, SQS1, STAGE, queue);
+
+    // assert the SQS was cleared
+    var messages = sqsRead(creds, SQS1);
+    assertThat(messages.hasMessages()).isFalse();
+
+    // check that they arrived
+    for (var i = 0; i < numMsgs; i++) {
+      var message = consumeOneMessage(STAGE, queue);
+      assertThat(((TextMessage) message).getText()).contains(payload);
+      assertThat(message.getStringProperty("key2")).isEqualTo("value2");
+      assertThat(message.getStringProperty("key3")).isEqualTo("value3");
+    }
+
+    // cleanup and check that the Qpid queue had zero messages
+    var deletedFrom = deleteAllMessagesFromQueue(STAGE, queue);
+    assertThat(deletedFrom).isEqualTo(0);
+  }
 }
