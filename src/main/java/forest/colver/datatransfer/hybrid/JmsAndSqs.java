@@ -88,5 +88,34 @@ public class JmsAndSqs {
       LOG.info("Moved {} messages for selector={}.", counter, selector);
     }
   }
-  //todo: probably should have a move all
+
+  public static void moveAllMessagesFromSqsToJms(AwsCredentialsProvider awsCreds, String sqs,
+      Environment env,
+      String queue) {
+    var moreMessages = true;
+    var counter = 0;
+    while (moreMessages) {
+      var response = sqsConsume(awsCreds, sqs);
+      if (response.hasMessages()) {
+        counter++;
+        var payload = response.messages().get(0).body();
+        Map<String, String> properties = new java.util.HashMap<>(Map.of());
+        var props = response.messages().get(0).messageAttributes().entrySet();
+        for (Entry<String, MessageAttributeValue> prop : props) {
+          properties.put(prop.getKey(), prop.getValue().stringValue());
+        }
+        var message = createTextMessage(payload, properties);
+        sendMessageAutoAck(env, queue, message);
+        LOG.info(
+            "Moved from SQS={} to, Queue={}:{} counter={}",
+            sqs,
+            env.name(),
+            queue,
+            counter);
+      } else {
+        moreMessages = false;
+      }
+    }
+    LOG.info("Moved {} messages from SQS={} to, Queue={}:{}.", counter, sqs, env.name(), queue);
+  }
 }
