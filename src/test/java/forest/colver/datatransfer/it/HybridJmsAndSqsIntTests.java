@@ -85,6 +85,10 @@ public class HybridJmsAndSqsIntTests {
     assertThat(((TextMessage) message).getText()).contains(payload);
     assertThat(message.getStringProperty("key2")).isEqualTo("value2");
     assertThat(message.getStringProperty("key3")).isEqualTo("value3");
+
+    // cleanup and check that the Qpid queue had zero messages
+    var deletedFrom = deleteAllMessagesFromQueue(STAGE, queue);
+    assertThat(deletedFrom).isEqualTo(0);
   }
 
   @Test
