@@ -1,9 +1,12 @@
 package forest.colver.datatransfer.messaging;
 
-import java.util.Enumeration;
+import static forest.colver.datatransfer.messaging.Utils.extractJmsHeaders;
+import static forest.colver.datatransfer.messaging.Utils.extractMsgProperties;
+import static forest.colver.datatransfer.messaging.Utils.getJmsMsgPayload;
+
 import java.util.Map;
+import java.util.Objects;
 import javax.jms.BytesMessage;
-import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.jms.Message;
 import javax.jms.ObjectMessage;
@@ -21,105 +24,34 @@ public class MessageDisplayer {
   private static final Logger LOG = LoggerFactory.getLogger(MessageDisplayer.class);
   private static final int DEFAULT_PAYLOAD_OUTPUT_LEN = 100;
 
-  private Message message;
-  private String messageType;
-  private String payload;
-  private Map<String, String> jmsHeaders;
-  private Map<String, String> customHeaders;
+  private final Message message;
+  private final String messageType;
+  private final String payload;
+  private final Map<String, String> jmsHeaders;
+  private final Map<String, String> customHeaders;
 
   public MessageDisplayer(Message message) {
-    // todo: note that much of this is copied into messaging.Utils and as such is duplicated, that should be reconciled.
-    if (message != null) {
-      this.message = message;
-      // todo: can I display the size of the message?
-      if (message instanceof TextMessage textMessage) {
-        this.messageType = "Text";
-        this.payload = payloadFromTextMessage(textMessage);
-      } else if (message instanceof BytesMessage bytesMessage) {
-        this.messageType = "Bytes";
-        this.payload = payloadFromBytesMessage(bytesMessage);
-      } else if (message instanceof ObjectMessage objectMessage) {
-        this.messageType = "Object";
-        this.payload = payloadFromObjectMessage(objectMessage);
-      } else if (message instanceof StreamMessage) {
-        this.messageType = "Stream";
-        this.payload = "ERROR: Extracting payload from a StreamMessage is not implemented yet.";
-      } else if (message instanceof MapMessage) {
-        this.messageType = "Map";
-        this.payload = "ERROR: Extracting payload from a MapMessage is not implemented yet.";
-      } else {
-        this.messageType = "unknown";
-      }
-      this.jmsHeaders = constructJmsProps(message);
-      this.customHeaders = constructCustomHeaders(message);
+    Objects.requireNonNull(message, "message cannot be null.");
+
+    this.message = message;
+    this.payload = getJmsMsgPayload(message);
+    this.jmsHeaders = extractJmsHeaders(message);
+    this.customHeaders = extractMsgProperties(message);
+
+    if (message instanceof TextMessage textMessage) {
+      this.messageType = "Text";
+    } else if (message instanceof BytesMessage bytesMessage) {
+      this.messageType = "Bytes";
+    } else if (message instanceof ObjectMessage objectMessage) {
+      this.messageType = "Object";
+    } else if (message instanceof StreamMessage) {
+      this.messageType = "Stream";
+    } else if (message instanceof MapMessage) {
+      this.messageType = "Map";
     } else {
-      LOG.info("Message is null.");
+      this.messageType = "unknown";
     }
-  }
-
-  private String payloadFromTextMessage(TextMessage textMessage) {
-    var payload = "";
-    try {
-      payload = textMessage.getText();
-    } catch (JMSException e) {
-      e.printStackTrace();
-    }
-    return payload;
-  }
-
-  private String payloadFromBytesMessage(BytesMessage bytesMessage) {
-    byte[] bytes = null;
-    try {
-      // When the message is first created the body of the message is in write-only mode. After
-      // the first call to the reset method has been made, the message is in read-only mode.
-      bytesMessage.reset();
-      bytes = new byte[(int) bytesMessage.getBodyLength()];
-      bytesMessage.readBytes(bytes);
-    } catch (JMSException e) {
-      e.printStackTrace();
-    }
-    assert bytes != null;
-    return new String(bytes);
-  }
-
-  private String payloadFromObjectMessage(ObjectMessage objectMessage) {
-    var payload = "";
-    try {
-      payload = objectMessage.getObject().toString();
-    } catch (JMSException e) {
-      e.printStackTrace();
-    }
-    return payload;
-  }
-
-  private Map<String, String> constructJmsProps(Message message) {
-    Map<String, String> map = new java.util.HashMap<>(Map.of());
-    try {
-      map.put("JMSMessageID", message.getJMSMessageID());
-      map.put("JMSPriority", String.valueOf(message.getJMSPriority()));
-      map.put("JMSRedelivered", String.valueOf(message.getJMSRedelivered()));
-      map.put("JMSDestination", String.valueOf(message.getJMSDestination()));
-      map.put("JMSDeliveryTime", String.valueOf(message.getJMSDeliveryTime()));
-      map.put("JMSExpiration", String.valueOf(message.getJMSExpiration()));
-      map.put("JMSCorrelationID", message.getJMSCorrelationID());
-    } catch (JMSException e) {
-      e.printStackTrace();
-    }
-    return map;
-  }
-
-  private Map<String, String> constructCustomHeaders(Message message) {
-    Map<String, String> map = new java.util.HashMap<>(Map.of());
-    try {
-      for (Enumeration<String> e = message.getPropertyNames(); e.hasMoreElements(); ) {
-        var s = e.nextElement();
-//        LOG.info("key={}; val={}", s, message.getObjectProperty(s));
-        map.put(s, message.getObjectProperty(s).toString());
-      }
-    } catch (JMSException e) {
-      e.printStackTrace();
-    }
-    return map;
+    // todo: can I display the size of the message?
   }
 
   public String createString() {
