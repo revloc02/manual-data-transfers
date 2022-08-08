@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 public class AwsCloudWatchLogsIntTests {
 
-  public static final String LOG_GROUP_NAME = "/emx-trace-data";
+  public static final String LOG_GROUP_NAME = "/emx-trace-data-sandbox";
   public static final String STREAM_PREFIX = "streamPrefix";
   private static final Logger LOG = LoggerFactory.getLogger(AwsCloudWatchLogsIntTests.class);
 
