@@ -120,7 +120,12 @@ public class JmsConsume {
     LOG.info("Purged {} messages from {}:{} queue.", counter, env.name(), queueName);
   }
 
-  // todo: Figure out how to test this and also write a Javadoc for it.
+  // todo: Figure out how to test this
+  /**
+   * This registers a listener to pick up messages as they arrive on the queue.
+   * @param env Environment of the broker.
+   * @param queueName The queue name.
+   */
   public static void listenForMessages(Environment env, String queueName) {
     LOG.info("Listening for messages on {} from {} queue.", env.name(), queueName);
     var cf = new JmsConnectionFactory(env.url());
