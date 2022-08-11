@@ -8,7 +8,7 @@ import static forest.colver.datatransfer.messaging.JmsConsume.consumeOneMessage;
 import static forest.colver.datatransfer.messaging.JmsSend.sendMessageAutoAck;
 import static forest.colver.datatransfer.messaging.Utils.createTextMessage;
 import static forest.colver.datatransfer.messaging.Utils.getJmsMsgPayload;
-import static forest.colver.datatransfer.messaging.Utils.getJmsMsgProperties;
+import static forest.colver.datatransfer.messaging.Utils.extractMsgProperties;
 import static javax.jms.JMSContext.CLIENT_ACKNOWLEDGE;
 
 import forest.colver.datatransfer.messaging.Environment;
@@ -42,7 +42,7 @@ public class JmsAndSqs {
     Message msg = consumeOneMessage(qpidEnv, qpidQ);
 
     // SQS messages are limited to 10 attributes of up to 256 characters each
-    sqsSend(awsCreds, sqs, getJmsMsgPayload(msg), getJmsMsgProperties(msg));
+    sqsSend(awsCreds, sqs, getJmsMsgPayload(msg), extractMsgProperties(msg));
   }
 
   public static void moveOneSqsToJms(AwsCredentialsProvider awsCreds, String sqs, Environment env,
@@ -70,7 +70,7 @@ public class JmsAndSqs {
           var message = consumer.receive(2_000L);
           if (message != null) {
             counter++;
-            sqsSend(awsCreds, sqs, getJmsMsgPayload(message), getJmsMsgProperties(message));
+            sqsSend(awsCreds, sqs, getJmsMsgPayload(message), extractMsgProperties(message));
             message.acknowledge();
             LOG.info(
                 "Moved from Queue={}:{} to SQS={}, counter={}",
