@@ -41,7 +41,7 @@ public class Utils {
   public static final String PERSONAL_SANDBOX_TEST_SNS_TOPIC_ARN = userCreds.getProperty("aws-personal-sandbox-test-sns-topic-arn");
   public static final String PERSONAL_SANDBOX_SQS_SUB_SNS = "sub_demo_adv_queue";
 
-  public static AwsCredentialsProvider getNpCreds() {
+  public static AwsCredentialsProvider getEmxNpCreds() {
     return ProfileCredentialsProvider.create("enterprise-np");
   }
 
@@ -49,7 +49,7 @@ public class Utils {
     return ProfileCredentialsProvider.create("enterprise-sb");
   }
 
-  public static AwsCredentialsProvider getProdCreds() {
+  public static AwsCredentialsProvider getEmxProdCreds() {
     return ProfileCredentialsProvider.create("enterprise-prod");
   }
 
