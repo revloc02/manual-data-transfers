@@ -5,6 +5,8 @@ import static software.amazon.awssdk.regions.Region.US_EAST_1;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
 import software.amazon.awssdk.awscore.AwsResponse;
@@ -20,6 +22,8 @@ import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
  * AWS specific utils
  */
 public class Utils {
+
+  private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
 
   public static Map<String, String> personalSandboxRole;
   public static final String PERSONAL_SANDBOX_KEY_ID = userCreds.getProperty(
@@ -106,8 +110,9 @@ public class Utils {
   public static void awsResponseValidation(AwsResponse response) {
     var responseCode = response.sdkHttpResponse().statusCode();
     if (responseCode >= 300) {
+      LOG.info("ERROR: {}, responseMetadata={}", responseCode, response.responseMetadata().toString());
       throw new IllegalStateException(
-          "Unsuccessful S3 object request. Status Code: " + responseCode);
+          "Unsuccessful AWS request. Status Code: " + responseCode);
     }
   }
 }
