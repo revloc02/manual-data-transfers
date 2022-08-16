@@ -12,7 +12,8 @@ import static forest.colver.datatransfer.messaging.JmsConsume.deleteAllSpecificM
 public class CommonTasks {
   // todo: a way to clean up sftp-error sqs removing only certain messages e.g. all health check errors and not interchange errors
   public static void cleanupSftpErrorSqsStage() {
-    //need to test this is sandbox first, which means I need some sftp errors to test with, so copy some
+    // Setup for dev, copy some messages to the sqs
+
 
     // retrieve a message
 
