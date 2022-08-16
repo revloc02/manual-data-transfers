@@ -37,6 +37,7 @@ public class SqsOperations {
     sqsSend(awsCp, queueName, payload, messageProps);
   }
 
+  // todo: how to sqsSend with a Message object as the arguement?
   /**
    * Send a message using a map of message properties to the desired SQS queue.
    */
@@ -46,13 +47,13 @@ public class SqsOperations {
       String payload,
       Map<String, String> messageProps) {
     try (var sqsClient = getSqsClient(awsCp)) {
-      var sendMessageReqest =
+      var sendMessageRequest =
           SendMessageRequest.builder()
               .messageBody(payload)
               .messageAttributes(createMessageAttributes(messageProps))
               .queueUrl(qUrl(sqsClient, queueName))
               .build();
-      var response = sqsClient.sendMessage(sendMessageReqest);
+      var response = sqsClient.sendMessage(sendMessageRequest);
       awsResponseValidation(response);
       LOG.info("SQSSEND: The payload '{}' was put on the SQS: {}.\n", payload, queueName);
     }
@@ -74,7 +75,7 @@ public class SqsOperations {
   public static ReceiveMessageResponse sqsRead(
       AwsCredentialsProvider awsCP, String queueName) {
     try (var sqsClient = getSqsClient(awsCP)) {
-      var receiveMessageReqest =
+      var receiveMessageRequest =
           ReceiveMessageRequest.builder()
               .waitTimeSeconds(2)
               .messageAttributeNames("All")
@@ -83,7 +84,7 @@ public class SqsOperations {
               .maxNumberOfMessages(1)
               .visibilityTimeout(3) // default 30 sec
               .build();
-      var response = sqsClient.receiveMessage(receiveMessageReqest);
+      var response = sqsClient.receiveMessage(receiveMessageRequest);
       awsResponseValidation(response);
       LOG.info("SQSREAD: {} has messages: {}", queueName, response.hasMessages());
       displayMessageAttributes(response);
@@ -215,4 +216,6 @@ public class SqsOperations {
     var message = response.messages().get(0);
     sqsSend(awsCP, toQueue, message.body(), message.attributesAsStrings());
   }
+
+  // todo: need a sqsCopyAll and sqsMoveAll
 }
