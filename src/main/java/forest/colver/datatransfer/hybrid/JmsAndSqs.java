@@ -1,6 +1,6 @@
 package forest.colver.datatransfer.hybrid;
 
-import static forest.colver.datatransfer.aws.SqsOperations.sqsConsume;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsConsumeOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.config.Utils.getPassword;
 import static forest.colver.datatransfer.config.Utils.getUsername;
@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.TextMessage;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,15 +48,25 @@ public class JmsAndSqs {
 
   public static void moveOneSqsToJms(AwsCredentialsProvider awsCreds, String sqs, Environment env,
       String queue) {
-    var receiveMessageResponse = sqsConsume(awsCreds, sqs);
-    var payload = receiveMessageResponse.messages().get(0).body();
+    var sqsMsg = sqsConsumeOneMessage(awsCreds, sqs);
+    if (sqsMsg != null) {
+      TextMessage message = getTextMessageFromSqsMessage(sqsMsg);
+      sendMessageAutoAck(env, queue, message);
+    } else {
+      LOG.error("ERROR: SQS message was null.");
+    }
+  }
+
+  private static TextMessage getTextMessageFromSqsMessage(
+      software.amazon.awssdk.services.sqs.model.Message sqsMsg) {
+    var payload = sqsMsg.body();
     Map<String, String> properties = new java.util.HashMap<>(Map.of());
-    var props = receiveMessageResponse.messages().get(0).messageAttributes().entrySet();
+    var props = sqsMsg.messageAttributes().entrySet();
     for (Entry<String, MessageAttributeValue> prop : props) {
       properties.put(prop.getKey(), prop.getValue().stringValue());
     }
     var message = createTextMessage(payload, properties);
-    sendMessageAutoAck(env, queue, message);
+    return message;
   }
 
   public static void moveAllSpecificMessagesFromJmsToSqs(Environment env, String queue,
@@ -95,16 +106,10 @@ public class JmsAndSqs {
     var moreMessages = true;
     var counter = 0;
     while (moreMessages) {
-      var response = sqsConsume(awsCreds, sqs);
-      if (response.hasMessages()) {
+      var sqsMsg = sqsConsumeOneMessage(awsCreds, sqs);
+      if (sqsMsg != null) {
         counter++;
-        var payload = response.messages().get(0).body();
-        Map<String, String> properties = new java.util.HashMap<>(Map.of());
-        var props = response.messages().get(0).messageAttributes().entrySet();
-        for (Entry<String, MessageAttributeValue> prop : props) {
-          properties.put(prop.getKey(), prop.getValue().stringValue());
-        }
-        var message = createTextMessage(payload, properties);
+        TextMessage message = getTextMessageFromSqsMessage(sqsMsg);
         sendMessageAutoAck(env, queue, message);
         LOG.info(
             "Moved from SQS={} to, Queue={}:{} counter={}",

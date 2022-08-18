@@ -1,9 +1,9 @@
 package forest.colver.datatransfer.it;
 
-import static forest.colver.datatransfer.aws.SqsOperations.sqsConsume;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsConsumeOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDelete;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
-import static forest.colver.datatransfer.aws.SqsOperations.sqsRead;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
@@ -52,7 +52,7 @@ public class HybridJmsAndSqsIntTests {
     moveOneJmsToSqs(STAGE, queueName, creds, SQS1);
 
     // check that it arrived
-    var response = sqsRead(creds, SQS1);
+    var response = sqsReadOneMessage(creds, SQS1);
     assertThat(response.messages().get(0).body()).isEqualTo(payload);
     assertThat(response.messages().get(0).hasMessageAttributes()).isEqualTo(true);
     assertThat(response.messages().get(0).messageAttributes().get("key2").stringValue()).isEqualTo(
@@ -79,7 +79,7 @@ public class HybridJmsAndSqsIntTests {
     moveOneSqsToJms(creds, SQS1, STAGE, queue);
 
     // assert the SQS was cleared
-    var messages = sqsRead(creds, SQS1);
+    var messages = sqsReadOneMessage(creds, SQS1);
     assertThat(messages.hasMessages()).isFalse();
 
     // check that it arrived
@@ -116,13 +116,10 @@ public class HybridJmsAndSqsIntTests {
 
     // check that each arrived on the SQS
     for (var i = 0; i < numMessagesToMove; i++) {
-      var response = sqsConsume(creds, SQS1);
-      assertThat(response.messages().get(0).body()).isEqualTo(payload);
-      assertThat(response.messages().get(0).hasMessageAttributes()).isEqualTo(true);
-      assertThat(
-          response.messages().get(0).messageAttributes().get("specificKey")
-              .stringValue()).isEqualTo(
-          "specificValue");
+      var response = sqsConsumeOneMessage(creds, SQS1);
+      assertThat(response.body()).isEqualTo(payload);
+      assertThat(response.hasMessageAttributes()).isEqualTo(true);
+      assertThat(response.messageAttributes().get("specificKey").stringValue()).isEqualTo("specificValue");
     }
 
     // cleanup and check that the Qpid queue had the correct number of messages after the move
@@ -152,7 +149,7 @@ public class HybridJmsAndSqsIntTests {
     moveAllMessagesFromSqsToJms(creds, SQS1, STAGE, queue);
 
     // assert the SQS was cleared
-    var messages = sqsRead(creds, SQS1);
+    var messages = sqsReadOneMessage(creds, SQS1);
     assertThat(messages.hasMessages()).isFalse();
 
     // check that they arrived

@@ -38,6 +38,7 @@ public class SqsOperations {
   }
 
   // todo: how to sqsSend with a Message object as the arguement?
+
   /**
    * Send a message using a map of message properties to the desired SQS queue.
    */
@@ -60,19 +61,26 @@ public class SqsOperations {
   }
 
   /**
-   * This receives one message from the SQS queue, then deletes that message off of the SQS.
+   * This retrieves one message from the SQS queue, then deletes that message off of the SQS.
+   *
+   * @return A Message.
    */
-  public static ReceiveMessageResponse sqsConsume(AwsCredentialsProvider awsCP, String queueName) {
-    var response = sqsRead(awsCP, queueName);
-    sqsDelete(awsCP, response, queueName);
-    LOG.info("======== SQSCONSUME: Consumed a message from SQS: {}.=======\n", queueName);
-    return response;
+  public static Message sqsConsumeOneMessage(AwsCredentialsProvider awsCP, String queueName) {
+    var response = sqsReadOneMessage(awsCP, queueName);
+    if (response.hasMessages()) {
+      sqsDelete(awsCP, response, queueName);
+      LOG.info("======== SQSCONSUME: Consumed a message from SQS: {}.=======\n", queueName);
+      return response.messages().get(0);
+    } else {
+      LOG.info("======== SQSCONSUME: No messages to consume from SQS: {}.=======\n", queueName);
+      return null;
+    }
   }
 
   /**
    * Reads one message from the SQS, and then displays the data and properties of it.
    */
-  public static ReceiveMessageResponse sqsRead(
+  public static ReceiveMessageResponse sqsReadOneMessage(
       AwsCredentialsProvider awsCP, String queueName) {
     try (var sqsClient = getSqsClient(awsCP)) {
       var receiveMessageRequest =
@@ -202,7 +210,7 @@ public class SqsOperations {
    * Copy a message from one SQS queue to another.
    */
   public static void sqsCopy(AwsCredentialsProvider awsCP, String fromQueue, String toQueue) {
-    var response = sqsRead(awsCP, fromQueue);
+    var response = sqsReadOneMessage(awsCP, fromQueue);
     for (Message message : response.messages()) {
       sqsSend(awsCP, toQueue, message.body());
     }
@@ -212,8 +220,7 @@ public class SqsOperations {
    * Move a message from one SQS queue to another.
    */
   public static void sqsMove(AwsCredentialsProvider awsCP, String fromQueue, String toQueue) {
-    var response = sqsConsume(awsCP, fromQueue);
-    var message = response.messages().get(0);
+    var message = sqsConsumeOneMessage(awsCP, fromQueue);
     sqsSend(awsCP, toQueue, message.body(), message.attributesAsStrings());
   }
 
