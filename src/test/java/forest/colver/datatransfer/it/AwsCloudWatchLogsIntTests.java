@@ -72,14 +72,12 @@ public class AwsCloudWatchLogsIntTests {
   public void testMultipleCloudWatchLogEvents() {
     var messagePrefix = "Multiple-messages-one-call, message generated from manual-data-transfers";
 
-    var streamName = STREAM_PREFIX + "-" + getUuid();
-    LOG.info("streamName={}", streamName);
-
-    List<String> messages = generateLogs(messagePrefix, 1_000, 20, 45);
-    putCWLogEvents(getPrsnlSbCreds(), LOG_GROUP_NAME, streamName, messages);
-
-//    List<String> messages2 = generateLogs(messagePrefix, 500, 150, 160);
-//    putCWLogEvents(getPrsnlSbCreds(), LOG_GROUP_NAME + "2", streamName, messages2);
+    for (int i = 0; i < 10; i++){
+      var streamName = STREAM_PREFIX + "-" + getUuid();
+      LOG.info("streamName={}", streamName);
+      List<String> messages = generateLogs(messagePrefix, 1_000, 20, 45);
+      putCWLogEvents(getPrsnlSbCreds(), LOG_GROUP_NAME, streamName, messages);
+    }
   }
 
   private List<String> generateLogs(String messagePrefix, int numOfLogs, int sizeMin, int sizeMax) {
