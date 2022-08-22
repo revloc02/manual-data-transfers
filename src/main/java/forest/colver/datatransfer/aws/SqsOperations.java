@@ -224,5 +224,27 @@ public class SqsOperations {
     sqsSend(awsCP, toSqs, message.body(), message.attributesAsStrings());
   }
 
-  // todo: need a sqsCopyAll and sqsMoveAll
+  public static void sqsCopyAll(AwsCredentialsProvider awsCP, String fromQueue, String toQueue) {
+    // todo: remember during a copy all the visibility timeout needs to be managed appropriately so the already copied message doesn't become available and copied again
+    // todo: in connection with the above comment, probably do moveAll first and see how long it takes to move 1 M messages do visibility timeout is easier to manage
+
+  }
+
+// todo: this needs a unit test. And then run it, because it hasn't been tested yet
+  public static void sqsMoveAll(AwsCredentialsProvider awsCP, String fromSqs, String toSqs) {
+    var counter = 0;
+    var moreMessages = true;
+    Message message;
+    while (moreMessages) {
+      message = sqsConsumeOneMessage(awsCP, fromSqs);
+      if (message != null) {
+        counter++;
+        sqsSend(awsCP, toSqs, message.body(), message.attributesAsStrings());
+        LOG.info("Moved from SQS={} to SQS={}, counter={}", fromSqs, toSqs, counter);
+      } else {
+        moreMessages = false;
+      }
+    }
+    LOG.info("Moved {} messages.", counter);
+  }
 }
