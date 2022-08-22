@@ -209,19 +209,19 @@ public class SqsOperations {
   /**
    * Copy a message from one SQS queue to another.
    */
-  public static void sqsCopy(AwsCredentialsProvider awsCP, String fromQueue, String toQueue) {
-    var response = sqsReadOneMessage(awsCP, fromQueue);
+  public static void sqsCopy(AwsCredentialsProvider awsCP, String fromSqs, String toSqs) {
+    var response = sqsReadOneMessage(awsCP, fromSqs);
     for (Message message : response.messages()) {
-      sqsSend(awsCP, toQueue, message.body());
+      sqsSend(awsCP, toSqs, message.body());
     }
   }
 
   /**
    * Move a message from one SQS queue to another.
    */
-  public static void sqsMove(AwsCredentialsProvider awsCP, String fromQueue, String toQueue) {
-    var message = sqsConsumeOneMessage(awsCP, fromQueue);
-    sqsSend(awsCP, toQueue, message.body(), message.attributesAsStrings());
+  public static void sqsMove(AwsCredentialsProvider awsCP, String fromSqs, String toSqs) {
+    var message = sqsConsumeOneMessage(awsCP, fromSqs);
+    sqsSend(awsCP, toSqs, message.body(), message.attributesAsStrings());
   }
 
   // todo: need a sqsCopyAll and sqsMoveAll
