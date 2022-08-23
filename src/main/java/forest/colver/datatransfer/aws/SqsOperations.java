@@ -37,7 +37,7 @@ public class SqsOperations {
     sqsSend(awsCp, queueName, payload, messageProps);
   }
 
-  // todo: how to sqsSend with a Message object as the arguement?
+  // todo: how to sqsSend with a Message object as the argument?
 
   /**
    * Send a message using a map of message properties to the desired SQS queue.
@@ -148,9 +148,18 @@ public class SqsOperations {
           LOG.info("Queue Attribute {} = {}", entry.getKey(), entry.getValue());
         }
       } else {
-        LOG.info("Attributes is null.");
+        LOG.info("SQS queue attributes is null.");
       }
       return response;
+    }
+  }
+
+  public static String sqsDepth(AwsCredentialsProvider awsCP, String queueName) {
+    var response = sqsGetQueueAttributes(awsCP, queueName);
+    if (response.hasAttributes()) {
+      return response.attributesAsStrings().get("ApproximateNumberOfMessages");
+    } else {
+      return "SQS queue attributes is null.";
     }
   }
 
@@ -186,7 +195,7 @@ public class SqsOperations {
   }
 
   /**
-   * Deletes messages from the given SQS.
+   * Deletes a list of messages from the given SQS.
    *
    * @param response ReceiveMessageResponse which contains the list of messages to be deleted.
    */
@@ -230,8 +239,14 @@ public class SqsOperations {
 
   }
 
-// todo: this needs a unit test. And then run it, because it hasn't been tested yet
-  public static void sqsMoveAll(AwsCredentialsProvider awsCP, String fromSqs, String toSqs) {
+  /**
+   * Moves all messages from one SQS to another. This method is slow and verbose.
+   *
+   * @param awsCP creds
+   * @param fromSqs source SQS
+   * @param toSqs target SQS
+   */
+  public static void sqsMoveAllVerbose(AwsCredentialsProvider awsCP, String fromSqs, String toSqs) {
     var counter = 0;
     var moreMessages = true;
     Message message;
@@ -246,5 +261,12 @@ public class SqsOperations {
       }
     }
     LOG.info("Moved {} messages.", counter);
+  }
+
+  /**
+   * Move all messages from one SQS to another. This method is fast.
+   */
+  public static void sqsMoveAll() {
+
   }
 }
