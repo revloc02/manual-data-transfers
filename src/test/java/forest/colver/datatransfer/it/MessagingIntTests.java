@@ -121,7 +121,7 @@ public class MessagingIntTests {
   }
 
   @Test
-  public void testMove() {
+  public void testMoveAll() {
     var env = STAGE;
     var fromQueueName = "forest-test";
     var toQueueName = "forest-test2";
