@@ -203,12 +203,12 @@ public class SqsOperations {
       AwsCredentialsProvider awsCP, ReceiveMessageResponse response, String queueName) {
     try (var sqsClient = getSqsClient(awsCP)) {
       for (Message message : response.messages()) {
-        var deleteMessageReqest =
+        var deleteMessageRequest =
             DeleteMessageRequest.builder()
                 .queueUrl(qUrl(sqsClient, queueName))
                 .receiptHandle(message.receiptHandle())
                 .build();
-        var deleteResponse = sqsClient.deleteMessage(deleteMessageReqest);
+        var deleteResponse = sqsClient.deleteMessage(deleteMessageRequest);
         awsResponseValidation(deleteResponse);
         LOG.info("DELETE: message {}.", message);
       }
