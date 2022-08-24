@@ -1,6 +1,7 @@
 package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.aws.CloudWatchLogsOps.putCWLogEvents;
+import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.aws.Utils.getPrsnlSbCreds;
 import static forest.colver.datatransfer.config.Utils.getRandomNumber;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
@@ -72,11 +73,11 @@ public class AwsCloudWatchLogsIntTests {
   public void testMultipleCloudWatchLogEvents() {
     var messagePrefix = "Multiple-messages-one-call, message generated from manual-data-transfers";
 
-    for (int i = 0; i < 10; i++){
+    for (int i = 0; i < 10; i++) {
       var streamName = STREAM_PREFIX + "-" + getUuid();
-      LOG.info("streamName={}", streamName);
-      List<String> messages = generateLogs(messagePrefix, 1_000, 20, 45);
-      putCWLogEvents(getPrsnlSbCreds(), LOG_GROUP_NAME, streamName, messages);
+      LOG.info("stream #{}; streamName={}", i + 1, streamName);
+      List<String> messages = generateLogs(messagePrefix, 1_200, 20, 45);
+      putCWLogEvents(getEmxSbCreds(), "/emx-trace-data-test", streamName, messages);
     }
   }
 
