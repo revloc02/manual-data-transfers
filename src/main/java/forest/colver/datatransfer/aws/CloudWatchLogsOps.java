@@ -70,7 +70,7 @@ public class CloudWatchLogsOps {
     DescribeLogStreamsResponse describeLogStreamsResponse = logsClient.describeLogStreams(
         logStreamRequest);
 
-    LOG.info("describeLogStreamsResponse=", describeLogStreamsResponse.toString());
+    LOG.info("describeLogStreamsResponse={}", describeLogStreamsResponse.toString());
     // Assume that a single stream is returned since a specific stream name was specified in the previous request.
     String sequenceToken = describeLogStreamsResponse.logStreams().get(0).uploadSequenceToken();
     return sequenceToken;
@@ -81,6 +81,6 @@ public class CloudWatchLogsOps {
     CreateLogStreamRequest createLogStreamRequest = CreateLogStreamRequest.builder().logGroupName(
         logGroupName).logStreamName(streamName).build();
     var createLogStreamResponse = logsClient.createLogStream(createLogStreamRequest);
-    LOG.info("createLogStreamResponse=", createLogStreamResponse.sdkHttpResponse().statusCode());
+    LOG.info("createLogStreamResponse={}", createLogStreamResponse.sdkHttpResponse().statusCode());
   }
 }
