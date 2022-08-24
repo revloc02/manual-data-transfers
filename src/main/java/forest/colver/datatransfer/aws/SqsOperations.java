@@ -48,7 +48,7 @@ public class SqsOperations {
               .build();
       var response = sqsClient.sendMessage(sendMessageRequest);
       awsResponseValidation(response);
-      LOG.info("SQSSEND: messageId={} was put on the SQS: {}.\n", message.messageId(), queueName);
+      LOG.info("SQSSEND: messageId={} was put on the SQS: {}.", message.messageId(), queueName);
     }
 
   }
@@ -70,7 +70,7 @@ public class SqsOperations {
               .build();
       var response = sqsClient.sendMessage(sendMessageRequest);
       awsResponseValidation(response);
-      LOG.info("SQSSEND: The payload '{}' was put on the SQS: {}.\n", payload, queueName);
+      LOG.info("SQSSEND: The payload '{}' was put on the SQS: {}.", payload, queueName);
     }
   }
 
@@ -83,10 +83,10 @@ public class SqsOperations {
     var response = sqsReadOneMessage(awsCP, queueName);
     if (response.hasMessages()) {
       sqsDelete(awsCP, response, queueName);
-      LOG.info("======== SQSCONSUME: Consumed a message from SQS: {}.=======\n", queueName);
+      LOG.info("======== SQSCONSUME: Consumed a message from SQS: {}.=======", queueName);
       return response.messages().get(0);
     } else {
-      LOG.info("======== SQSCONSUME: No messages to consume from SQS: {}.=======\n", queueName);
+      LOG.info("======== SQSCONSUME: No messages to consume from SQS: {}.=======", queueName);
       return null;
     }
   }
@@ -123,7 +123,7 @@ public class SqsOperations {
           PurgeQueueRequest.builder().queueUrl(qUrl(sqsClient, queueName)).build();
       var response = sqsClient.purgeQueue(purgeQueueRequest);
       awsResponseValidation(response);
-      LOG.info("SQSPURGE: The SQS {} has beeen purged.\n", queueName);
+      LOG.info("SQSPURGE: The SQS {} has beeen purged.", queueName);
     }
   }
 
