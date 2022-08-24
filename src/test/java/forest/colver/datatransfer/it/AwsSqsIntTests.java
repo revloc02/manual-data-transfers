@@ -6,6 +6,7 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsDelete;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsGetQueueAttributes;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMove;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveAll;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveAllVerbose;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
@@ -174,6 +175,32 @@ public class AwsSqsIntTests {
   }
 
   @Test
+  public void testSqsMoveAllVerbose() {
+    LOG.info("Interacting with: sqs={}; sqs={}", SQS1, SQS2);
+    // put messages on sqs
+    var creds = getEmxSbCreds();
+    var payload = getDefaultPayload();
+    var numMessages = 14;
+    for (var i = 0; i < numMessages; i++) {
+      sqsSend(creds, SQS1, payload);
+    }
+    pause(12); // todo: i need to adopt awaitility here.
+
+    // verify message is on the sqs
+    assertThat(sqsDepth(creds, SQS1)).isEqualTo(String.valueOf(numMessages));
+
+    // move the message
+    sqsMoveAllVerbose(creds, SQS1, SQS2);
+    pause(12);
+
+    // verify message is on the sqs
+    assertThat(sqsDepth(creds, SQS2)).isEqualTo(String.valueOf(numMessages));
+
+    // cleanup
+    sqsPurge(creds, SQS2);
+  }
+
+  @Test
   public void testSqsMoveAll() {
     LOG.info("Interacting with: sqs={}; sqs={}", SQS1, SQS2);
     // put messages on sqs
@@ -189,7 +216,7 @@ public class AwsSqsIntTests {
     assertThat(sqsDepth(creds, SQS1)).isEqualTo(String.valueOf(numMessages));
 
     // move the message
-    sqsMoveAllVerbose(creds, SQS1, SQS2);
+    sqsMoveAll(creds, SQS1, SQS2);
     pause(12);
 
     // verify message is on the sqs
