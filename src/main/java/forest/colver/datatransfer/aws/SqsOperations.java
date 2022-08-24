@@ -278,9 +278,50 @@ public class SqsOperations {
   }
 
   /**
-   * Move all messages from one SQS to another. This method is fast.
+   * Move all messages from one SQS to another. This method is faster and less verbose.
    */
-  public static void sqsMoveAll() {
-
+  public static void sqsMoveAll(AwsCredentialsProvider awsCP, String fromSqs, String toSqs) {
+    var counter = 0;
+    var moreMessages = true;
+    try (var sqsClient = getSqsClient(awsCP)) {
+      do {
+        // receive
+        var receiveMessageRequest =
+            ReceiveMessageRequest.builder()
+                .waitTimeSeconds(2)
+                .messageAttributeNames("All")
+                .attributeNames(QueueAttributeName.ALL)
+                .queueUrl(qUrl(sqsClient, fromSqs))
+                .maxNumberOfMessages(10)
+                .visibilityTimeout(3) // default 30 sec
+                .build();
+        var response = sqsClient.receiveMessage(receiveMessageRequest);
+        // send
+        if (response.hasMessages()) {
+          for (var message : response.messages()) {
+            counter++;
+            var sendMessageRequest =
+                SendMessageRequest.builder()
+                    .messageBody(message.body())
+                    .messageAttributes(createMessageAttributes(message.attributesAsStrings()))
+                    .queueUrl(qUrl(sqsClient, toSqs))
+                    .build();
+            sqsClient.sendMessage(sendMessageRequest);
+          }
+        } else {
+          moreMessages = false;
+        }
+        // delete
+        for (Message message : response.messages()) {
+          var deleteMessageRequest =
+              DeleteMessageRequest.builder()
+                  .queueUrl(qUrl(sqsClient, fromSqs))
+                  .receiptHandle(message.receiptHandle())
+                  .build();
+          sqsClient.deleteMessage(deleteMessageRequest);
+        }
+      } while (moreMessages);
+    }
+    LOG.info("Moved {} messages.", counter);
   }
 }
