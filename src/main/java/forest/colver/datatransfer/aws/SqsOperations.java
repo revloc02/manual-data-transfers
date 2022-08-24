@@ -183,7 +183,7 @@ public class SqsOperations {
   private static String qUrl(SqsClient sqsClient, String queueName) {
     String queueUrl =
         sqsClient.getQueueUrl(GetQueueUrlRequest.builder().queueName(queueName).build()).queueUrl();
-    LOG.info("Queue URL={}", queueUrl);
+//    LOG.info("Queue URL={}", queueUrl);
     return queueUrl;
   }
 
