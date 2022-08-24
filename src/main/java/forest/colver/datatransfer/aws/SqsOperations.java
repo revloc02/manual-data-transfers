@@ -37,7 +37,21 @@ public class SqsOperations {
     sqsSend(awsCp, queueName, payload, messageProps);
   }
 
-  // todo: how to sqsSend with a Message object as the argument?
+  // todo: this needs a Javadoc and a unit test
+  public static void sqsSend(AwsCredentialsProvider awsCp, String queueName, Message message) {
+    try (var sqsClient = getSqsClient(awsCp)) {
+      var sendMessageRequest =
+          SendMessageRequest.builder()
+              .messageBody(message.body())
+              .messageAttributes(createMessageAttributes(message.attributesAsStrings()))
+              .queueUrl(qUrl(sqsClient, queueName))
+              .build();
+      var response = sqsClient.sendMessage(sendMessageRequest);
+      awsResponseValidation(response);
+      LOG.info("SQSSEND: messageId={} was put on the SQS: {}.\n", message.messageId(), queueName);
+    }
+
+  }
 
   /**
    * Send a message using a map of message properties to the desired SQS queue.
