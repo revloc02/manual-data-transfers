@@ -19,6 +19,7 @@ import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
 import static forest.colver.datatransfer.config.Utils.pause;
 import static forest.colver.datatransfer.config.Utils.readFile;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -184,17 +185,19 @@ public class AwsSqsIntTests {
     for (var i = 0; i < numMessages; i++) {
       sqsSend(creds, SQS1, payload);
     }
-    pause(12); // todo: i need to adopt awaitility here.
 
     // verify message is on the sqs
-    assertThat(sqsDepth(creds, SQS1)).isEqualTo(String.valueOf(numMessages));
+    await()
+        .untilAsserted(
+            () -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(String.valueOf(numMessages)));
 
     // move the message
     sqsMoveAllVerbose(creds, SQS1, SQS2);
-    pause(12);
 
     // verify message is on the sqs
-    assertThat(sqsDepth(creds, SQS2)).isEqualTo(String.valueOf(numMessages));
+    await()
+        .untilAsserted(
+            () -> assertThat(sqsDepth(creds, SQS2)).isEqualTo(String.valueOf(numMessages)));
 
     // cleanup
     sqsPurge(creds, SQS2);
@@ -210,17 +213,19 @@ public class AwsSqsIntTests {
     for (var i = 0; i < numMessages; i++) {
       sqsSend(creds, SQS1, payload);
     }
-    pause(12);
 
     // verify message is on the sqs
-    assertThat(sqsDepth(creds, SQS1)).isEqualTo(String.valueOf(numMessages));
+    await()
+        .untilAsserted(
+            () -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(String.valueOf(numMessages)));
 
     // move the message
     sqsMoveAll(creds, SQS1, SQS2);
-    pause(12);
 
     // verify message is on the sqs
-    assertThat(sqsDepth(creds, SQS2)).isEqualTo(String.valueOf(numMessages));
+    await()
+        .untilAsserted(
+            () -> assertThat(sqsDepth(creds, SQS2)).isEqualTo(String.valueOf(numMessages)));
 
     // cleanup
     sqsPurge(creds, SQS2);
