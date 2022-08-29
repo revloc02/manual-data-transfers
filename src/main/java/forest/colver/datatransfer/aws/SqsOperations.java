@@ -278,8 +278,9 @@ public class SqsOperations {
   }
 
   /**
-   * Move all messages from one SQS to another, with less log verbosity.
-   * I was also attempting to make this method faster, but it is only about twice as fast.
+   * Move all messages from one SQS to another, with less log verbosity. I was also attempting to
+   * make this method faster, but it is only about twice as fast as {@link
+   * #sqsMoveAllVerbose(AwsCredentialsProvider, String, String) sqsMoveAllVerbose}.
    */
   public static void sqsMoveAll(AwsCredentialsProvider awsCP, String fromSqs, String toSqs) {
     var counter = 0;
