@@ -142,7 +142,7 @@ public class HybridJmsAndSqsIntTests {
     for (var i = 0; i < numMsgs; i++) {
       sqsSend(creds, SQS1, payload, messageProps);
     }
-    pause(8);
+    pause(8); // todo: use awaitility
 
     // move them to Qpid
     var queue = "forest-test";

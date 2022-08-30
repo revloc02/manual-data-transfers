@@ -189,7 +189,7 @@ public class AzureServiceBusQueueTests {
     assertThat(messageCount(credsQwTtl, EMX_SANDBOX_FOREST_QUEUE_W_TTL)).isEqualTo(1);
 
     // not sure what the poll cycle is when checking for expired messages, but my guess is >60 sec
-    pause(100);
+    pause(100); // todo: this needs to use awaitility
     // check queue to see if main queue is empty
     assertThat(messageCount(credsQwTtl, EMX_SANDBOX_FOREST_QUEUE_W_TTL)).isEqualTo(0);
 

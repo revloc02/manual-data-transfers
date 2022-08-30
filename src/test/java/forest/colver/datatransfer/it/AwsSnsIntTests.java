@@ -46,7 +46,7 @@ public class AwsSnsIntTests {
     var message = "testing SNS publish topic via SQS subscription";
     publishTopic(getPrsnlSbCreds(), SNS_ARN, message);
 
-    pause(2);
+    pause(2); // todo: see if awaitility will work here
     // check that it arrived
     var response = sqsReadOneMessage(creds, SQS);
     LOG.info("response.messages().get(0).body():{}", response.messages().get(0).body());
