@@ -41,19 +41,17 @@ public class AwsSqsIntTests {
     LOG.info("Interacting with: sqs={}", SQS1);
     // place some messages
     var creds = getEmxSbCreds();
-    for (var i = 0; i < 5; i++) {
+    var numMessages = 5;
+    for (var i = 0; i < numMessages; i++) {
       sqsSend(
           creds,
           SQS1,
           readFile("src/test/resources/1test.txt", StandardCharsets.UTF_8));
     }
-    pause(1);
+    await().until(() -> sqsGetQueueAttributes(creds, SQS1).attributesAsStrings()
+        .get("ApproximateNumberOfMessages").equals(String.valueOf(numMessages)));
 
-    // check that the messages are where we think they are
-    var attributes = sqsGetQueueAttributes(creds, SQS1);
-    sqsPurge(creds,
-        SQS1); // purge before asserting depth in case it's wrong, thus a rerun will work
-    assertThat(attributes.attributesAsStrings().get("ApproximateNumberOfMessages")).isEqualTo("5");
+    sqsPurge(creds, SQS1); // Note: AWS only allows 1 purge per minute for SQS queues
 
     // assert the sqs was cleared
     var messages = sqsReadOneMessage(creds, SQS1);
@@ -113,7 +111,7 @@ public class AwsSqsIntTests {
     // check that it arrived
     var responseGet = sqsReadOneMessage(creds, SQS1);
     assertThat(responseGet.messages().get(0).body()).isEqualTo(payload);
-    pause(5);
+    pause(5); // todo: try to use awaitility
     // consume the message
     var message = sqsConsumeOneMessage(creds, SQS1);
     assertThat(message.body()).isEqualTo(payload);
