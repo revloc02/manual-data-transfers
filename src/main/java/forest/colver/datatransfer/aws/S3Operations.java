@@ -16,6 +16,7 @@ import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Object;
@@ -78,18 +79,14 @@ public class S3Operations {
    * The HEAD action retrieves metadata from an object without returning the object itself. This
    * action is useful if you're only interested in an object's metadata.
    */
-  public static void s3Head(
+  public static HeadObjectResponse s3Head(
       AwsCredentialsProvider awsCp, String bucket, String objectKey) {
+    HeadObjectResponse headObjectResponse;
     try (var s3Client = getS3Client(awsCp)) {
       var headObjectRequest = HeadObjectRequest.builder().bucket(bucket).key(objectKey).build();
-      var headObjectResponse = s3Client.headObject(headObjectRequest);
+      headObjectResponse = s3Client.headObject(headObjectRequest);
       awsResponseValidation(headObjectResponse);
-      LOG.info("{} Metadata:", objectKey);
-      for (Map.Entry<String, String> entry : headObjectResponse.metadata().entrySet()) {
-        LOG.info("  {}={}", entry.getKey(), entry.getValue());
-      }
-      LOG.info("  expires={}", headObjectResponse.expires());
-      LOG.info("  expiration={}\n", headObjectResponse.expiration());
+      return headObjectResponse;
     }
   }
 
