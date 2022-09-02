@@ -168,13 +168,15 @@ public class SqsOperations {
     }
   }
 
-  public static String sqsDepth(AwsCredentialsProvider awsCP, String queueName) {
+  public static int sqsDepth(AwsCredentialsProvider awsCP, String queueName) {
     var response = sqsGetQueueAttributes(awsCP, queueName);
+    var numMsgs = 0;
     if (response.hasAttributes()) {
-      return response.attributesAsStrings().get("ApproximateNumberOfMessages");
+      numMsgs = Integer.parseInt(response.attributes().get(QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES));
     } else {
-      return "SQS queue attributes is null.";
+      LOG.error("ERROR: SQS queue attributes is null.");
     }
+    return numMsgs;
   }
 
   /**

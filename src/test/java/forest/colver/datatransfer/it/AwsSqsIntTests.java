@@ -4,7 +4,6 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsConsumeOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsCopy;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDelete;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
-import static forest.colver.datatransfer.aws.SqsOperations.sqsGetQueueAttributes;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMove;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveAll;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveAllVerbose;
@@ -48,8 +47,7 @@ public class AwsSqsIntTests {
           SQS1,
           readFile("src/test/resources/1test.txt", StandardCharsets.UTF_8));
     }
-    await().until(() -> sqsGetQueueAttributes(creds, SQS1).attributesAsStrings()
-        .get("ApproximateNumberOfMessages").equals(String.valueOf(numMessages)));
+    await().until(() -> sqsDepth(creds, SQS1) >= numMessages);
 
     sqsPurge(creds, SQS1); // Note: AWS only allows 1 purge per minute for SQS queues
 
@@ -187,7 +185,7 @@ public class AwsSqsIntTests {
     // verify message is on the sqs
     await()
         .untilAsserted(
-            () -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(String.valueOf(numMessages)));
+            () -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMessages));
 
     // move the message
     sqsMoveAllVerbose(creds, SQS1, SQS2);
@@ -195,7 +193,7 @@ public class AwsSqsIntTests {
     // verify message is on the sqs
     await()
         .untilAsserted(
-            () -> assertThat(sqsDepth(creds, SQS2)).isEqualTo(String.valueOf(numMessages)));
+            () -> assertThat(sqsDepth(creds, SQS2)).isEqualTo(numMessages));
 
     // cleanup
     sqsPurge(creds, SQS2);
@@ -215,7 +213,7 @@ public class AwsSqsIntTests {
     // verify message is on the sqs
     await()
         .untilAsserted(
-            () -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(String.valueOf(numMessages)));
+            () -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMessages));
 
     // move the message
     sqsMoveAll(creds, SQS1, SQS2);
@@ -223,7 +221,7 @@ public class AwsSqsIntTests {
     // verify message is on the sqs
     await()
         .untilAsserted(
-            () -> assertThat(sqsDepth(creds, SQS2)).isEqualTo(String.valueOf(numMessages)));
+            () -> assertThat(sqsDepth(creds, SQS2)).isEqualTo(numMessages));
 
     // cleanup
     sqsPurge(creds, SQS2);
