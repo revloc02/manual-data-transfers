@@ -168,7 +168,22 @@ public class AwsSqsIntTests {
 
   @Test
   public void testSqsDepth() {
+    LOG.info("Interacting with: sqs={}", SQS1);
+    // put messages on sqs
+    var creds = getEmxSbCreds();
+    var payload = getDefaultPayload();
+    var numMessages = 6;
+    for (var i = 0; i < numMessages; i++) {
+      sqsSend(creds, SQS1, payload);
+    }
 
+    // verify depth is correct
+    await()
+        .untilAsserted(
+            () -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMessages));
+
+    // cleanup
+    sqsPurge(creds, SQS1);
   }
 
   @Test
