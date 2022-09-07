@@ -69,6 +69,7 @@ public class AwsSqsIntTests {
     var body = fromQResponse.messages().get(0).body();
     assertThat(body).isEqualTo(payload);
 
+    //todo: can I use awaitility here?
     // copy the message
     pause(4); // waiting for the visibility timeout from the sqsRead()
     sqsCopy(creds, SQS1, SQS2);
@@ -107,9 +108,7 @@ public class AwsSqsIntTests {
     var payload = "message with payload only, no MessageAttributes";
     sqsSend(creds, SQS1, payload);
     // check that it arrived
-    var responseGet = sqsReadOneMessage(creds, SQS1);
-    assertThat(responseGet.messages().get(0).body()).isEqualTo(payload);
-    pause(5); // todo: try to use awaitility
+    await().until(() -> sqsDepth(creds, SQS1) >= 1);
     // consume the message
     var message = sqsConsumeOneMessage(creds, SQS1);
     assertThat(message.body()).isEqualTo(payload);
