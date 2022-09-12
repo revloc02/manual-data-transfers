@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -47,7 +48,10 @@ public class AwsSqsIntTests {
           SQS1,
           readFile("src/test/resources/1test.txt", StandardCharsets.UTF_8));
     }
-    await().until(() -> sqsDepth(creds, SQS1) >= numMessages);
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .until(() -> sqsDepth(creds, SQS1) >= numMessages);
 
     sqsPurge(creds, SQS1); // Note: AWS only allows 1 purge per minute for SQS queues
 
@@ -108,7 +112,10 @@ public class AwsSqsIntTests {
     var payload = "message with payload only, no MessageAttributes";
     sqsSend(creds, SQS1, payload);
     // check that it arrived
-    await().until(() -> sqsDepth(creds, SQS1) >= 1);
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .until(() -> sqsDepth(creds, SQS1) >= 1);
     // consume the message
     var message = sqsConsumeOneMessage(creds, SQS1);
     assertThat(message.body()).isEqualTo(payload);
@@ -178,6 +185,8 @@ public class AwsSqsIntTests {
 
     // verify depth is correct
     await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
         .untilAsserted(
             () -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMessages));
 
@@ -198,6 +207,8 @@ public class AwsSqsIntTests {
 
     // verify message is on the sqs
     await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
         .untilAsserted(
             () -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMessages));
 
@@ -206,6 +217,8 @@ public class AwsSqsIntTests {
 
     // verify message is on the sqs
     await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
         .untilAsserted(
             () -> assertThat(sqsDepth(creds, SQS2)).isEqualTo(numMessages));
 
@@ -226,6 +239,8 @@ public class AwsSqsIntTests {
 
     // verify message is on the sqs
     await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
         .untilAsserted(
             () -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMessages));
 
@@ -234,6 +249,8 @@ public class AwsSqsIntTests {
 
     // verify message is on the sqs
     await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
         .untilAsserted(
             () -> assertThat(sqsDepth(creds, SQS2)).isEqualTo(numMessages));
 
