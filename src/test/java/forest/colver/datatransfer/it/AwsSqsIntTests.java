@@ -15,7 +15,6 @@ import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS2;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
-import static forest.colver.datatransfer.config.Utils.pause;
 import static forest.colver.datatransfer.config.Utils.readFile;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -154,18 +153,24 @@ public class AwsSqsIntTests {
     var payload = getDefaultPayload();
     sqsSend(creds, SQS1, payload);
 
-    // verify message is on the sqs
-    var fromQResponse = sqsReadOneMessage(creds, SQS1);
-    var body = fromQResponse.messages().get(0).body();
-    assertThat(body).isEqualTo(payload);
+    // check that it arrived
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .until(() -> sqsDepth(creds, SQS1) >= 1);
 
     // move the message
-    pause(4); // waiting for the visibility timeout from the sqsGet()
     sqsMove(creds, SQS1, SQS2);
+
+    // ensure that the file was moved off of the first SQS
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .until(() -> sqsDepth(creds, SQS1) == 0);
 
     // verify the message is on the other sqs
     var toQResponse = sqsReadOneMessage(creds, SQS2);
-    body = toQResponse.messages().get(0).body();
+    var body = toQResponse.messages().get(0).body();
     assertThat(body).isEqualTo(payload);
 
     // cleanup
