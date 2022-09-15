@@ -39,6 +39,7 @@ public class SqsOperations {
 
   /**
    * Sends a {@link software.amazon.awssdk.services.sqs.model.Message Message} to an SQS.
+   *
    * @param awsCp Credentials.
    * @param queueName SQS name.
    * @param message A {@link software.amazon.awssdk.services.sqs.model.Message Message}.
@@ -176,7 +177,8 @@ public class SqsOperations {
     var response = sqsGetQueueAttributes(awsCP, queueName);
     var numMsgs = 0;
     if (response.hasAttributes()) {
-      numMsgs = Integer.parseInt(response.attributes().get(QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES));
+      numMsgs = Integer.parseInt(
+          response.attributes().get(QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES));
     } else {
       LOG.error("ERROR: SQS queue attributes is null.");
     }
