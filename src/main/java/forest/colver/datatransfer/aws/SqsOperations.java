@@ -37,7 +37,12 @@ public class SqsOperations {
     sqsSend(awsCp, queueName, payload, messageProps);
   }
 
-  // todo: this needs a Javadoc and a unit test
+  /**
+   * Sends a {@link software.amazon.awssdk.services.sqs.model.Message Message} to an SQS.
+   * @param awsCp Credentials.
+   * @param queueName SQS name.
+   * @param message A {@link software.amazon.awssdk.services.sqs.model.Message Message}.
+   */
   public static void sqsSend(AwsCredentialsProvider awsCp, String queueName, Message message) {
     try (var sqsClient = getSqsClient(awsCp)) {
       var sendMessageRequest =
@@ -50,7 +55,6 @@ public class SqsOperations {
       awsResponseValidation(response);
       LOG.info("SQSSEND: messageId={} was put on the SQS: {}.", message.messageId(), queueName);
     }
-
   }
 
   /**

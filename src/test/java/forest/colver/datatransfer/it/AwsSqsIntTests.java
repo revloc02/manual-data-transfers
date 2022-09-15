@@ -15,6 +15,7 @@ import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS2;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
+import static forest.colver.datatransfer.config.Utils.getUuid;
 import static forest.colver.datatransfer.config.Utils.readFile;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -25,6 +26,8 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.services.sqs.model.Message;
+import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
 /**
  * Integration Tests for AWS SQS
@@ -96,6 +99,30 @@ public class AwsSqsIntTests {
     var creds = getEmxSbCreds();
     var payload = "message with payload only, no MessageAttributes";
     sqsSend(creds, SQS1, payload);
+    // check that it arrived
+    var response = sqsReadOneMessage(creds, SQS1);
+    assertThat(response.messages().get(0).body()).isEqualTo(payload);
+    // cleanup
+    sqsDelete(creds, response, SQS1);
+  }
+
+  /**
+   * Sends a {@link software.amazon.awssdk.services.sqs.model.Message Message} to an SQS.
+   */
+  @Test
+  public void testSqsSendMessage() {
+    LOG.info("Interacting with: sqs={}", SQS1);
+    var payload = "Message Payload. This message also includes message attributes.";
+    var value2 = MessageAttributeValue.builder().stringValue("value2").build();
+    var messageAttributes = Map.of("key2", value2);
+    var message = Message.builder()
+        .body(payload)
+        .messageAttributes(messageAttributes)
+        .messageId(getUuid())
+        .build();
+    // send some stuff
+    var creds = getEmxSbCreds();
+    sqsSend(creds, SQS1, message);
     // check that it arrived
     var response = sqsReadOneMessage(creds, SQS1);
     assertThat(response.messages().get(0).body()).isEqualTo(payload);
