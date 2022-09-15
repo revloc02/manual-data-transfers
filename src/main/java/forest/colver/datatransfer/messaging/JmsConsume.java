@@ -121,8 +121,10 @@ public class JmsConsume {
   }
 
   // todo: Figure out how to test this
+
   /**
    * This registers a listener to pick up messages as they arrive on the queue.
+   *
    * @param env Environment of the broker.
    * @param queueName The queue name.
    */
@@ -284,7 +286,8 @@ public class JmsConsume {
       } catch (JMSException e) {
         e.printStackTrace();
       }
-      LOG.info("Moved {} messages for selector={}.", counter, selector);
+      LOG.info("Moved {} messages to {} in {}, for selector={}.", counter, toQueueName, env.name(),
+          selector);
     }
   }
 
