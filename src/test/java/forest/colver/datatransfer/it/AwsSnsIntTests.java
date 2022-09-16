@@ -38,7 +38,9 @@ public class AwsSnsIntTests {
     // refresh personal sandbox creds
     // run TF in terraform/aws/main.tf to create personal sandbox SNS topic
     // copy the created SNS ARN to .aws/credentials.properties
-    getSnsTopicAttributes(getPrsnlSbCreds(), SNS_ARN);
+
+    // need to refresh Enterprise Sandbox creds to run
+    getSnsTopicAttributes(getEmxSbCreds(), SNS_ARN);
   }
 
   @Test
