@@ -219,8 +219,7 @@ public class AwsSqsIntTests {
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(
-            () -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMessages));
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMessages));
 
     // cleanup
     sqsPurge(creds, SQS1);
@@ -241,8 +240,7 @@ public class AwsSqsIntTests {
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(
-            () -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMessages));
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMessages));
 
     // move the message
     sqsMoveAllVerbose(creds, SQS1, SQS2);
@@ -251,8 +249,7 @@ public class AwsSqsIntTests {
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(
-            () -> assertThat(sqsDepth(creds, SQS2)).isEqualTo(numMessages));
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS2)).isEqualTo(numMessages));
 
     // cleanup
     sqsPurge(creds, SQS2);
@@ -273,8 +270,7 @@ public class AwsSqsIntTests {
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(
-            () -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMessages));
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMessages));
 
     // move the message
     sqsMoveAll(creds, SQS1, SQS2);
@@ -283,8 +279,7 @@ public class AwsSqsIntTests {
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(
-            () -> assertThat(sqsDepth(creds, SQS2)).isEqualTo(numMessages));
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS2)).isEqualTo(numMessages));
 
     // cleanup
     sqsPurge(creds, SQS2);
