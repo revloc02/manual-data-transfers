@@ -43,8 +43,8 @@ public class AwsSqsIntTests {
     LOG.info("Interacting with: sqs={}", SQS1);
     // place some messages
     var creds = getEmxSbCreds();
-    var numMessages = 5;
-    for (var i = 0; i < numMessages; i++) {
+    var numMsgs = 5;
+    for (var i = 0; i < numMsgs; i++) {
       sqsSend(
           creds,
           SQS1,
@@ -53,7 +53,7 @@ public class AwsSqsIntTests {
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .until(() -> sqsDepth(creds, SQS1) >= numMessages);
+        .until(() -> sqsDepth(creds, SQS1) >= numMsgs);
 
     sqsPurge(creds, SQS1); // Note: AWS only allows 1 purge per minute for SQS queues
 
@@ -210,8 +210,8 @@ public class AwsSqsIntTests {
     // put messages on sqs
     var creds = getEmxSbCreds();
     var payload = getDefaultPayload();
-    var numMessages = 6;
-    for (var i = 0; i < numMessages; i++) {
+    var numMsgs = 6;
+    for (var i = 0; i < numMsgs; i++) {
       sqsSend(creds, SQS1, payload);
     }
 
@@ -219,7 +219,7 @@ public class AwsSqsIntTests {
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMessages));
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMsgs));
 
     // cleanup
     sqsPurge(creds, SQS1);
@@ -231,8 +231,8 @@ public class AwsSqsIntTests {
     // put messages on sqs
     var creds = getEmxSbCreds();
     var payload = getDefaultPayload();
-    var numMessages = 14;
-    for (var i = 0; i < numMessages; i++) {
+    var numMsgs = 14;
+    for (var i = 0; i < numMsgs; i++) {
       sqsSend(creds, SQS1, payload);
     }
 
@@ -240,16 +240,16 @@ public class AwsSqsIntTests {
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMessages));
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMsgs));
 
     // move the message
     sqsMoveAllVerbose(creds, SQS1, SQS2);
 
-    // verify message is on the sqs
+    // verify messages are on the sqs
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS2)).isEqualTo(numMessages));
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS2)).isEqualTo(numMsgs));
 
     // cleanup
     sqsPurge(creds, SQS2);
@@ -261,16 +261,16 @@ public class AwsSqsIntTests {
     // put messages on sqs
     var creds = getEmxSbCreds();
     var payload = getDefaultPayload();
-    var numMessages = 14;
-    for (var i = 0; i < numMessages; i++) {
+    var numMsgs = 14;
+    for (var i = 0; i < numMsgs; i++) {
       sqsSend(creds, SQS1, payload);
     }
 
-    // verify message is on the sqs
+    // verify messages are on the sqs
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMessages));
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMsgs));
 
     // move the message
     sqsMoveAll(creds, SQS1, SQS2);
@@ -279,7 +279,7 @@ public class AwsSqsIntTests {
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS2)).isEqualTo(numMessages));
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS2)).isEqualTo(numMsgs));
 
     // cleanup
     sqsPurge(creds, SQS2);
