@@ -2,6 +2,7 @@ package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.aws.SqsOperations.sqsConsumeOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDelete;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
@@ -9,7 +10,6 @@ import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
-import static forest.colver.datatransfer.config.Utils.pause;
 import static forest.colver.datatransfer.hybrid.JmsAndSqs.moveAllMessagesFromSqsToJms;
 import static forest.colver.datatransfer.hybrid.JmsAndSqs.moveAllSpecificMessagesFromJmsToSqs;
 import static forest.colver.datatransfer.hybrid.JmsAndSqs.moveOneJmsToSqs;
@@ -22,7 +22,9 @@ import static forest.colver.datatransfer.messaging.JmsSend.sendMultipleSameMessa
 import static forest.colver.datatransfer.messaging.Utils.createDefaultMessage;
 import static forest.colver.datatransfer.messaging.Utils.createTextMessage;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
+import java.time.Duration;
 import java.util.Map;
 import javax.jms.JMSException;
 import javax.jms.TextMessage;
@@ -74,6 +76,12 @@ public class HybridJmsAndSqsIntTests {
     var payload = getDefaultPayload();
     sqsSend(creds, SQS1, payload, messageProps);
 
+    // check that it arrived
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(1));
+
     // move it to Qpid
     var queue = "forest-test";
     moveOneSqsToJms(creds, SQS1, STAGE, queue);
@@ -119,7 +127,8 @@ public class HybridJmsAndSqsIntTests {
       var response = sqsConsumeOneMessage(creds, SQS1);
       assertThat(response.body()).isEqualTo(payload);
       assertThat(response.hasMessageAttributes()).isEqualTo(true);
-      assertThat(response.messageAttributes().get("specificKey").stringValue()).isEqualTo("specificValue");
+      assertThat(response.messageAttributes().get("specificKey").stringValue()).isEqualTo(
+          "specificValue");
     }
 
     // cleanup and check that the Qpid queue had the correct number of messages after the move
@@ -142,7 +151,12 @@ public class HybridJmsAndSqsIntTests {
     for (var i = 0; i < numMsgs; i++) {
       sqsSend(creds, SQS1, payload, messageProps);
     }
-    pause(8); // todo: use awaitility
+
+    // verify messages are on the sqs
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMsgs));
 
     // move them to Qpid
     var queue = "forest-test";
