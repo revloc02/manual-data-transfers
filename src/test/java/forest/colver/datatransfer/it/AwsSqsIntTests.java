@@ -284,4 +284,6 @@ public class AwsSqsIntTests {
     // cleanup
     sqsPurge(creds, SQS2);
   }
+
+  // todo: Can you access(retrieve) a message from an SQS by its message.ID?
 }

@@ -334,4 +334,15 @@ public class SqsOperations {
     }
     LOG.info("Moved {} messages.", counter);
   }
+
+  /**
+   * SQS Selector. Find messages on an SQS with certain attributes. How to do this right?
+   */
+  public static void sqsSelector() {
+    // todo: indeed, how to do this correctly?
+    // for deep queues this is impossible. But for queue with, less than 100 say, perhaps the
+    // visibility timeout could be used to rummage through all of the messages to find the ones you
+    // want. Maybe either move them to another queue or collect their message.IDs--can you access
+    // a message from an SQS by its message.ID?
+  }
 }
