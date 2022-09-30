@@ -338,11 +338,64 @@ public class SqsOperations {
   /**
    * SQS Selector. Find messages on an SQS with certain attributes. How to do this right?
    */
-  public static void sqsSelector() {
+  public static void sqsMoveSelectedMessages(AwsCredentialsProvider awsCP, String fromSqs, String toSqs) {
     // todo: indeed, how to do this correctly?
     // for deep queues this is impossible. But for queue with, less than 100 say, perhaps the
     // visibility timeout could be used to rummage through all of the messages to find the ones you
     // want. Maybe either move them to another queue or collect their message.IDs--can you access
     // a message from an SQS by its message.ID?
+
+    // check queue depth, if it is too deep just stop
+    var depth = sqsDepth(awsCP, fromSqs);
+    if (depth < 100) {
+      // from queue depth calculate visibility timeout
+      var vt = depth * 4;
+      // start loop
+      var counter = 0;
+      var moreMessages = true;
+      try (var sqsClient = getSqsClient(awsCP)) {
+        do {
+          // receive
+          // receive 10 messages
+          var receiveMessageRequest =
+              ReceiveMessageRequest.builder()
+                  .waitTimeSeconds(2)
+                  .messageAttributeNames("All")
+                  .attributeNames(QueueAttributeName.ALL)
+                  .queueUrl(qUrl(sqsClient, fromSqs))
+                  .maxNumberOfMessages(10)
+                  .visibilityTimeout(3) // default 30 sec
+                  .build();
+          var response = sqsClient.receiveMessage(receiveMessageRequest);
+          // send
+          if (response.hasMessages()) {
+            for (var message : response.messages()) {
+              // check each one for selector stuff
+
+              // if it matches move it and then delete it using the receiptHandle()
+              counter++;
+              var sendMessageRequest =
+                  SendMessageRequest.builder()
+                      .messageBody(message.body())
+                      .messageAttributes(createMessageAttributes(message.attributesAsStrings()))
+                      .queueUrl(qUrl(sqsClient, toSqs))
+                      .build();
+              sqsClient.sendMessage(sendMessageRequest);
+              var deleteMessageRequest =
+                  DeleteMessageRequest.builder()
+                      .queueUrl(qUrl(sqsClient, fromSqs))
+                      .receiptHandle(message.receiptHandle())
+                      .build();
+              sqsClient.deleteMessage(deleteMessageRequest);
+            }
+          } else {
+            moreMessages = false;
+          }
+        } while (moreMessages);
+      }
+      // display summary: num messages checked, num messages moved
+    } else {
+      LOG.info("Queue {} is too deep {} for selective message moving.", fromSqs, depth);
+    }
   }
 }
