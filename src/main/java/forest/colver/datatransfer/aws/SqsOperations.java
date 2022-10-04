@@ -336,7 +336,7 @@ public class SqsOperations {
   }
 
   /**
-   * SQS Selector. Find messages on an SQS with certain attributes. How to do this right?
+   * SQS Selector. Find messages on an SQS with a certain attribute and move it to another SQS.
    */
   public static void sqsMoveSelectedMessages(AwsCredentialsProvider awsCP, String fromSqs,
       String selectKey, String selectValue, String toSqs) {
@@ -348,15 +348,14 @@ public class SqsOperations {
 
     // check queue depth, if it is too deep just stop
     var depth = sqsDepth(awsCP, fromSqs);
-    if (depth < 100) {
+    var maxDepth = 100;
+    if (depth < maxDepth) {
       // from queue depth calculate visibility timeout
-      var vt = depth * 4;
-      // start loop
+      var vt = 10 + (depth * 4);
       var counter = 0;
       var moreMessages = true;
       try (var sqsClient = getSqsClient(awsCP)) {
         do {
-          // receive
           // receive 10 messages
           var receiveMessageRequest =
               ReceiveMessageRequest.builder()
@@ -365,7 +364,7 @@ public class SqsOperations {
                   .attributeNames(QueueAttributeName.ALL)
                   .queueUrl(qUrl(sqsClient, fromSqs))
                   .maxNumberOfMessages(10)
-                  .visibilityTimeout(3) // default 30 sec
+                  .visibilityTimeout(vt) // default 30 sec
                   .build();
           var response = sqsClient.receiveMessage(receiveMessageRequest);
           // send
@@ -400,7 +399,7 @@ public class SqsOperations {
       // display summary: num messages checked, num messages moved
       LOG.info("move {} message matching Key={} and Value={}", counter, selectKey, selectValue);
     } else {
-      LOG.info("Queue {} is too deep {} for selective message moving.", fromSqs, depth);
+      LOG.info("Queue {} is too deep {} for selective message moving, max depth is {}.", fromSqs, depth, maxDepth);
     }
   }
 }

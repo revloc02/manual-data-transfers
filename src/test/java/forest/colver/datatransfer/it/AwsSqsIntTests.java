@@ -286,4 +286,33 @@ public class AwsSqsIntTests {
   }
 
   // todo: Can you access(retrieve) a message from an SQS by its message.ID?
+  @Test
+  public void testSomeStuff() {
+    LOG.info("Interacting with: sqs={}", SQS1);
+    // put messages on sqs
+    var creds = getEmxSbCreds();
+    var numMsgs = 14;
+    for (var i = 0; i < numMsgs; i++) {
+      sqsSend(creds, SQS1, String.valueOf(i));
+    }
+
+    // verify messages are on the sqs
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs));
+
+    var response = sqsReadOneMessage(creds, SQS1);
+    LOG.info("receiptHandle()={}", response.messages().get(0).receiptHandle());
+    LOG.info("messageId()={}", response.messages().get(0).messageId());
+    LOG.info("body()={}", response.messages().get(0).body());
+
+    // cleanup
+    sqsPurge(creds, SQS1);
+  }
+
+  @Test
+  public void testSqsMoveSelectedMessages() {
+    // todo: this
+  }
 }
