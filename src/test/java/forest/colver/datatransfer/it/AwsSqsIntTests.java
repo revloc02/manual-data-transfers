@@ -307,6 +307,10 @@ public class AwsSqsIntTests {
     LOG.info("messageId()={}", response.messages().get(0).messageId());
     LOG.info("body()={}", response.messages().get(0).body());
 
+    // if you have the message.ID then you also have the message itself, and it still exists on the
+    // SQS until you delete it with the receiptHandle, which you also have. Thus, accessing a
+    // message on the SQS using the message.ID is a moot point.
+
     // cleanup
     sqsPurge(creds, SQS1);
   }

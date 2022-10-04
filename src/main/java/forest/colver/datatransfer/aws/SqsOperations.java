@@ -336,16 +336,14 @@ public class SqsOperations {
   }
 
   /**
-   * SQS Selector. Find messages on an SQS with a certain attribute and move it to another SQS.
+   * Pseudo SQS Selector. Find messages on an SQS with a certain attribute and move it to another
+   * SQS. 1. Retrieve a message with an appropriate visibility timeout. 2. Identify if it meets the
+   * criteria you are interested it 3a. If it does, move the message and delete if from the SQS. 3b.
+   * If it does not, ignore it, and it will become available again after the visibility timeout is
+   * over.
    */
   public static void sqsMoveSelectedMessages(AwsCredentialsProvider awsCP, String fromSqs,
       String selectKey, String selectValue, String toSqs) {
-    // todo: indeed, how to do this correctly?
-    // for deep queues this is impossible. But for queue with, less than 100 say, perhaps the
-    // visibility timeout could be used to rummage through all of the messages to find the ones you
-    // want. Maybe either move them to another queue or collect their message.IDs--can you access
-    // a message from an SQS by its message.ID?
-
     // check queue depth, if it is too deep just stop
     var depth = sqsDepth(awsCP, fromSqs);
     var maxDepth = 100;
@@ -371,7 +369,7 @@ public class SqsOperations {
           if (response.hasMessages()) {
             for (var message : response.messages()) {
               // check each one for selector stuff
-              if (message.attributesAsStrings().get(selectKey).equals(selectValue)){
+              if (message.attributesAsStrings().get(selectKey).equals(selectValue)) {
                 // if it matches move it and then delete it using the receiptHandle()
                 counter++;
                 var sendMessageRequest =
@@ -399,7 +397,8 @@ public class SqsOperations {
       // display summary: num messages checked, num messages moved
       LOG.info("move {} message matching Key={} and Value={}", counter, selectKey, selectValue);
     } else {
-      LOG.info("Queue {} is too deep {} for selective message moving, max depth is {}.", fromSqs, depth, maxDepth);
+      LOG.info("Queue {} is too deep {} for selective message moving, max depth is {}.", fromSqs,
+          depth, maxDepth);
     }
   }
 }
