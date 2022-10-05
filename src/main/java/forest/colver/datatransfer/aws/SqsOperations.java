@@ -369,24 +369,26 @@ public class SqsOperations {
           if (response.hasMessages()) {
             for (var message : response.messages()) {
               // check each one for selector stuff
-              if (message.attributesAsStrings().get(selectKey).equals(selectValue)) {
-                // if it matches move it and then delete it using the receiptHandle()
-                counter++;
-                var sendMessageRequest =
-                    SendMessageRequest.builder()
-                        .messageBody(message.body())
-                        .messageAttributes(createMessageAttributes(message.attributesAsStrings()))
-                        .queueUrl(qUrl(sqsClient, toSqs))
-                        .build();
-                sqsClient.sendMessage(sendMessageRequest);
-                var deleteMessageRequest =
-                    DeleteMessageRequest.builder()
-                        .queueUrl(qUrl(sqsClient, fromSqs))
-                        .receiptHandle(message.receiptHandle())
-                        .build();
-                sqsClient.deleteMessage(deleteMessageRequest);
-              } else {
-                LOG.info("This message doesn't match, bypassing it.");
+              if (message.hasAttributes()) {
+                if (message.attributesAsStrings().get(selectKey).equals(selectValue)) {
+                  // if it matches move it and then delete it using the receiptHandle()
+                  counter++;
+                  var sendMessageRequest =
+                      SendMessageRequest.builder()
+                          .messageBody(message.body())
+                          .messageAttributes(createMessageAttributes(message.attributesAsStrings()))
+                          .queueUrl(qUrl(sqsClient, toSqs))
+                          .build();
+                  sqsClient.sendMessage(sendMessageRequest);
+                  var deleteMessageRequest =
+                      DeleteMessageRequest.builder()
+                          .queueUrl(qUrl(sqsClient, fromSqs))
+                          .receiptHandle(message.receiptHandle())
+                          .build();
+                  sqsClient.deleteMessage(deleteMessageRequest);
+                } else {
+                  LOG.info("This message doesn't match, bypassing it.");
+                }
               }
             }
           } else {
