@@ -7,6 +7,7 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMove;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveAll;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveAllVerbose;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveSelectedMessages;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
@@ -315,8 +316,56 @@ public class AwsSqsIntTests {
     sqsPurge(creds, SQS1);
   }
 
+  // todo: debug this
   @Test
   public void testSqsMoveSelectedMessages() {
-    // todo: this
+    LOG.info("Interacting with: sqs={}; sqs={}", SQS1, SQS2);
+    // put messages on sqs
+    var creds = getEmxSbCreds();
+    var payload = getDefaultPayload();
+    // send a specific message
+    var specificProps = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
+        "specificValue");
+    sqsSend(creds, SQS1, payload, specificProps);
+    // send some generic messages
+    var numMsgs = 4;
+    for (var i = 0; i < numMsgs; i++) {
+      var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key" + i, "value" + i);
+      sqsSend(creds, SQS1, payload, messageProps);
+    }
+    // send additional specific messages
+    sqsSend(creds, SQS1, payload, specificProps);
+    sqsSend(creds, SQS1, payload, specificProps);
+
+    // verify messages are on the sqs
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs + 3));
+
+    // move the specific messages
+    sqsMoveSelectedMessages(creds, SQS1, "specificKey", "specificValue", SQS2);
+
+    // verify messages are on the sqs
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS2)).isEqualTo(3));
+
+    // assert first queue has correct number of messages
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMsgs));
+
+    // cleanup
+    sqsPurge(creds, SQS2);
+    sqsPurge(creds, SQS1);
+  }
+
+  // todo: this
+  @Test
+  public void testSqsMoveTooManySelectedMessages() {
+    // put more than 100 messages on the first queue and try to move selected messages and have it fail because there are too many messages
   }
 }
