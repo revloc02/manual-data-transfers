@@ -365,30 +365,39 @@ public class SqsOperations {
                   .visibilityTimeout(vt) // default 30 sec
                   .build();
           var response = sqsClient.receiveMessage(receiveMessageRequest);
-          // send
           if (response.hasMessages()) {
             for (var message : response.messages()) {
               // check each one for selector stuff
               if (message.hasAttributes()) {
-                if (message.attributesAsStrings().get(selectKey).equals(selectValue)) {
-                  // if it matches move it and then delete it using the receiptHandle()
-                  counter++;
-                  var sendMessageRequest =
-                      SendMessageRequest.builder()
-                          .messageBody(message.body())
-                          .messageAttributes(createMessageAttributes(message.attributesAsStrings()))
-                          .queueUrl(qUrl(sqsClient, toSqs))
-                          .build();
-                  sqsClient.sendMessage(sendMessageRequest);
-                  var deleteMessageRequest =
-                      DeleteMessageRequest.builder()
-                          .queueUrl(qUrl(sqsClient, fromSqs))
-                          .receiptHandle(message.receiptHandle())
-                          .build();
-                  sqsClient.deleteMessage(deleteMessageRequest);
+                if (message.messageAttributes().get(selectKey) != null) {
+                  if (message.messageAttributes().get(selectKey).stringValue()
+                      .equals(selectValue)) {
+                    // if it matches move it and then delete it using the receiptHandle()
+                    counter++;
+                    LOG.info("===SENDING MESSAGE===");
+                    var sendMessageRequest =
+                        SendMessageRequest.builder()
+                            .messageBody(message.body())
+                            .messageAttributes(
+                                createMessageAttributes(message.attributesAsStrings()))
+                            .queueUrl(qUrl(sqsClient, toSqs))
+                            .build();
+                    sqsClient.sendMessage(sendMessageRequest);
+                    LOG.info("===DELETING MESSAGE===");
+                    var deleteMessageRequest =
+                        DeleteMessageRequest.builder()
+                            .queueUrl(qUrl(sqsClient, fromSqs))
+                            .receiptHandle(message.receiptHandle())
+                            .build();
+                    sqsClient.deleteMessage(deleteMessageRequest);
+                  } else {
+                    LOG.info("This message doesn't have any matching attributes, bypassing it.");
+                  }
                 } else {
-                  LOG.info("This message doesn't match, bypassing it.");
+                  LOG.info("Message does not have desired attribute key, bypassing it.");
                 }
+              } else {
+                LOG.info("Message does not have any attributes, bypassing it.");
               }
             }
           } else {
