@@ -316,7 +316,6 @@ public class AwsSqsIntTests {
     sqsPurge(creds, SQS1);
   }
 
-  // todo: debug this
   @Test
   public void testSqsMoveSelectedMessages() {
     LOG.info("Interacting with: sqs={}; sqs={}", SQS1, SQS2);
@@ -344,7 +343,8 @@ public class AwsSqsIntTests {
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs + 3));
 
     // move the specific messages
-    sqsMoveSelectedMessages(creds, SQS1, "specificKey", "specificValue", SQS2);
+    assertThat(
+        sqsMoveSelectedMessages(creds, SQS1, "specificKey", "specificValue", SQS2)).isEqualTo(3);
 
     // verify messages are on the sqs
     await()

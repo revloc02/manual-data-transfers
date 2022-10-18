@@ -342,15 +342,15 @@ public class SqsOperations {
    * If it does not, ignore it, and it will become available again after the visibility timeout is
    * over.
    */
-  public static void sqsMoveSelectedMessages(AwsCredentialsProvider awsCP, String fromSqs,
+  public static int sqsMoveSelectedMessages(AwsCredentialsProvider awsCP, String fromSqs,
       String selectKey, String selectValue, String toSqs) {
     // check queue depth, if it is too deep just stop
     var depth = sqsDepth(awsCP, fromSqs);
     var maxDepth = 100;
+    var counter = 0;
     if (depth < maxDepth) {
       // from queue depth calculate visibility timeout
       var vt = 10 + (depth * 4);
-      var counter = 0;
       var moreMessages = true;
       try (var sqsClient = getSqsClient(awsCP)) {
         do {
@@ -374,7 +374,6 @@ public class SqsOperations {
                       .equals(selectValue)) {
                     // if it matches move it and then delete it using the receiptHandle()
                     counter++;
-                    LOG.info("===SENDING MESSAGE===");
                     var sendMessageRequest =
                         SendMessageRequest.builder()
                             .messageBody(message.body())
@@ -383,13 +382,13 @@ public class SqsOperations {
                             .queueUrl(qUrl(sqsClient, toSqs))
                             .build();
                     sqsClient.sendMessage(sendMessageRequest);
-                    LOG.info("===DELETING MESSAGE===");
                     var deleteMessageRequest =
                         DeleteMessageRequest.builder()
                             .queueUrl(qUrl(sqsClient, fromSqs))
                             .receiptHandle(message.receiptHandle())
                             .build();
                     sqsClient.deleteMessage(deleteMessageRequest);
+                    LOG.info("Moved message #{}", counter);
                   } else {
                     LOG.info("This message doesn't have any matching attributes, bypassing it.");
                   }
@@ -406,10 +405,12 @@ public class SqsOperations {
         } while (moreMessages);
       }
       // display summary: num messages checked, num messages moved
-      LOG.info("move {} message matching Key={} and Value={}", counter, selectKey, selectValue);
+      LOG.info("Moved {} messages matching Key={} and Value={}", counter, selectKey, selectValue);
     } else {
+      counter = -1;
       LOG.info("Queue {} is too deep {} for selective message moving, max depth is {}.", fromSqs,
           depth, maxDepth);
     }
+    return counter;
   }
 }
