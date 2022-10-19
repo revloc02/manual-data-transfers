@@ -27,6 +27,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
@@ -286,40 +287,9 @@ public class AwsSqsIntTests {
     sqsPurge(creds, SQS2);
   }
 
-  // todo: Can you access(retrieve) a message from an SQS by its message.ID?
-  @Test
-  public void testSomeStuff() {
-    LOG.info("Interacting with: sqs={}", SQS1);
-    // put messages on sqs
-    var creds = getEmxSbCreds();
-    var numMsgs = 14;
-    for (var i = 0; i < numMsgs; i++) {
-      sqsSend(creds, SQS1, String.valueOf(i));
-    }
-
-    // verify messages are on the sqs
-    await()
-        .pollInterval(Duration.ofSeconds(3))
-        .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs));
-
-    var response = sqsReadOneMessage(creds, SQS1);
-    LOG.info("receiptHandle()={}", response.messages().get(0).receiptHandle());
-    LOG.info("messageId()={}", response.messages().get(0).messageId());
-    LOG.info("body()={}", response.messages().get(0).body());
-
-    // if you have the message.ID then you also have the message itself, and it still exists on the
-    // SQS until you delete it with the receiptHandle, which you also have. Thus, accessing a
-    // message on the SQS using the message.ID is a moot point.
-
-    // cleanup
-    sqsPurge(creds, SQS1);
-  }
-
   @Test
   public void testSqsMoveSelectedMessages() {
     LOG.info("Interacting with: sqs={}; sqs={}", SQS1, SQS2);
-    // put messages on sqs
     var creds = getEmxSbCreds();
     var payload = getDefaultPayload();
     // send a specific message
@@ -346,13 +316,13 @@ public class AwsSqsIntTests {
     assertThat(
         sqsMoveSelectedMessages(creds, SQS1, "specificKey", "specificValue", SQS2)).isEqualTo(3);
 
-    // verify messages are on the sqs
+    // verify moved messages are on the other sqs
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS2)).isGreaterThanOrEqualTo(3));
 
-    // assert first queue has correct number of messages
+    // assert first sqs has correct number of messages left on it
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
@@ -363,9 +333,39 @@ public class AwsSqsIntTests {
     sqsPurge(creds, SQS1);
   }
 
-  // todo: this
+  /**
+   * Put more than 100 messages on the first SQS, and then try a {@link
+   * forest.colver.datatransfer.aws.SqsOperations#sqsMoveSelectedMessages(AwsCredentialsProvider,
+   * String, String, String, String) sqsMoveSelectedMessages} and have it fail because the queue is
+   * too deep.
+   */
   @Test
-  public void testSqsMoveTooManySelectedMessages() {
-    // put more than 100 messages on the first queue and try to move selected messages and have it fail because there are too many messages
+  public void testSqsMoveSelectedMessagesQueueTooDeep() {
+    LOG.info("Interacting with: sqs={}; sqs={}", SQS1, SQS2);
+    var creds = getEmxSbCreds();
+    // send a specific message
+    var specificProps = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
+        "specificValue");
+    sqsSend(creds, SQS1, getDefaultPayload(), specificProps);
+    // send some generic messages
+    var numMsgs = 102;
+    for (var i = 0; i < numMsgs; i++) {
+      var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key" + i, "value" + i);
+      sqsSend(creds, SQS1, getDefaultPayload(), messageProps);
+    }
+
+    // verify messages are on the sqs
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs + 1));
+
+    // move the specific messages and get a -1 result indicating the queue depth is too big
+    assertThat(
+        sqsMoveSelectedMessages(creds, SQS1, "specificKey", "specificValue", SQS2)).isEqualTo(-1);
+
+    // cleanup
+    sqsPurge(creds, SQS1);
+    sqsPurge(creds, SQS2); // just in case, from a previous run
   }
 }

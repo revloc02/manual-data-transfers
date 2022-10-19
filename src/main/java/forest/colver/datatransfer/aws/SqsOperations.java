@@ -337,20 +337,22 @@ public class SqsOperations {
 
   /**
    * Pseudo SQS Selector. Find messages on an SQS with a certain attribute and move it to another
-   * SQS. 1. Retrieve a message with an appropriate visibility timeout. 2. Identify if it meets the
-   * criteria you are interested it 3a. If it does, move the message and delete if from the SQS. 3b.
+   * SQS. 1) Retrieve a message, using an appropriate visibility timeout. 2) Identify if it meets the
+   * criteria you are interested in. 3a) If it does, move the message and delete it from the SQS. 3b)
    * If it does not, ignore it, and it will become available again after the visibility timeout is
-   * over.
+   * over. If the queue is too deep this strategy will not work as the entire queue must be iterated
+   * through before the visibility timeout is over, making messages already checked available again.
+   * SQS Visibility Timeout: Default= 30 seconds, Max= 43,200 seconds (12 hours).
    */
   public static int sqsMoveSelectedMessages(AwsCredentialsProvider awsCP, String fromSqs,
       String selectKey, String selectValue, String toSqs) {
     // check queue depth, if it is too deep just stop
     var depth = sqsDepth(awsCP, fromSqs);
-    var maxDepth = 100;
+    var maxDepth = 100; // This could probably go as high as 40k, or 50k if the vt calculation is changed
     var counter = 0;
     if (depth < maxDepth) {
       // from queue depth calculate visibility timeout
-      var vt = 10 + (depth * 4);
+      var visibilityTimeout = 10 + (depth);
       var moreMessages = true;
       try (var sqsClient = getSqsClient(awsCP)) {
         do {
@@ -362,7 +364,7 @@ public class SqsOperations {
                   .attributeNames(QueueAttributeName.ALL)
                   .queueUrl(qUrl(sqsClient, fromSqs))
                   .maxNumberOfMessages(10)
-                  .visibilityTimeout(vt) // default 30 sec
+                  .visibilityTimeout(visibilityTimeout) // default 30 sec
                   .build();
           var response = sqsClient.receiveMessage(receiveMessageRequest);
           if (response.hasMessages()) {
