@@ -255,10 +255,24 @@ public class SqsOperations {
     sqsSend(awsCP, toSqs, message.body(), message.attributesAsStrings());
   }
 
+  /**
+   * Copy all messages from one SQS to another. 1) Check the queue depth, if it is deeper than 1000
+   * messages, abort. 2) Calculate a visibility timeout, one second per message currently on the
+   * SQS. 3) Retrieve each message from the SQS setting the visibility timeout. 4) Copy the message
+   * to the other SQS.
+   *
+   * @param awsCP Credentials.
+   * @param fromQueue Source SQS.
+   * @param toQueue Destination SQS.
+   */
   public static void sqsCopyAll(AwsCredentialsProvider awsCP, String fromQueue, String toQueue) {
     // todo: remember during a copy all the visibility timeout needs to be managed appropriately so the already copied message doesn't become available and copied again
     // todo: in connection with the above comment, probably do moveAll first and see how long it takes to move 1 M messages do visibility timeout is easier to manage
 
+    // check the queue depth, if it is beyond a certain size, abort
+    // calculate a visibility timeout, probably 1 sec per message in the sqs
+    // retrieve each message setting the visibility timeout
+    // copy to other queue
   }
 
   /**
@@ -337,12 +351,13 @@ public class SqsOperations {
 
   /**
    * Pseudo SQS Selector. Find messages on an SQS with a certain attribute and move it to another
-   * SQS. 1) Retrieve a message, using an appropriate visibility timeout. 2) Identify if it meets the
-   * criteria you are interested in. 3a) If it does, move the message and delete it from the SQS. 3b)
-   * If it does not, ignore it, and it will become available again after the visibility timeout is
-   * over. If the queue is too deep this strategy will not work as the entire queue must be iterated
-   * through before the visibility timeout is over, making messages already checked available again.
-   * SQS Visibility Timeout: Default= 30 seconds, Max= 43,200 seconds (12 hours).
+   * SQS. 1) Retrieve a message, using an appropriate visibility timeout. 2) Identify if the message
+   * has the specific attribute that meets the criteria you are interested in. 3a) If it does, move
+   * the message and delete it from the SQS. 3b) If it does not, ignore it, and it will become
+   * available again after the visibility timeout is over. If the queue is too deep this strategy
+   * will not work as the entire queue must be iterated through before the visibility timeout is
+   * over, making messages already checked available again. SQS Visibility Timeout: Default= 30
+   * seconds, Max= 43,200 seconds (12 hours).
    */
   public static int sqsMoveSelectedMessages(AwsCredentialsProvider awsCP, String fromSqs,
       String selectKey, String selectValue, String toSqs) {
