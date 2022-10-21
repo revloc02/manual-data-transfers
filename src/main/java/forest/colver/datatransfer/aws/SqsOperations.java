@@ -255,6 +255,7 @@ public class SqsOperations {
     sqsSend(awsCP, toSqs, message.body(), message.attributesAsStrings());
   }
 
+  // todo: this needs a unit test
   /**
    * Copy all messages from one SQS to another. 1) Check the queue depth, if it is deeper than 1000
    * messages, abort. 2) Calculate a visibility timeout, one second per message currently on the
@@ -310,7 +311,7 @@ public class SqsOperations {
       LOG.info("Moved {} messages", counter);
     } else {
       counter = -1;
-      LOG.info("Queue {} is too deep {} for selective message moving, max depth is {}.", fromSqs,
+      LOG.info("Queue {} is too deep ({}), for an SQS copy all, max depth is currently {}.", fromSqs,
           depth, maxDepth);
     }
     return counter;
@@ -466,7 +467,7 @@ public class SqsOperations {
       LOG.info("Moved {} messages matching Key={} and Value={}", counter, selectKey, selectValue);
     } else {
       counter = -1;
-      LOG.info("Queue {} is too deep {} for selective message moving, max depth is {}.", fromSqs,
+      LOG.info("Queue {} is too deep ({}), for selective message moving, max depth is currently {}.", fromSqs,
           depth, maxDepth);
     }
     return counter;
