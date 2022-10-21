@@ -262,17 +262,58 @@ public class SqsOperations {
    * to the other SQS.
    *
    * @param awsCP Credentials.
-   * @param fromQueue Source SQS.
-   * @param toQueue Destination SQS.
+   * @param fromSqs Source SQS.
+   * @param toSqs Destination SQS.
    */
-  public static void sqsCopyAll(AwsCredentialsProvider awsCP, String fromQueue, String toQueue) {
-    // todo: remember during a copy all the visibility timeout needs to be managed appropriately so the already copied message doesn't become available and copied again
-    // todo: in connection with the above comment, probably do moveAll first and see how long it takes to move 1 M messages do visibility timeout is easier to manage
-
+  public static int sqsCopyAll(AwsCredentialsProvider awsCP, String fromSqs, String toSqs) {
     // check the queue depth, if it is beyond a certain size, abort
-    // calculate a visibility timeout, probably 1 sec per message in the sqs
-    // retrieve each message setting the visibility timeout
-    // copy to other queue
+    var depth = sqsDepth(awsCP, fromSqs);
+    var maxDepth = 1000; // This could probably go as high as 40k
+    var counter = 0;
+    if (depth < maxDepth) {
+      // calculate a visibility timeout, probably 1 sec per message in the sqs
+      var visibilityTimeout = 10 + (depth);
+      var moreMessages = true;
+      try (var sqsClient = getSqsClient(awsCP)) {
+        do {
+          // receive 10 messages, setting the visibility timeout
+          var receiveMessageRequest =
+              ReceiveMessageRequest.builder()
+                  .waitTimeSeconds(2)
+                  .messageAttributeNames("All")
+                  .attributeNames(QueueAttributeName.ALL)
+                  .queueUrl(qUrl(sqsClient, fromSqs))
+                  .maxNumberOfMessages(10)
+                  .visibilityTimeout(visibilityTimeout) // default 30 sec
+                  .build();
+          var response = sqsClient.receiveMessage(receiveMessageRequest);
+          if (response.hasMessages()) {
+            for (var message : response.messages()) {
+              // copy to other queue
+              counter++;
+              var sendMessageRequest =
+                  SendMessageRequest.builder()
+                      .messageBody(message.body())
+                      .messageAttributes(
+                          createMessageAttributes(message.attributesAsStrings()))
+                      .queueUrl(qUrl(sqsClient, toSqs))
+                      .build();
+              sqsClient.sendMessage(sendMessageRequest);
+              LOG.info("Copied message #{}", counter);
+            }
+          } else {
+            moreMessages = false;
+          }
+        } while (moreMessages);
+      }
+      // display summary: num messages checked, num messages moved
+      LOG.info("Moved {} messages", counter);
+    } else {
+      counter = -1;
+      LOG.info("Queue {} is too deep {} for selective message moving, max depth is {}.", fromSqs,
+          depth, maxDepth);
+    }
+    return counter;
   }
 
   /**
