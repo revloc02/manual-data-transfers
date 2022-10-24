@@ -308,7 +308,7 @@ public class SqsOperations {
         } while (moreMessages);
       }
       // display summary: num messages checked, num messages moved
-      LOG.info("Moved {} messages", counter);
+      LOG.info("Copied {} messages", counter);
     } else {
       counter = -1;
       LOG.info("Queue {} is too deep ({}), for an SQS copy all, max depth is currently {}.", fromSqs,

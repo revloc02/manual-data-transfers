@@ -2,6 +2,7 @@ package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.aws.SqsOperations.sqsConsumeOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsCopy;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsCopyAll;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDelete;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMove;
@@ -367,5 +368,44 @@ public class AwsSqsIntTests {
     // cleanup
     sqsPurge(creds, SQS1);
     sqsPurge(creds, SQS2); // just in case, from a previous run
+  }
+
+  @Test
+  public void testSqsCopyAllMessages() {
+    LOG.info("Interacting with: sqs={}; sqs={}", SQS1, SQS2);
+    var creds = getEmxSbCreds();
+    var payload = getDefaultPayload();
+    // send some generic messages
+    var numMsgs = 10;
+    for (var i = 0; i < numMsgs; i++) {
+      var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key" + i, "value" + i);
+      sqsSend(creds, SQS1, payload, messageProps);
+    }
+
+    // verify starting messages are on the sqs
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs));
+
+    // copy the messages
+    assertThat(
+        sqsCopyAll(creds, SQS1, SQS2)).isEqualTo(numMsgs);
+
+    // verify copied messages are on the other sqs
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS2)).isGreaterThanOrEqualTo(numMsgs));
+
+    // assert first sqs has correct number of messages still on it
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs));
+
+    // cleanup
+    sqsPurge(creds, SQS2);
+    sqsPurge(creds, SQS1);
   }
 }
