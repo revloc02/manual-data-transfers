@@ -29,6 +29,9 @@ public class Main {
     moveAllSpecificMessages(PROD, "emx-error",
         "emxSystem='identity-vault' AND emxErrorMessage LIKE '%HttpTimeoutException: request timed out%'",
         "emx-to-identity-vault-prod");
+    moveAllSpecificMessages(PROD, "emx-error",
+        "emxSystem='identity-vault' AND emxErrorMessage LIKE '%Internal Server Error code: 503%'",
+        "emx-to-identity-vault-prod");
     moveAllSpecificMessages(STAGE, "emx-error",
         "emxSystem='identity-vault' AND emxSystemEnvironment='stage'",
         "emx-to-identity-vault-stage");
