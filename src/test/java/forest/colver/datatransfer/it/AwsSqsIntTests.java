@@ -8,7 +8,7 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMove;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveAll;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveAllVerbose;
-import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveSelectedMessages;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveMessagesWithSelectedAttribute;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
@@ -315,7 +315,8 @@ public class AwsSqsIntTests {
 
     // move the specific messages
     assertThat(
-        sqsMoveSelectedMessages(creds, SQS1, "specificKey", "specificValue", SQS2)).isEqualTo(3);
+        sqsMoveMessagesWithSelectedAttribute(creds, SQS1, "specificKey", "specificValue",
+            SQS2)).isEqualTo(3);
 
     // verify moved messages are on the other sqs
     await()
@@ -336,9 +337,9 @@ public class AwsSqsIntTests {
 
   /**
    * Put more than 100 messages on the first SQS, and then try a {@link
-   * forest.colver.datatransfer.aws.SqsOperations#sqsMoveSelectedMessages(AwsCredentialsProvider,
-   * String, String, String, String) sqsMoveSelectedMessages} and have it fail because the queue is
-   * too deep.
+   * forest.colver.datatransfer.aws.SqsOperations#sqsMoveMessagesWithSelectedAttribute(AwsCredentialsProvider,
+   * String, String, String, String) sqsMoveMessagesWithSelectedAttribute} and have it fail because
+   * the queue is too deep.
    */
   @Test
   public void testSqsMoveSelectedMessagesQueueTooDeep() {
@@ -363,7 +364,8 @@ public class AwsSqsIntTests {
 
     // move the specific messages and get a -1 result indicating the queue depth is too big
     assertThat(
-        sqsMoveSelectedMessages(creds, SQS1, "specificKey", "specificValue", SQS2)).isEqualTo(-1);
+        sqsMoveMessagesWithSelectedAttribute(creds, SQS1, "specificKey", "specificValue",
+            SQS2)).isEqualTo(-1);
 
     // cleanup
     sqsPurge(creds, SQS1);

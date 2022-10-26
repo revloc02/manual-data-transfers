@@ -255,7 +255,6 @@ public class SqsOperations {
     sqsSend(awsCP, toSqs, message.body(), message.attributesAsStrings());
   }
 
-  // todo: this needs a unit test
   /**
    * Copy all messages from one SQS to another. 1) Check the queue depth, if it is deeper than 1000
    * messages, abort. 2) Calculate a visibility timeout, one second per message currently on the
@@ -311,7 +310,8 @@ public class SqsOperations {
       LOG.info("Copied {} messages", counter);
     } else {
       counter = -1;
-      LOG.info("Queue {} is too deep ({}), for an SQS copy all, max depth is currently {}.", fromSqs,
+      LOG.info("Queue {} is too deep ({}), for an SQS copy all, max depth is currently {}.",
+          fromSqs,
           depth, maxDepth);
     }
     return counter;
@@ -365,26 +365,10 @@ public class SqsOperations {
         // send
         if (response.hasMessages()) {
           for (var message : response.messages()) {
-            counter++;
-            var sendMessageRequest =
-                SendMessageRequest.builder()
-                    .messageBody(message.body())
-                    .messageAttributes(createMessageAttributes(message.attributesAsStrings()))
-                    .queueUrl(qUrl(sqsClient, toSqs))
-                    .build();
-            sqsClient.sendMessage(sendMessageRequest);
+            counter = moveMessage(fromSqs, toSqs, counter, sqsClient, message);
           }
         } else {
           moreMessages = false;
-        }
-        // delete
-        for (Message message : response.messages()) {
-          var deleteMessageRequest =
-              DeleteMessageRequest.builder()
-                  .queueUrl(qUrl(sqsClient, fromSqs))
-                  .receiptHandle(message.receiptHandle())
-                  .build();
-          sqsClient.deleteMessage(deleteMessageRequest);
         }
       } while (moreMessages);
     }
@@ -401,7 +385,8 @@ public class SqsOperations {
    * over, making messages already checked available again. SQS Visibility Timeout: Default= 30
    * seconds, Max= 43,200 seconds (12 hours).
    */
-  public static int sqsMoveSelectedMessages(AwsCredentialsProvider awsCP, String fromSqs,
+  public static int sqsMoveMessagesWithSelectedAttribute(AwsCredentialsProvider awsCP,
+      String fromSqs,
       String selectKey, String selectValue, String toSqs) {
     // check queue depth, if it is too deep just stop
     var depth = sqsDepth(awsCP, fromSqs);
@@ -431,23 +416,7 @@ public class SqsOperations {
                 if (message.messageAttributes().get(selectKey) != null) {
                   if (message.messageAttributes().get(selectKey).stringValue()
                       .equals(selectValue)) {
-                    // if it matches move it and then delete it using the receiptHandle()
-                    counter++;
-                    var sendMessageRequest =
-                        SendMessageRequest.builder()
-                            .messageBody(message.body())
-                            .messageAttributes(
-                                createMessageAttributes(message.attributesAsStrings()))
-                            .queueUrl(qUrl(sqsClient, toSqs))
-                            .build();
-                    sqsClient.sendMessage(sendMessageRequest);
-                    var deleteMessageRequest =
-                        DeleteMessageRequest.builder()
-                            .queueUrl(qUrl(sqsClient, fromSqs))
-                            .receiptHandle(message.receiptHandle())
-                            .build();
-                    sqsClient.deleteMessage(deleteMessageRequest);
-                    LOG.info("Moved message #{}", counter);
+                    counter = moveMessage(fromSqs, toSqs, counter, sqsClient, message);
                   } else {
                     LOG.info("This message doesn't have any matching attributes, bypassing it.");
                   }
@@ -467,9 +436,83 @@ public class SqsOperations {
       LOG.info("Moved {} messages matching Key={} and Value={}", counter, selectKey, selectValue);
     } else {
       counter = -1;
-      LOG.info("Queue {} is too deep ({}), for selective message moving, max depth is currently {}.", fromSqs,
+      LOG.info(
+          "Queue {} is too deep ({}), for selective message moving, max depth is currently {}.",
+          fromSqs,
           depth, maxDepth);
     }
+    return counter;
+  }
+
+  // todo: this and unit test it
+  public static int sqsMoveMessagesWithPayloadLike(AwsCredentialsProvider awsCP, String fromSqs,
+      String payloadLike, String toSqs) {
+    // check queue depth, if it is too deep just stop
+    var depth = sqsDepth(awsCP, fromSqs);
+    var maxDepth = 100; // This could probably go as high as 40k
+    var counter = 0;
+    if (depth < maxDepth) {
+      // from queue depth calculate visibility timeout
+      var visibilityTimeout = 10 + (depth);
+      var moreMessages = true;
+      try (var sqsClient = getSqsClient(awsCP)) {
+        do {
+          // receive 10 messages
+          var receiveMessageRequest =
+              ReceiveMessageRequest.builder()
+                  .waitTimeSeconds(2)
+                  .messageAttributeNames("All")
+                  .attributeNames(QueueAttributeName.ALL)
+                  .queueUrl(qUrl(sqsClient, fromSqs))
+                  .maxNumberOfMessages(10)
+                  .visibilityTimeout(visibilityTimeout) // default 30 sec
+                  .build();
+          var response = sqsClient.receiveMessage(receiveMessageRequest);
+          if (response.hasMessages()) {
+            for (var message : response.messages()) {
+              // check each one for selector stuff
+              if (message.body().contains(payloadLike)) {
+                moveMessage(fromSqs, toSqs, counter, sqsClient, message);
+              } else {
+                LOG.info("Message does not have contents containing criteria, bypassing it.");
+              }
+            }
+          } else {
+            moreMessages = false;
+          }
+        } while (moreMessages);
+      }
+      // display summary: num messages checked, num messages moved
+      LOG.info("Moved {} messages with payload containing: {}", counter, payloadLike);
+    } else {
+      counter = -1;
+      LOG.info(
+          "Queue {} is too deep ({}), for selective message moving, max depth is currently {}.",
+          fromSqs,
+          depth, maxDepth);
+    }
+    return counter;
+  }
+
+  private static int moveMessage(String fromSqs, String toSqs, int counter, SqsClient sqsClient,
+      Message message) {
+    // if it matches move it and then delete it using the receiptHandle()
+    counter++;
+    var sendMessageRequest =
+        SendMessageRequest.builder()
+            .messageBody(message.body())
+            .messageAttributes(
+                createMessageAttributes(message.attributesAsStrings()))
+            .queueUrl(qUrl(sqsClient, toSqs))
+            .build();
+    sqsClient.sendMessage(sendMessageRequest);
+    var deleteMessageRequest =
+        DeleteMessageRequest.builder()
+            .queueUrl(qUrl(sqsClient, fromSqs))
+            .receiptHandle(message.receiptHandle())
+            .build();
+    sqsClient.deleteMessage(deleteMessageRequest);
+    LOG.info("Moved message #{}", counter);
     return counter;
   }
 }
