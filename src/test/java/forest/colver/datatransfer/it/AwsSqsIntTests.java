@@ -8,6 +8,7 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMove;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveAll;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveAllVerbose;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveMessagesWithPayloadLike;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveMessagesWithSelectedAttribute;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
@@ -329,6 +330,44 @@ public class AwsSqsIntTests {
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs));
+
+    // cleanup
+    sqsPurge(creds, SQS2);
+    sqsPurge(creds, SQS1);
+  }
+
+  @Test
+  public void testSqsMoveMessagesWithPayloadLike() {
+    LOG.info("Interacting with: sqs={}; sqs={}", SQS1, SQS2);
+    var creds = getEmxSbCreds();
+    var payload = getDefaultPayload();
+    // send some messages
+    var numMsgs = 6;
+    for (var i = 0; i < numMsgs; i++) {
+      sqsSend(creds, SQS1, payload + i);
+    }
+
+    // verify messages are on the sqs
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs));
+
+    // move the specific messages
+    assertThat(
+        sqsMoveMessagesWithPayloadLike(creds, SQS1, payload + "2", SQS2)).isEqualTo(1);
+
+    // verify moved messages are on the other sqs
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS2)).isGreaterThanOrEqualTo(1));
+
+    // assert first sqs has correct number of messages left on it
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs - 1));
 
     // cleanup
     sqsPurge(creds, SQS2);
