@@ -289,7 +289,7 @@ public class AwsSqsIntTests {
   }
 
   @Test
-  public void testSqsMoveSelectedMessages() {
+  public void testSqsMoveMessagesWithSelectedAttribute() {
     LOG.info("Interacting with: sqs={}; sqs={}", SQS1, SQS2);
     var creds = getEmxSbCreds();
     var payload = getDefaultPayload();
