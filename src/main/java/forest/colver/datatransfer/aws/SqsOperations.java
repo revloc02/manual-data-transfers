@@ -444,7 +444,6 @@ public class SqsOperations {
     return counter;
   }
 
-  // todo: this and unit test it
   public static int sqsMoveMessagesWithPayloadLike(AwsCredentialsProvider awsCP, String fromSqs,
       String payloadLike, String toSqs) {
     // check queue depth, if it is too deep just stop
@@ -472,7 +471,7 @@ public class SqsOperations {
             for (var message : response.messages()) {
               // check each one for selector stuff
               if (message.body().contains(payloadLike)) {
-                moveMessage(fromSqs, toSqs, counter, sqsClient, message);
+                counter = moveMessage(fromSqs, toSqs, counter, sqsClient, message);
               } else {
                 LOG.info("Message does not have contents containing criteria, bypassing it.");
               }
