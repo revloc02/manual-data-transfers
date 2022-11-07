@@ -45,6 +45,7 @@ public class AwsS3IntTests {
     assertThat(objects.size()).isEqualTo(1);
     assertThat(objects.get(0).key()).isEqualTo(destKey);
 
+    // todo: what's going on here? Why is this commented out?
     // check the contents
 //    s3Get(creds, SANDBOX_SFTP_TARGET_CUSTOMER_BUCKET, destKey);
 
