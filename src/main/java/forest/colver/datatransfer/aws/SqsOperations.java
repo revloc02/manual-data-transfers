@@ -493,6 +493,8 @@ public class SqsOperations {
     return counter;
   }
 
+  // todo: this needs a Javadoc
+  // todo: I hate that this has a counter arg, it makes it too specialized
   private static int moveMessage(String fromSqs, String toSqs, int counter, SqsClient sqsClient,
       Message message) {
     // if it matches move it and then delete it using the receiptHandle()
@@ -500,8 +502,11 @@ public class SqsOperations {
     var sendMessageRequest =
         SendMessageRequest.builder()
             .messageBody(message.body())
-            .messageAttributes(
-                createMessageAttributes(message.attributesAsStrings()))
+            .messageAttributes(message.messageAttributes())
+            // todo: fix this and everything that touches it. previous line is correct, following 2 commented lines are wrong
+//            .messageAttributes(
+//                createMessageAttributes(message.attributesAsStrings()))
+            // todo: furthermore, look for other usages of createMessageAttributes(message.attributesAsStrings()) should also be changed
             .queueUrl(qUrl(sqsClient, toSqs))
             .build();
     sqsClient.sendMessage(sendMessageRequest);
