@@ -96,6 +96,14 @@ public class Utils {
         .build();
   }
 
+  /**
+   * A helper method to take a Map<String, String> can convert it into a Map<String,
+   * MessageAttributeValue> so it can be used as an input value for something like
+   * SendMessageRequest.
+   *
+   * @param properties A map of the message attributes.
+   * @return A map of message attributes converted to the format a Request object needs.
+   */
   public static Map<String, MessageAttributeValue> createMessageAttributes(
       Map<String, String> properties) {
     final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
@@ -107,6 +115,7 @@ public class Utils {
     return messageAttributes;
   }
 
+  // todo: this also needs a javadoc
   public static void awsResponseValidation(AwsResponse response) {
     var responseCode = response.sdkHttpResponse().statusCode();
     if (responseCode >= 300) {
