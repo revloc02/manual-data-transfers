@@ -25,6 +25,8 @@ public class AwsS3IntTests {
   // todo: see if I can use awaitlity on some of the asserts
   private static final Logger LOG = LoggerFactory.getLogger(AwsS3IntTests.class);
 
+  // todo: review and run each one of these (I accidentally deleted code and I want to make sure this stuff works)
+
   @Test
   public void testS3Copy() {
     // place a file

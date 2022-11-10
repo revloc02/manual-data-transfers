@@ -42,6 +42,8 @@ public class AwsSqsIntTests {
   private static final String SQS1 = EMX_SANDBOX_TEST_SQS1;
   private static final String SQS2 = EMX_SANDBOX_TEST_SQS2;
 
+  // todo: review and run each one of these (I accidentally deleted code and I want to make sure this stuff works)
+
   @Test
   public void testSqsPurge() {
     LOG.info("Interacting with: sqs={}", SQS1);
