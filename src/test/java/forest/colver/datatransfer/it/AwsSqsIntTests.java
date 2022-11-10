@@ -15,6 +15,7 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS2;
+import static forest.colver.datatransfer.aws.Utils.createMessageAttributes;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
@@ -31,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.services.sqs.model.Message;
-import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
 /**
  * Integration Tests for AWS SQS
@@ -117,11 +117,10 @@ public class AwsSqsIntTests {
   public void testSqsSendMessage() {
     LOG.info("Interacting with: sqs={}", SQS1);
     var payload = "Message Payload. This message also includes message attributes.";
-    var value2 = MessageAttributeValue.builder().stringValue("value2").build();
-    var messageAttributes = Map.of("key2", value2);
+    var attributes = Map.of("key1", "value1", "key2", "value2");
     var message = Message.builder()
         .body(payload)
-        .messageAttributes(messageAttributes)
+        .messageAttributes(createMessageAttributes(attributes))
         .messageId(getUuid())
         .build();
     // send some stuff
