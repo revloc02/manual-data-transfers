@@ -57,7 +57,7 @@ public class Utils {
     return ProfileCredentialsProvider.create("enterprise-prod");
   }
 
-  public static AwsCredentialsProvider getPrsnlSbCreds() {
+  public static AwsCredentialsProvider getPersonalSbCreds() {
     return ProfileCredentialsProvider.create("personal-sandbox");
   }
 

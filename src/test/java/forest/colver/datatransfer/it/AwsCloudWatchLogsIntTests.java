@@ -2,7 +2,7 @@ package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.aws.CloudWatchLogsOps.putCWLogEvents;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
-import static forest.colver.datatransfer.aws.Utils.getPrsnlSbCreds;
+import static forest.colver.datatransfer.aws.Utils.getPersonalSbCreds;
 import static forest.colver.datatransfer.config.Utils.getRandomNumber;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
 import static forest.colver.datatransfer.config.Utils.getUuid;
@@ -34,7 +34,7 @@ public class AwsCloudWatchLogsIntTests {
 
     var streamName = STREAM_PREFIX + "-" + getUuid();
     LOG.info("streamName={}", streamName);
-    putCWLogEvents(getPrsnlSbCreds(), LOG_GROUP_NAME, streamName, List.of(message));
+    putCWLogEvents(getPersonalSbCreds(), LOG_GROUP_NAME, streamName, List.of(message));
   }
 
   @Test
@@ -44,9 +44,9 @@ public class AwsCloudWatchLogsIntTests {
 
     var streamName = STREAM_PREFIX + "-" + getUuid();
     LOG.info("streamName={}", streamName);
-    var putLogEventsResponse = putCWLogEvents(getPrsnlSbCreds(), LOG_GROUP_NAME, streamName,
+    var putLogEventsResponse = putCWLogEvents(getPersonalSbCreds(), LOG_GROUP_NAME, streamName,
         List.of(message));
-    putCWLogEvents(getPrsnlSbCreds(), LOG_GROUP_NAME, streamName,
+    putCWLogEvents(getPersonalSbCreds(), LOG_GROUP_NAME, streamName,
         putLogEventsResponse.nextSequenceToken(),
         List.of(anotherMessage));
   }
@@ -58,12 +58,12 @@ public class AwsCloudWatchLogsIntTests {
     var streamName = STREAM_PREFIX + "-" + getUuid();
     LOG.info("streamName={}", streamName);
     var message = messagePrefix + getUuid();
-    var putLogEventsResponse = putCWLogEvents(getPrsnlSbCreds(), LOG_GROUP_NAME, streamName,
+    var putLogEventsResponse = putCWLogEvents(getPersonalSbCreds(), LOG_GROUP_NAME, streamName,
         List.of(message));
 
     for (int i = 0; i < 35; i++) {
       message = messagePrefix + getUuid();
-      putLogEventsResponse = putCWLogEvents(getPrsnlSbCreds(), LOG_GROUP_NAME, streamName,
+      putLogEventsResponse = putCWLogEvents(getPersonalSbCreds(), LOG_GROUP_NAME, streamName,
           putLogEventsResponse.nextSequenceToken(),
           List.of(message));
     }

@@ -8,8 +8,7 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.Utils.PERSONAL_SANDBOX_SQS_SUB_SNS;
 import static forest.colver.datatransfer.aws.Utils.PERSONAL_SANDBOX_TEST_SNS_TOPIC_ARN;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
-import static forest.colver.datatransfer.aws.Utils.getPrsnlSbCreds;
-import static forest.colver.datatransfer.config.Utils.pause;
+import static forest.colver.datatransfer.aws.Utils.getPersonalSbCreds;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
@@ -46,9 +45,9 @@ public class AwsSnsIntTests {
   @Test
   public void testSnsPublishTopic() {
     LOG.info("SNS ARN: {}", SNS_ARN);
-    var creds = getPrsnlSbCreds();
+    var creds = getPersonalSbCreds();
     var message = "testing SNS publish topic via SQS subscription";
-    publishTopic(getPrsnlSbCreds(), SNS_ARN, message);
+    publishTopic(getPersonalSbCreds(), SNS_ARN, message);
 
     await()
         .pollInterval(Duration.ofSeconds(3))
