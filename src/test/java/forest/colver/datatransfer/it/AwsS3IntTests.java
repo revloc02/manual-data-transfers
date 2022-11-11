@@ -26,6 +26,7 @@ public class AwsS3IntTests {
   private static final Logger LOG = LoggerFactory.getLogger(AwsS3IntTests.class);
 
   // todo: review and run each one of these (I accidentally deleted code and I want to make sure this stuff works)
+  // todo: so none of these tests check the payload of the arrived file, is that too hard or something? Figure it out, then fix it or comment on it so I don't look at this again sometime.
 
   @Test
   public void testS3Copy() {
