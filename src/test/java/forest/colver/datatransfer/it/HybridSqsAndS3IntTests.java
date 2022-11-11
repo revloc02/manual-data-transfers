@@ -63,7 +63,7 @@ public class HybridSqsAndS3IntTests {
 
   // todo: this
   @Test
-  public void testMoveOneSqsToS3WithProperties() {
+  public void testMoveOneWithPropertiesSqsToS3() {
     // place a message on SQS
     LOG.info("Interacting with: sqs={}", SQS1);
     var creds = getEmxSbCreds();
