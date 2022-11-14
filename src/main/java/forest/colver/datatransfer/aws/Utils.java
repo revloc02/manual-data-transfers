@@ -98,11 +98,11 @@ public class Utils {
 
   /**
    * A helper method to take a Map<String, String> can convert it into a Map<String,
-   * MessageAttributeValue> so it can be used as an input value for something like
-   * SendMessageRequest.
+   * MessageAttributeValue> (SQS message.messageAttributes) so it can be used as an input value for
+   * something like an SQS SendMessageRequest.
    *
    * @param properties A map of the message attributes.
-   * @return A map of message attributes converted to the format a Request object needs.
+   * @return A map of message attributes converted to the format an SQS Request object needs.
    */
   public static Map<String, MessageAttributeValue> createMessageAttributes(
       Map<String, String> properties) {
@@ -114,6 +114,8 @@ public class Utils {
     }
     return messageAttributes;
   }
+
+  // todo: write a helper method that does the opposite of this ^^^
 
   // todo: this also needs a javadoc
   public static void awsResponseValidation(AwsResponse response) {
