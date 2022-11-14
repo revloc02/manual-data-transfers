@@ -61,6 +61,7 @@ public class JmsAndSqs {
       software.amazon.awssdk.services.sqs.model.Message sqsMsg) {
     var payload = sqsMsg.body();
     Map<String, String> properties = new java.util.HashMap<>(Map.of());
+    // todo: look for a help method in AWS Utils that does this
     var props = sqsMsg.messageAttributes().entrySet();
     for (Entry<String, MessageAttributeValue> prop : props) {
       properties.put(prop.getKey(), prop.getValue().stringValue());
