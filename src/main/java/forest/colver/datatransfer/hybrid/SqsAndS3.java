@@ -18,7 +18,7 @@ public class SqsAndS3 {
     var sqsMsg = sqsConsumeOneMessage(awsCreds, sqs);
     if (sqsMsg != null) {
       // send body and properties to s3
-      s3Put(awsCreds, bucket, objectKey, sqsMsg.body(), sqsMsg.attributesAsStrings());
+      s3Put(awsCreds, bucket, objectKey, sqsMsg.body(), sqsMsg.attributesAsStrings()); // todo: wrong attributes, use messageAttributes()
     } else {
       LOG.error("ERROR: SQS message was null.");
     }
