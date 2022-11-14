@@ -1,6 +1,7 @@
 package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
+import static forest.colver.datatransfer.aws.S3Operations.s3Head;
 import static forest.colver.datatransfer.aws.S3Operations.s3List;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
@@ -86,6 +87,8 @@ public class HybridSqsAndS3IntTests {
     assertThat(objects.get(0).key()).isEqualTo(objectKey);
 
     // use head to check metadata on S3 object
+    var headObjectResponse = s3Head(creds, S3_INTERNAL, objectKey);
+    assertThat(headObjectResponse.metadata().get("key2")).isEqualTo("value2");
 
     // assert the SQS was cleared
     var messages = sqsReadOneMessage(creds, SQS1);
