@@ -16,7 +16,6 @@ import static org.awaitility.Awaitility.await;
 
 import java.time.Duration;
 import java.util.Map;
-import javax.jms.JMSException;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,9 +25,8 @@ public class HybridSqsAndS3IntTests {
   private static final Logger LOG = LoggerFactory.getLogger(HybridSqsAndS3IntTests.class);
   private static final String SQS1 = EMX_SANDBOX_TEST_SQS1;
 
-  // todo: run this
   @Test
-  public void testMoveOneSqsToS3() throws JMSException {
+  public void testMoveOneSqsToS3() {
     // place a message on SQS
     LOG.info("Interacting with: sqs={}", SQS1);
     var creds = getEmxSbCreds();
