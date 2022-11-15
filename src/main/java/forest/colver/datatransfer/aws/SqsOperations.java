@@ -49,7 +49,7 @@ public class SqsOperations {
       var sendMessageRequest =
           SendMessageRequest.builder()
               .messageBody(message.body())
-              .messageAttributes(createMessageAttributes(message.attributesAsStrings()))
+              .messageAttributes(message.messageAttributes())
               .queueUrl(qUrl(sqsClient, queueName))
               .build();
       var response = sqsClient.sendMessage(sendMessageRequest);
@@ -294,8 +294,7 @@ public class SqsOperations {
               var sendMessageRequest =
                   SendMessageRequest.builder()
                       .messageBody(message.body())
-                      .messageAttributes(
-                          createMessageAttributes(message.attributesAsStrings()))
+                      .messageAttributes(message.messageAttributes())
                       .queueUrl(qUrl(sqsClient, toSqs))
                       .build();
               sqsClient.sendMessage(sendMessageRequest);
