@@ -96,6 +96,7 @@ public class Utils {
         .build();
   }
 
+  // todo: create a unit test for this method.
   /**
    * A helper method to take a Map<String, String> can convert it into a Map<String,
    * MessageAttributeValue> (SQS message.messageAttributes) so it can be used as an input value for
@@ -115,7 +116,14 @@ public class Utils {
     return messageAttributes;
   }
 
-  // todo: write a helper method that does the opposite of this ^^^
+  // todo: test this method, write a JavaDoc for it, and create a unit test for it.
+  public static Map<String, String> convertMessageAttributesToStrings(Map<String, MessageAttributeValue> messageAttributes){
+    Map<String, String> map = new HashMap<>();
+    for (Map.Entry<String, MessageAttributeValue> entry : messageAttributes.entrySet() ){
+      map.put(entry.getKey(),entry.getValue().stringValue()); // todo: I actually don't know if the value part of this is right
+    }
+    return map;
+  }
 
   // todo: this also needs a javadoc
   public static void awsResponseValidation(AwsResponse response) {
