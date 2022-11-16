@@ -116,11 +116,18 @@ public class Utils {
     return messageAttributes;
   }
 
-  // todo: test this method, write a JavaDoc for it, and create a unit test for it.
-  public static Map<String, String> convertMessageAttributesToStrings(Map<String, MessageAttributeValue> messageAttributes){
+  /**
+   * A helper method that takes Map<String, MessageAttributeValue>, usually associated with an SQS
+   * message, and converts it to a Map<String, String>, which is typical more usable.
+   *
+   * @param messageAttributes software.amazon.awssdk.services.sqs.model.message.messageAttributes()
+   * @return A map of message attributes that are just Strings.
+   */
+  public static Map<String, String> convertMessageAttributesToStrings(
+      Map<String, MessageAttributeValue> messageAttributes) {
     Map<String, String> map = new HashMap<>();
-    for (Map.Entry<String, MessageAttributeValue> entry : messageAttributes.entrySet() ){
-      map.put(entry.getKey(),entry.getValue().stringValue()); // todo: I actually don't know if the value part of this is right
+    for (Map.Entry<String, MessageAttributeValue> entry : messageAttributes.entrySet()) {
+      map.put(entry.getKey(), entry.getValue().stringValue());
     }
     return map;
   }
