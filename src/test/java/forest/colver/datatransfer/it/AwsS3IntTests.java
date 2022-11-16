@@ -82,6 +82,34 @@ public class AwsS3IntTests {
     assertThat(objects.size()).isEqualTo(0);
   }
 
+  // todo: finish this
+  @Test
+  public void testS3PutObjectWithTagging() {
+    // put a file
+    var objectKey = "revloc02/source/test/test.txt";
+    var creds = getEmxSbCreds();
+    var tagging = "expirableObject=true";
+    var putObjectRequest = PutObjectRequest.builder()
+        .bucket(S3_INTERNAL)
+        .key(objectKey)
+        .tagging(tagging)
+        .build();
+    s3Put(creds, getDefaultPayload(), putObjectRequest);
+
+    // todo need to use the getObject method
+    // verify the file is there
+    var objects = s3List(creds, S3_INTERNAL, objectKey);
+    assertThat(objects.size()).isEqualTo(1);
+    assertThat(objects.get(0).key()).isEqualTo(objectKey);
+
+    // delete the file
+    s3Delete(creds, S3_INTERNAL, objectKey);
+
+    // verify the file is gone
+    objects = s3List(creds, S3_INTERNAL, objectKey);
+    assertThat(objects.size()).isEqualTo(0);
+  }
+
   @Test
   public void testS3Head() {
     // put a file
