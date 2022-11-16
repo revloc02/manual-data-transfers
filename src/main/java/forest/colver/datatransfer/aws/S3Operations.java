@@ -107,6 +107,8 @@ public class S3Operations {
     }
   }
 
+  // todo: this needs a unit test
+  // todo: see what .toString() looks like on the getObjectResponse
   /**
    * Get an object on a desired S3 bucket.
    */
