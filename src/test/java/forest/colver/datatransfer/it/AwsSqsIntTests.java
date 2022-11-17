@@ -15,7 +15,7 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS2;
-import static forest.colver.datatransfer.aws.Utils.createMessageAttributes;
+import static forest.colver.datatransfer.aws.Utils.createSqsMessageAttributes;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
@@ -122,7 +122,7 @@ public class AwsSqsIntTests {
     var attributes = Map.of("key1", "value1", "key2", "value2");
     var message = Message.builder()
         .body(payload)
-        .messageAttributes(createMessageAttributes(attributes))
+        .messageAttributes(createSqsMessageAttributes(attributes))
         .messageId(getUuid())
         .build();
     // send some stuff

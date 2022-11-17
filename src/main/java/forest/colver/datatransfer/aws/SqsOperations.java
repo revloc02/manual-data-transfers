@@ -1,7 +1,7 @@
 package forest.colver.datatransfer.aws;
 
 import static forest.colver.datatransfer.aws.Utils.awsResponseValidation;
-import static forest.colver.datatransfer.aws.Utils.createMessageAttributes;
+import static forest.colver.datatransfer.aws.Utils.createSqsMessageAttributes;
 import static forest.colver.datatransfer.aws.Utils.getSqsClient;
 
 import java.util.List;
@@ -70,7 +70,7 @@ public class SqsOperations {
       var sendMessageRequest =
           SendMessageRequest.builder()
               .messageBody(payload)
-              .messageAttributes(createMessageAttributes(messageProps))
+              .messageAttributes(createSqsMessageAttributes(messageProps))
               .queueUrl(qUrl(sqsClient, queueName))
               .build();
       var response = sqsClient.sendMessage(sendMessageRequest);

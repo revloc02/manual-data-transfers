@@ -2,18 +2,17 @@ package forest.colver.datatransfer.hybrid;
 
 import static forest.colver.datatransfer.aws.SqsOperations.sqsConsumeOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
+import static forest.colver.datatransfer.aws.Utils.convertSqsMessageAttributesToStrings;
 import static forest.colver.datatransfer.config.Utils.getPassword;
 import static forest.colver.datatransfer.config.Utils.getUsername;
 import static forest.colver.datatransfer.messaging.JmsConsume.consumeOneMessage;
 import static forest.colver.datatransfer.messaging.JmsSend.sendMessageAutoAck;
 import static forest.colver.datatransfer.messaging.Utils.createTextMessage;
-import static forest.colver.datatransfer.messaging.Utils.getJmsMsgPayload;
 import static forest.colver.datatransfer.messaging.Utils.extractMsgProperties;
+import static forest.colver.datatransfer.messaging.Utils.getJmsMsgPayload;
 import static javax.jms.JMSContext.CLIENT_ACKNOWLEDGE;
 
 import forest.colver.datatransfer.messaging.Environment;
-import java.util.Map;
-import java.util.Map.Entry;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.TextMessage;
@@ -21,7 +20,6 @@ import org.apache.qpid.jms.JmsConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
-import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
 /**
  * This is for methods that perform operations between Qpid and SQS.
@@ -50,24 +48,12 @@ public class JmsAndSqs {
       String queue) {
     var sqsMsg = sqsConsumeOneMessage(awsCreds, sqs);
     if (sqsMsg != null) {
-      TextMessage message = getTextMessageFromSqsMessage(sqsMsg);
+      TextMessage message = createTextMessage(sqsMsg.body(),
+          convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
       sendMessageAutoAck(env, queue, message);
     } else {
       LOG.error("ERROR: SQS message was null.");
     }
-  }
-
-  private static TextMessage getTextMessageFromSqsMessage(
-      software.amazon.awssdk.services.sqs.model.Message sqsMsg) {
-    var payload = sqsMsg.body();
-    Map<String, String> properties = new java.util.HashMap<>(Map.of());
-    // todo: look for a help method in AWS Utils that does this
-    var props = sqsMsg.messageAttributes().entrySet();
-    for (Entry<String, MessageAttributeValue> prop : props) {
-      properties.put(prop.getKey(), prop.getValue().stringValue());
-    }
-    var message = createTextMessage(payload, properties);
-    return message;
   }
 
   public static void moveAllSpecificMessagesFromJmsToSqs(Environment env, String queue,
@@ -110,7 +96,8 @@ public class JmsAndSqs {
       var sqsMsg = sqsConsumeOneMessage(awsCreds, sqs);
       if (sqsMsg != null) {
         counter++;
-        TextMessage message = getTextMessageFromSqsMessage(sqsMsg);
+        TextMessage message = createTextMessage(sqsMsg.body(),
+            convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
         sendMessageAutoAck(env, queue, message);
         LOG.info(
             "Moved from SQS={} to, Queue={}:{} counter={}",

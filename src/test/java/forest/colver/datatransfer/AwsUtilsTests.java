@@ -1,6 +1,7 @@
 package forest.colver.datatransfer;
 
-import static forest.colver.datatransfer.aws.Utils.convertMessageAttributesToStrings;
+import static forest.colver.datatransfer.aws.Utils.convertSqsMessageAttributesToStrings;
+import static forest.colver.datatransfer.aws.Utils.createSqsMessageAttributes;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
@@ -17,8 +18,16 @@ public class AwsUtilsTests {
         MessageAttributeValue.builder().dataType("String").stringValue("value1").build());
     messageAttributes.put("key2",
         MessageAttributeValue.builder().dataType("String").stringValue("value2").build());
-    var response = convertMessageAttributesToStrings(messageAttributes);
+    var response = convertSqsMessageAttributesToStrings(messageAttributes);
     assertThat(response.get("key1")).isEqualTo("value1");
     assertThat(response.get("key2")).isEqualTo("value2");
+  }
+
+  @Test
+  public void testCreateMessageAttributes() {
+    var map = Map.of("key3", "value3", "key4", "value4");
+    var response = createSqsMessageAttributes(map);
+    assertThat(response.get("key3").stringValue()).isEqualTo("value3");
+    assertThat(response.get("key4").stringValue()).isEqualTo("value4");
   }
 }

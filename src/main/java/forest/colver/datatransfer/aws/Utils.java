@@ -96,7 +96,6 @@ public class Utils {
         .build();
   }
 
-  // todo: create a unit test for this method.
   /**
    * A helper method to take a Map<String, String> can convert it into a Map<String,
    * MessageAttributeValue> (SQS message.messageAttributes) so it can be used as an input value for
@@ -105,7 +104,7 @@ public class Utils {
    * @param properties A map of the message attributes.
    * @return A map of message attributes converted to the format an SQS Request object needs.
    */
-  public static Map<String, MessageAttributeValue> createMessageAttributes(
+  public static Map<String, MessageAttributeValue> createSqsMessageAttributes(
       Map<String, String> properties) {
     final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
     for (Map.Entry<String, String> entry : properties.entrySet()) {
@@ -123,7 +122,7 @@ public class Utils {
    * @param messageAttributes software.amazon.awssdk.services.sqs.model.message.messageAttributes()
    * @return A map of message attributes that are just Strings.
    */
-  public static Map<String, String> convertMessageAttributesToStrings(
+  public static Map<String, String> convertSqsMessageAttributesToStrings(
       Map<String, MessageAttributeValue> messageAttributes) {
     Map<String, String> map = new HashMap<>();
     for (Map.Entry<String, MessageAttributeValue> entry : messageAttributes.entrySet()) {
