@@ -131,11 +131,18 @@ public class Utils {
     return map;
   }
 
-  // todo: this also needs a javadoc
+  /**
+   * There are several differenct AWS Clients used in the code (see above), and whenever there is a
+   * response when using one of those, this method validates that the response was successful.
+   * Actually not certain how necessary it is, but all responses are being validated with this.
+   *
+   * @param response One of the AWS Client Response objects.
+   */
   public static void awsResponseValidation(AwsResponse response) {
     var responseCode = response.sdkHttpResponse().statusCode();
     if (responseCode >= 300) {
-      LOG.info("ERROR: {}, responseMetadata={}", responseCode, response.responseMetadata().toString());
+      LOG.info("ERROR: {}, responseMetadata={}", responseCode,
+          response.responseMetadata().toString());
       throw new IllegalStateException(
           "Unsuccessful AWS request. Status Code: " + responseCode);
     }
