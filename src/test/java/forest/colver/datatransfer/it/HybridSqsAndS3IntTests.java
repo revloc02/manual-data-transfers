@@ -60,7 +60,6 @@ public class HybridSqsAndS3IntTests {
     assertThat(objects.size()).isEqualTo(0);
   }
 
-  // todo: this
   @Test
   public void testMoveOneWithPropertiesSqsToS3() {
     // place a message on SQS
@@ -89,6 +88,7 @@ public class HybridSqsAndS3IntTests {
     // use head to check metadata on S3 object
     var headObjectResponse = s3Head(creds, S3_INTERNAL, objectKey);
     assertThat(headObjectResponse.metadata().get("key2")).isEqualTo("value2");
+    assertThat(headObjectResponse.metadata().get("key3")).isEqualTo("value3");
 
     // assert the SQS was cleared
     var messages = sqsReadOneMessage(creds, SQS1);
