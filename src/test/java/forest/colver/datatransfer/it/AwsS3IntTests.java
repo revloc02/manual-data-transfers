@@ -2,6 +2,7 @@ package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.aws.S3Operations.s3Copy;
 import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
+import static forest.colver.datatransfer.aws.S3Operations.s3Get;
 import static forest.colver.datatransfer.aws.S3Operations.s3Head;
 import static forest.colver.datatransfer.aws.S3Operations.s3List;
 import static forest.colver.datatransfer.aws.S3Operations.s3Put;
@@ -11,6 +12,8 @@ import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -29,7 +32,7 @@ public class AwsS3IntTests {
   // todo: so none of these tests check the payload of the arrived file, is that too hard or something? Figure it out, then fix it or comment on it so I don't look at this again sometime.
 
   @Test
-  public void testS3Copy() {
+  public void testS3Copy() throws IOException {
     // place a file
     var creds = getEmxSbCreds();
     var objectKey = "revloc02/source/test/test.txt";
@@ -49,9 +52,13 @@ public class AwsS3IntTests {
     assertThat(objects.size()).isEqualTo(1);
     assertThat(objects.get(0).key()).isEqualTo(destKey);
 
-    // todo: what's going on here? Why is this commented out?
+    // todo: what's going on here? Why doesn't this thing work?f I think the problem is I don't know how to use a friggin InputStream
     // check the contents
-//    s3Get(creds, SANDBOX_SFTP_TARGET_CUSTOMER_BUCKET, destKey);
+    var response = s3Get(creds, S3_TARGET_CUSTOMER, destKey);
+    LOG.info("response={}", response.response());
+    LOG.info("toString={}", response);
+    var payload = new String(response.readAllBytes(), StandardCharsets.UTF_8); // todo: this InputStream is not being closed properly
+    assertThat(payload).isEqualTo(getDefaultPayload());
 
     // delete the files
     s3Delete(creds, S3_INTERNAL, objectKey);
