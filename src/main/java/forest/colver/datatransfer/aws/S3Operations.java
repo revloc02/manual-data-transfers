@@ -11,10 +11,12 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
@@ -108,20 +110,22 @@ public class S3Operations {
   }
 
   // todo: this needs a unit test
-  // todo: see what .toString() looks like on the getObjectResponse
   /**
    * Get an object on a desired S3 bucket.
+   * @return
    */
-  public static void s3Get(
+  public static ResponseInputStream<GetObjectResponse> s3Get(
       AwsCredentialsProvider awsCp, String bucket, String objectKey) {
     try (var s3Client = getS3Client(awsCp)) {
       var getObjectRequest = GetObjectRequest.builder().bucket(bucket).key(objectKey).build();
       var getObjectResponse = s3Client.getObject(getObjectRequest);
+      awsResponseValidation(getObjectResponse.response());
       LOG.info("Metadata:");
       for (Map.Entry<String, String> entry : getObjectResponse.response().metadata().entrySet()) {
         LOG.info("  {}={}", entry.getKey(), entry.getValue());
       }
-//      LOG.info("S3GET: The object {} was got on the {} bucket.\n", getObjectResponse.readAllBytes(), bucket);
+//      LOG.info("S3GET: The object {} was retrieved on the {} bucket.\n", getObjectResponse.readAllBytes(), bucket);
+      return getObjectResponse;
     }
   }
 
