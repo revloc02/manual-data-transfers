@@ -447,7 +447,7 @@ public class SqsOperations {
       String payloadLike, String toSqs) {
     // check queue depth, if it is too deep just stop
     var depth = sqsDepth(awsCP, fromSqs);
-    var maxDepth = 100; // This could probably go as high as 40k
+    var maxDepth = 500; // This could probably go as high as 40k
     var counter = 0;
     if (depth < maxDepth) {
       // from queue depth calculate visibility timeout
