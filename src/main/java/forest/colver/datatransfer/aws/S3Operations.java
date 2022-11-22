@@ -149,9 +149,9 @@ public class S3Operations {
   }
 
   /**
-   * List all of the object at a certain directory (keyPrefix).
+   * List all the objects at a certain directory (keyPrefix).
    *
-   * @param keyPrefix The folder on the S3 to list.
+   * @param keyPrefix The "folder" on the S3 to list.
    */
   public static List<S3Object> s3List(AwsCredentialsProvider awsCp, String bucket,
       String keyPrefix) {
