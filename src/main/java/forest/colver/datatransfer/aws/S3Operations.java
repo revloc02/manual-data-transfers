@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
@@ -110,9 +111,9 @@ public class S3Operations {
   }
 
   // todo: this needs a unit test
+
   /**
    * Get an object on a desired S3 bucket.
-   * @return
    */
   public static ResponseInputStream<GetObjectResponse> s3Get(
       AwsCredentialsProvider awsCp, String bucket, String objectKey) {
@@ -127,6 +128,24 @@ public class S3Operations {
 //      LOG.info("S3GET: The object {} was retrieved on the {} bucket.\n", getObjectResponse.readAllBytes(), bucket);
       return getObjectResponse;
     }
+  }
+
+  // todo: this needs a unit test
+  // todo: okay so passing in the client allowed this to work because creating a client for each connection caused the client to be garbage collected by Java before the download was finished. This changes my whole paradigm, and I may have to refactor a bunch of stuff--at least in s3 land.
+  /**
+   * Pass in the S3 client and get an object on a desired S3 bucket.
+   */
+  public static ResponseInputStream<GetObjectResponse> s3Get(S3Client s3Client, String bucket,
+      String objectKey) {
+    var getObjectRequest = GetObjectRequest.builder().bucket(bucket).key(objectKey).build();
+    var getObjectResponse = s3Client.getObject(getObjectRequest);
+    awsResponseValidation(getObjectResponse.response());
+    LOG.info("Metadata:");
+    for (Map.Entry<String, String> entry : getObjectResponse.response().metadata().entrySet()) {
+      LOG.info("  {}={}", entry.getKey(), entry.getValue());
+    }
+//      LOG.info("S3GET: The object {} was retrieved on the {} bucket.\n", getObjectResponse.readAllBytes(), bucket);
+    return getObjectResponse;
   }
 
   /**
