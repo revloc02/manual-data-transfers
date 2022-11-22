@@ -9,6 +9,7 @@ import static forest.colver.datatransfer.aws.S3Operations.s3Put;
 import static forest.colver.datatransfer.aws.Utils.S3_INTERNAL;
 import static forest.colver.datatransfer.aws.Utils.S3_TARGET_CUSTOMER;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
+import static forest.colver.datatransfer.aws.Utils.getS3Client;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -33,36 +34,40 @@ public class AwsS3IntTests {
 
   @Test
   public void testS3Copy() throws IOException {
-    // place a file
     var creds = getEmxSbCreds();
-    var objectKey = "revloc02/source/test/test.txt";
-    s3Put(creds, S3_INTERNAL, objectKey, getDefaultPayload());
+    try (var s3Client = getS3Client(creds)) {
+      // place a file
+      var objectKey = "revloc02/source/test/test.txt";
+      var payload = getDefaultPayload();
+      s3Put(creds, S3_INTERNAL, objectKey, payload);
 
-    // verify the file is in the source
-    var objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isEqualTo(1);
-    assertThat(objects.get(0).key()).isEqualTo(objectKey);
+      // verify the file is in the source
+      var objects = s3List(creds, S3_INTERNAL, objectKey);
+      assertThat(objects.size()).isEqualTo(1);
+      assertThat(objects.get(0).key()).isEqualTo(objectKey);
 
-    // copy file
-    var destKey = "blake/inbound/dev/some-bank/ack/testCopied.txt";
-    s3Copy(creds, S3_INTERNAL, objectKey, S3_TARGET_CUSTOMER, destKey);
+      // copy file
+      var destKey = "blake/inbound/dev/some-bank/ack/testCopied.txt";
+      s3Copy(creds, S3_INTERNAL, objectKey, S3_TARGET_CUSTOMER, destKey);
 
-    // verify the copy
-    objects = s3List(creds, S3_TARGET_CUSTOMER, destKey);
-    assertThat(objects.size()).isEqualTo(1);
-    assertThat(objects.get(0).key()).isEqualTo(destKey);
+      // verify the copy is in the new location
+      objects = s3List(creds, S3_TARGET_CUSTOMER, destKey);
+      assertThat(objects.size()).isEqualTo(1);
+      assertThat(objects.get(0).key()).isEqualTo(destKey);
 
-    // todo: what's going on here? Why doesn't this thing work?f I think the problem is I don't know how to use a friggin InputStream
-    // check the contents
-    var response = s3Get(creds, S3_TARGET_CUSTOMER, destKey);
-    LOG.info("response={}", response.response());
-    LOG.info("toString={}", response);
-    var payload = new String(response.readAllBytes(), StandardCharsets.UTF_8); // todo: this InputStream is not being closed properly
-    assertThat(payload).isEqualTo(getDefaultPayload());
+      // todo: what's going on here? Why doesn't this thing work?f I think the problem is I don't know how to use a friggin InputStream
+      // check the contents
+      var response = s3Get(s3Client, S3_TARGET_CUSTOMER, destKey);
+      LOG.info("response={}", response.response());
+      LOG.info("statusCode={}", response.response().sdkHttpResponse().statusCode());
+      var respPayload = new String(response.readAllBytes(),
+          StandardCharsets.UTF_8); // todo: this InputStream is not being closed properly
+      assertThat(respPayload).isEqualTo(payload);
 
-    // delete the files
-    s3Delete(creds, S3_INTERNAL, objectKey);
-    s3Delete(creds, S3_TARGET_CUSTOMER, destKey);
+      // delete the files
+      s3Delete(creds, S3_INTERNAL, objectKey);
+      s3Delete(creds, S3_TARGET_CUSTOMER, destKey);
+    }
   }
 
   @Test
