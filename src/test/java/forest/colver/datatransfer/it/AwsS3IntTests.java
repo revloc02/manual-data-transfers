@@ -55,16 +55,16 @@ public class AwsS3IntTests {
       assertThat(objects.size()).isEqualTo(1);
       assertThat(objects.get(0).key()).isEqualTo(destKey);
 
-      // todo: what's going on here? Why doesn't this thing work?f I think the problem is I don't know how to use a friggin InputStream
       // check the contents
       var response = s3Get(s3Client, S3_TARGET_CUSTOMER, destKey);
       LOG.info("response={}", response.response());
       LOG.info("statusCode={}", response.response().sdkHttpResponse().statusCode());
       var respPayload = new String(response.readAllBytes(),
-          StandardCharsets.UTF_8); // todo: this InputStream is not being closed properly
+          StandardCharsets.UTF_8);
       assertThat(respPayload).isEqualTo(payload);
 
-      // delete the files
+      // cleanup and delete the files
+      response.close();
       s3Delete(creds, S3_INTERNAL, objectKey);
       s3Delete(creds, S3_TARGET_CUSTOMER, destKey);
     }
