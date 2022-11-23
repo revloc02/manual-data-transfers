@@ -131,9 +131,17 @@ public class S3Operations {
   }
 
   // todo: this needs a unit test
-  // todo: okay so passing in the client allowed this to work because creating a client for each connection caused the client to be garbage collected by Java before the download was finished. This changes my whole paradigm, and I may have to refactor a bunch of stuff--at least in s3 land.
   /**
-   * Pass in the S3 client and get an object on a desired S3 bucket.
+   * Get an object from an S3 bucket.
+   *
+   * @param s3Client Pass in the client. It was discovered that creating a client for each
+   * connection caused the client to be garbage collected by Java before the download was finished,
+   * and errors ensued. Passing in the client allows it to stay around longer so the operation can
+   * finish.
+   * @param bucket S3 bucket.
+   * @param objectKey Object path and name.
+   * @return Input stream that provides access to the unmarshalled POJO response returned by the
+   * service in addition to the streamed contents.
    */
   public static ResponseInputStream<GetObjectResponse> s3Get(S3Client s3Client, String bucket,
       String objectKey) {
