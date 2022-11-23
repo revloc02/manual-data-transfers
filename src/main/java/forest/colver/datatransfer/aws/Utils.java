@@ -132,9 +132,9 @@ public class Utils {
   }
 
   /**
-   * There are several differenct AWS Clients used in the code (see above), and whenever there is a
-   * response when using one of those, this method validates that the response was successful.
-   * Actually not certain how necessary it is, but all responses are being validated with this.
+   * There are several AWS Clients used in the code (see above), and whenever there is a response
+   * when using one of those, this method validates that the response was successful. Actually not
+   * certain how necessary it is, but all responses are being validated with this.
    *
    * @param response One of the AWS Client Response objects.
    */
