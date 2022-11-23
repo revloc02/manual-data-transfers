@@ -18,6 +18,11 @@ public class Main {
   public static void main(String[] args) {
     LOG.info("start");
 
+//    sqsCopyAll(getEmxSbCreds(), "sftp-error", "blake-emxonramp-dev");
+//    sqsMoveMessagesWithPayloadLike(getEmxSbCreds(), "sftp-error", "lifeflightTestFile", "blake-emxonramp-test");
+//    sqsMoveMessagesWithPayloadLike(getEmxNpCreds(), "sftp-error", "lifeflightTestFile", "test-queue");
+
+
     moveAllSpecificMessages(PROD, "emx-error", "emxSystem='si-services' AND emxSystemEnvironment='prod'", "emx-to-si-services-prod");
     moveAllSpecificMessages(STAGE, "emx-error", "emxSystem='si-services' AND emxSystemEnvironment='test'", "emx-to-si-services-test");
     moveAllSpecificMessages(STAGE, "emx-error", "emxSystem='si-services' AND emxSystemEnvironment='stage'", "emx-to-si-services-stage");
@@ -35,20 +40,5 @@ public class Main {
     moveAllSpecificMessages(STAGE, "emx-error",
         "emxSystem='identity-vault' AND emxSystemEnvironment='stage'",
         "emx-to-identity-vault-stage");
-
-//    moveAllSpecificMessages(PROD, "emx-error", "emxSystem='identity-vault'", "identity-vault-error");
-//    browseAndCountSpecificMessages(PROD, "emx-error", "emxSystem='crm-correctional-services' AND emxErrorMessage LIKE '%TimeoutException: Request timed out.%'");
-
-//    moveAllSpecificMessages(PROD, "emx-error",
-//        "emxSystem='crm-missionary-inquiry' AND emxErrorMessage LIKE '%TimeoutException: Request timed out.%'",
-//        "emx-to-crm-missionary-inquiry-prod");
-
-//    moveAllSpecificMessages(STAGE, "emx-error", "emxSystem='ext-salesforce-ccd'", "emx-to-ext-salesforce-ccd-test");
-//    moveAllSpecificMessages(STAGE, "emx-error", "emxSystem='crm-missionary-recommend' AND emxSystemEnvironment='dev'", "emx-to-crm-missionary-recommend-dev");
-//    moveAllSpecificMessages(STAGE, "emx-error", "emxSystem='crm-missionary-recommend' AND emxSystemEnvironment='test'", "emx-to-crm-missionary-recommend-test");
-//    moveAllSpecificMessages(STAGE, "emx-error", "emxSystem='crm-missionary-inquiry' AND emxSystemEnvironment='test'", "emx-to-crm-missionary-inquiry-test");
-//    moveAllSpecificMessages(STAGE, "emx-error", "emxSystem='crm-missionary-inquiry' AND emxSystemEnvironment='dev'", "emx-to-crm-missionary-inquiry-dev");
-//    moveAllSpecificMessages(STAGE, "emx-error", "emxSystem='crm-correctional-services' AND emxSystemEnvironment='stage'", "emx-to-crm-correctional-services-stage");
-//    browseAndCountSpecificMessages(STAGE, "emx-error", "emxSourceSystem='gfs-d365'");
   }
 }
