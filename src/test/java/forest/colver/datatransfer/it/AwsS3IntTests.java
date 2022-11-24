@@ -39,7 +39,7 @@ public class AwsS3IntTests {
       // place a file
       var objectKey = "revloc02/source/test/test.txt";
       var payload = getDefaultPayload();
-      s3Put(creds, S3_INTERNAL, objectKey, payload);
+      s3Put(s3Client, S3_INTERNAL, objectKey, payload);
 
       // verify the file is in the source
       var objects = s3List(creds, S3_INTERNAL, objectKey);
@@ -48,7 +48,7 @@ public class AwsS3IntTests {
 
       // copy file
       var destKey = "blake/inbound/dev/some-bank/ack/testCopied.txt";
-      s3Copy(creds, S3_INTERNAL, objectKey, S3_TARGET_CUSTOMER, destKey);
+      s3Copy(creds, S3_INTERNAL, objectKey, S3_TARGET_CUSTOMER, destKey); // todo: change this to use method that take s3Client as a param
 
       // verify the copy is in the new location
       objects = s3List(creds, S3_TARGET_CUSTOMER, destKey);
