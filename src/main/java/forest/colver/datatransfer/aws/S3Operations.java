@@ -32,7 +32,7 @@ public class S3Operations {
   private static final Logger LOG = LoggerFactory.getLogger(S3Operations.class);
 
   /**
-   * Put an object on a desired S3 bucket.
+   * Put an object on a desired S3 bucket. Creates an S3Client.
    */
   public static void s3Put(
       AwsCredentialsProvider awsCp, String bucket, String objectKey, String payload) {
@@ -120,9 +120,9 @@ public class S3Operations {
       awsResponseValidation(copyObjectResponse);
     }
   }
+  // todo: get the s3Get method that creates a client back (deleted it), and label it as such.
 
   // todo: this needs a unit test
-
   /**
    * Get an object from an S3 bucket.
    *
