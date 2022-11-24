@@ -79,6 +79,17 @@ public class S3Operations {
   }
 
   /**
+   * Put an object on a desired S3 bucket.
+   */
+  public static void s3Put(S3Client s3Client, String payload, PutObjectRequest putObjectRequest) {
+    var requestBody = RequestBody.fromString(payload);
+    var putObjectResponse = s3Client.putObject(putObjectRequest, requestBody);
+    awsResponseValidation(putObjectResponse);
+    LOG.info("S3PUT: The object {} was put on the {} bucket.\n", putObjectRequest.key(),
+        putObjectRequest.bucket());
+  }
+
+  /**
    * The HEAD action retrieves metadata from an object without returning the object itself. This
    * action is useful if you're only interested in an object's metadata.
    */
