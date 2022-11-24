@@ -46,6 +46,17 @@ public class S3Operations {
   }
 
   /**
+   * Put an object on a desired S3 bucket. S3Client is a parameter.
+   */
+  public static void s3Put(S3Client s3Client, String bucket, String objectKey, String payload) {
+    var putObjectRequest = PutObjectRequest.builder().bucket(bucket).key(objectKey).build();
+    var requestBody = RequestBody.fromString(payload);
+    var putObjectResponse = s3Client.putObject(putObjectRequest, requestBody);
+    awsResponseValidation(putObjectResponse);
+    LOG.info("S3PUT: The object {} was put on the {} bucket.\n", objectKey, bucket);
+  }
+
+  /**
    * Put an object on a desired S3 bucket including some metadata.
    */
   public static void s3Put(
@@ -76,17 +87,6 @@ public class S3Operations {
       LOG.info("S3PUT: The object {} was put on the {} bucket.\n", putObjectRequest.key(),
           putObjectRequest.bucket());
     }
-  }
-
-  /**
-   * Put an object on a desired S3 bucket.
-   */
-  public static void s3Put(S3Client s3Client, String payload, PutObjectRequest putObjectRequest) {
-    var requestBody = RequestBody.fromString(payload);
-    var putObjectResponse = s3Client.putObject(putObjectRequest, requestBody);
-    awsResponseValidation(putObjectResponse);
-    LOG.info("S3PUT: The object {} was put on the {} bucket.\n", putObjectRequest.key(),
-        putObjectRequest.bucket());
   }
 
   /**
