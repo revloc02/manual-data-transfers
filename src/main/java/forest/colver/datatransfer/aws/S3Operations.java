@@ -113,25 +113,6 @@ public class S3Operations {
   // todo: this needs a unit test
 
   /**
-   * Get an object on a desired S3 bucket.
-   */
-  public static ResponseInputStream<GetObjectResponse> s3Get(
-      AwsCredentialsProvider awsCp, String bucket, String objectKey) {
-    try (var s3Client = getS3Client(awsCp)) {
-      var getObjectRequest = GetObjectRequest.builder().bucket(bucket).key(objectKey).build();
-      var getObjectResponse = s3Client.getObject(getObjectRequest);
-      awsResponseValidation(getObjectResponse.response());
-      LOG.info("Metadata:");
-      for (Map.Entry<String, String> entry : getObjectResponse.response().metadata().entrySet()) {
-        LOG.info("  {}={}", entry.getKey(), entry.getValue());
-      }
-//      LOG.info("S3GET: The object {} was retrieved on the {} bucket.\n", getObjectResponse.readAllBytes(), bucket);
-      return getObjectResponse;
-    }
-  }
-
-  // todo: this needs a unit test
-  /**
    * Get an object from an S3 bucket.
    *
    * @param s3Client Pass in the client. It was discovered that creating a client for each
