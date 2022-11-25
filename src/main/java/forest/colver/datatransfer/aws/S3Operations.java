@@ -31,8 +31,9 @@ public class S3Operations {
 
   private static final Logger LOG = LoggerFactory.getLogger(S3Operations.class);
 
+  // todo: this needs a unit test
   /**
-   * Put an object on a desired S3 bucket. Creates an S3Client.
+   * Put an object on a desired S3 bucket. Creates and S3Client--good to use this for one-off S3 operations.
    */
   public static void s3Put(
       AwsCredentialsProvider awsCp, String bucket, String objectKey, String payload) {
@@ -45,8 +46,9 @@ public class S3Operations {
     }
   }
 
+  // todo: this needs a unit test
   /**
-   * Put an object on a desired S3 bucket. S3Client is a parameter.
+   * Put an object on a desired S3 bucket. Pass in the S3Client--good for stringing multiple S3 calls together so only one client is created.
    */
   public static void s3Put(S3Client s3Client, String bucket, String objectKey, String payload) {
     var putObjectRequest = PutObjectRequest.builder().bucket(bucket).key(objectKey).build();
@@ -120,11 +122,29 @@ public class S3Operations {
       awsResponseValidation(copyObjectResponse);
     }
   }
-  // todo: get the s3Get method that creates a client back (deleted it), and label it as such.
 
   // todo: this needs a unit test
   /**
-   * Get an object from an S3 bucket.
+   * Get an object on a desired S3 bucket. Creates and S3Client--good to use this for one-off S3 operations.
+   */
+  public static ResponseInputStream<GetObjectResponse> s3Get(
+      AwsCredentialsProvider awsCp, String bucket, String objectKey) {
+    try (var s3Client = getS3Client(awsCp)) {
+      var getObjectRequest = GetObjectRequest.builder().bucket(bucket).key(objectKey).build();
+      var getObjectResponse = s3Client.getObject(getObjectRequest);
+      awsResponseValidation(getObjectResponse.response());
+      LOG.info("Metadata:");
+      for (Map.Entry<String, String> entry : getObjectResponse.response().metadata().entrySet()) {
+        LOG.info("  {}={}", entry.getKey(), entry.getValue());
+      }
+//      LOG.info("S3GET: The object {} was retrieved on the {} bucket.\n", getObjectResponse.readAllBytes(), bucket);
+      return getObjectResponse;
+    }
+  }
+
+  // todo: this needs a unit test
+  /**
+   * Get an object from an S3 bucket. Pass in the S3Client--good for stringing multiple S3 calls together so only one client is created.
    *
    * @param s3Client Pass in the client. It was discovered that creating a client for each
    * connection caused the client to be garbage collected by Java before the download was finished,
