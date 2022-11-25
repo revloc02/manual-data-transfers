@@ -32,8 +32,10 @@ public class S3Operations {
   private static final Logger LOG = LoggerFactory.getLogger(S3Operations.class);
 
   // todo: this needs a unit test
+
   /**
-   * Put an object on a desired S3 bucket. Creates and S3Client--good to use this for one-off S3 operations.
+   * Put an object on a desired S3 bucket. Creates and S3Client--good to use this for one-off S3
+   * operations.
    */
   public static void s3Put(
       AwsCredentialsProvider awsCp, String bucket, String objectKey, String payload) {
@@ -47,8 +49,10 @@ public class S3Operations {
   }
 
   // todo: this needs a unit test
+
   /**
-   * Put an object on a desired S3 bucket. Pass in the S3Client--good for stringing multiple S3 calls together so only one client is created.
+   * Put an object on a desired S3 bucket. Pass in the S3Client--good for stringing multiple S3
+   * calls together so only one client is created.
    */
   public static void s3Put(S3Client s3Client, String bucket, String objectKey, String payload) {
     var putObjectRequest = PutObjectRequest.builder().bucket(bucket).key(objectKey).build();
@@ -124,8 +128,10 @@ public class S3Operations {
   }
 
   // todo: this needs a unit test
+
   /**
-   * Get an object on a desired S3 bucket. Creates and S3Client--good to use this for one-off S3 operations.
+   * Get an object on a desired S3 bucket. Creates and S3Client--good to use this for one-off S3
+   * operations.
    */
   public static ResponseInputStream<GetObjectResponse> s3Get(
       AwsCredentialsProvider awsCp, String bucket, String objectKey) {
@@ -143,8 +149,10 @@ public class S3Operations {
   }
 
   // todo: this needs a unit test
+
   /**
-   * Get an object from an S3 bucket. Pass in the S3Client--good for stringing multiple S3 calls together so only one client is created.
+   * Get an object from an S3 bucket. Pass in the S3Client--good for stringing multiple S3 calls
+   * together so only one client is created.
    *
    * @param s3Client Pass in the client. It was discovered that creating a client for each
    * connection caused the client to be garbage collected by Java before the download was finished,
