@@ -71,7 +71,7 @@ public class AwsS3IntTests {
   }
 
   @Test
-  public void testS3PutObjectRequest() {
+  public void testS3PutPassCreds() {
     // put a file
     var objectKey = "revloc02/source/test/test.txt";
     var creds = getEmxSbCreds();
@@ -92,6 +92,32 @@ public class AwsS3IntTests {
     // verify the file is gone
     objects = s3List(creds, S3_INTERNAL, objectKey);
     assertThat(objects.size()).isEqualTo(0);
+  }
+
+  @Test
+  public void testS3PutPassClient() {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      // put a file
+      var objectKey = "revloc02/source/test/test.txt";
+      var putObjectRequest = PutObjectRequest.builder()
+          .bucket(S3_INTERNAL)
+          .key(objectKey)
+          .build();
+      s3Put(s3Client, getDefaultPayload(), putObjectRequest);
+
+      // verify the file is there
+      var objects = s3List(creds, S3_INTERNAL, objectKey); // todo: need to pass client
+      assertThat(objects.size()).isEqualTo(1);
+      assertThat(objects.get(0).key()).isEqualTo(objectKey);
+
+      // delete the file
+      s3Delete(creds, S3_INTERNAL, objectKey); // todo: need to pass client
+
+      // verify the file is gone
+      objects = s3List(creds, S3_INTERNAL, objectKey); // todo: need to pass client
+      assertThat(objects.size()).isEqualTo(0);
+    }
   }
 
   // todo: finish this
