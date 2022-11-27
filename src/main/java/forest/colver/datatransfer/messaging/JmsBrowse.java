@@ -204,4 +204,25 @@ public class JmsBrowse {
           toQName);
     }
   }
+
+  // todo: this needs a unit test
+
+  /**
+   * Copies a message from a queue and returns the Message object.
+   */
+  public static Enumeration downloadSpecificMessages(Environment env, String fromQName,
+      String selector) {
+    Enumeration messages = null;
+    var cf = new JmsConnectionFactory(env.url());
+    try (var ctx = cf.createContext(getUsername(), getPassword())) {
+      var fromQ = ctx.createQueue(fromQName);
+      int count = 0;
+      try (var browser = ctx.createBrowser(fromQ, selector)) {
+        messages = browser.getEnumeration();
+      } catch (JMSException e) {
+        e.printStackTrace();
+      }
+    }
+    return messages;
+  }
 }
