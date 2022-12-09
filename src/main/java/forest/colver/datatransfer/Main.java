@@ -18,27 +18,30 @@ public class Main {
   public static void main(String[] args) {
     LOG.info("start");
 
+    // todo: are my retrieve methods appropriate so that I can get a message off of the EMX replay cache? What if there are multiple messages there that I need?
+    browseForSpecificMessage(PROD, "emx-replay-cache", "emxReplayPriorTrackingNumber='89cb031a-f47e-4fb0-8666-b586760fd5cd'");
+
 //    sqsCopyAll(getEmxSbCreds(), "sftp-error", "blake-emxonramp-dev");
 //    sqsMoveMessagesWithPayloadLike(getEmxSbCreds(), "sftp-error", "lifeflightTestFile", "blake-emxonramp-test");
 //    sqsMoveMessagesWithPayloadLike(getEmxNpCreds(), "sftp-error", "lifeflightTestFile", "test-queue");
 
 
-    moveAllSpecificMessages(PROD, "emx-error", "emxSystem='si-services' AND emxSystemEnvironment='prod'", "emx-to-si-services-prod");
-    moveAllSpecificMessages(STAGE, "emx-error", "emxSystem='si-services' AND emxSystemEnvironment='test'", "emx-to-si-services-test");
-    moveAllSpecificMessages(STAGE, "emx-error", "emxSystem='si-services' AND emxSystemEnvironment='stage'", "emx-to-si-services-stage");
-
-    moveAllSpecificMessages(STAGE, "emx-error",
-        "emxSystem='lenel'",
-        "lenel-tyler");
-
-    moveAllSpecificMessages(PROD, "emx-error",
-        "emxSystem='identity-vault' AND emxErrorMessage LIKE '%HttpTimeoutException: request timed out%'",
-        "emx-to-identity-vault-prod");
-    moveAllSpecificMessages(PROD, "emx-error",
-        "emxSystem='identity-vault' AND emxErrorMessage LIKE '%Internal Server Error code: 503%'",
-        "emx-to-identity-vault-prod");
-    moveAllSpecificMessages(STAGE, "emx-error",
-        "emxSystem='identity-vault' AND emxSystemEnvironment='stage'",
-        "emx-to-identity-vault-stage");
+//    moveAllSpecificMessages(PROD, "emx-error", "emxSystem='si-services' AND emxSystemEnvironment='prod'", "emx-to-si-services-prod");
+//    moveAllSpecificMessages(STAGE, "emx-error", "emxSystem='si-services' AND emxSystemEnvironment='test'", "emx-to-si-services-test");
+//    moveAllSpecificMessages(STAGE, "emx-error", "emxSystem='si-services' AND emxSystemEnvironment='stage'", "emx-to-si-services-stage");
+//
+//    moveAllSpecificMessages(STAGE, "emx-error",
+//        "emxSystem='lenel'",
+//        "lenel-tyler");
+//
+//    moveAllSpecificMessages(PROD, "emx-error",
+//        "emxSystem='identity-vault' AND emxErrorMessage LIKE '%HttpTimeoutException: request timed out%'",
+//        "emx-to-identity-vault-prod");
+//    moveAllSpecificMessages(PROD, "emx-error",
+//        "emxSystem='identity-vault' AND emxErrorMessage LIKE '%Internal Server Error code: 503%'",
+//        "emx-to-identity-vault-prod");
+//    moveAllSpecificMessages(STAGE, "emx-error",
+//        "emxSystem='identity-vault' AND emxSystemEnvironment='stage'",
+//        "emx-to-identity-vault-stage");
   }
 }
