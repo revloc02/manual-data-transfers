@@ -32,12 +32,10 @@ public class S3Operations {
   // todo: this whole file needs better organization and better JavaDocs.
   private static final Logger LOG = LoggerFactory.getLogger(S3Operations.class);
 
-  // todo: this needs a unit test
-
   /**
-   * Put an object on a desired S3 bucket. Creates PutObjectRequest. Creates an S3Client--good to
-   * use this for one-off S3 operations, as opposed to doing several S3 operations and passing the
-   * client around.
+   * s3Put with AwsCreds. Put an object on a desired S3 bucket. Creates PutObjectRequest. Creates an
+   * S3Client--good to use this for one-off S3 operations, as opposed to doing several S3 operations
+   * and passing the client around.
    */
   public static void s3Put(
       AwsCredentialsProvider awsCp, String bucket, String objectKey, String payload) {
@@ -53,8 +51,8 @@ public class S3Operations {
   // todo: this needs a unit test
 
   /**
-   * Put an object on a desired S3 bucket. Creates PutObjectRequest. Pass in the S3Client--good for
-   * stringing multiple S3 calls together so only one client is created.
+   * s3Put with S3Client. Put an object on a desired S3 bucket. Creates PutObjectRequest. Pass in
+   * the S3Client--good for stringing multiple S3 calls together so only one client is created.
    */
   public static void s3Put(S3Client s3Client, String bucket, String objectKey, String payload) {
     var putObjectRequest = PutObjectRequest.builder().bucket(bucket).key(objectKey).build();
@@ -67,9 +65,9 @@ public class S3Operations {
   // todo: does this need a unit test?
 
   /**
-   * Put an object on a desired S3 bucket including some metadata. Creates an S3Client--good to use
-   * this for one-off S3 operations, as opposed to doing several S3 operations and passing the
-   * client around.
+   * s3Put with AwsCreds and metadata. Put an object on a desired S3 bucket including some metadata.
+   * Creates an S3Client--good to use this for one-off S3 operations, as opposed to doing several S3
+   * operations and passing the client around.
    */
   public static void s3Put(
       AwsCredentialsProvider awsCp, String bucket, String objectKey, String payload,
@@ -88,8 +86,9 @@ public class S3Operations {
   }
 
   /**
-   * Put an object on a desired S3 bucket. Creates an S3Client--good to use this for one-off S3
-   * operations, as opposed to doing several S3 operations and passing the client around.
+   * s3Put with AwsCreds and PutObjectRequest. Put an object on a desired S3 bucket. Creates an
+   * S3Client--good to use this for one-off S3 operations, as opposed to doing several S3 operations
+   * and passing the client around.
    */
   public static void s3Put(
       AwsCredentialsProvider awsCp, String payload, PutObjectRequest putObjectRequest) {
@@ -103,8 +102,8 @@ public class S3Operations {
   }
 
   /**
-   * Put an object on a desired S3 bucket. Pass in the S3Client--good for stringing multiple S3
-   * calls together so only one client is created.
+   * s3Put with S3Client and PutObjectRequest. Put an object on a desired S3 bucket. Pass in the
+   * S3Client--good for stringing multiple S3 calls together so only one client is created.
    */
   public static void s3Put(S3Client s3Client, String payload, PutObjectRequest putObjectRequest) {
     var requestBody = RequestBody.fromString(payload);
