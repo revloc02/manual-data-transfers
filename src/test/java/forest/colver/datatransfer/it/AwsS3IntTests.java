@@ -48,7 +48,8 @@ public class AwsS3IntTests {
 
       // copy file
       var destKey = "blake/inbound/dev/some-bank/ack/testCopied.txt";
-      s3Copy(creds, S3_INTERNAL, objectKey, S3_TARGET_CUSTOMER, destKey); // todo: change this to use method that take s3Client as a param
+      s3Copy(creds, S3_INTERNAL, objectKey, S3_TARGET_CUSTOMER,
+          destKey); // todo: change this to use method that take s3Client as a param
 
       // verify the copy is in the new location
       objects = s3List(creds, S3_TARGET_CUSTOMER, destKey);
@@ -70,8 +71,11 @@ public class AwsS3IntTests {
     }
   }
 
+  /**
+   * Each S3 operation uses the creds to create its own S3Client.
+   */
   @Test
-  public void testS3PutPassCreds() {
+  public void testS3PutWithCreds() {
     // put a file
     var objectKey = "revloc02/source/test/test.txt";
     var creds = getEmxSbCreds();
@@ -94,6 +98,9 @@ public class AwsS3IntTests {
     assertThat(objects.size()).isEqualTo(0);
   }
 
+  /**
+   * One S3Client is created and then passed to each of the S3 operations.
+   */
   @Test
   public void testS3PutPassClient() {
     var creds = getEmxSbCreds();
