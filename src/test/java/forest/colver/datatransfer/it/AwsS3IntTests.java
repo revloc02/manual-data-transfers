@@ -114,15 +114,15 @@ public class AwsS3IntTests {
       s3Put(s3Client, getDefaultPayload(), putObjectRequest);
 
       // verify the file is there
-      var objects = s3List(creds, S3_INTERNAL, objectKey); // todo: need to pass client
+      var objects = s3List(s3Client, S3_INTERNAL, objectKey);
       assertThat(objects.size()).isEqualTo(1);
       assertThat(objects.get(0).key()).isEqualTo(objectKey);
 
       // delete the file
-      s3Delete(creds, S3_INTERNAL, objectKey); // todo: need to pass client
+      s3Delete(s3Client, S3_INTERNAL, objectKey);
 
       // verify the file is gone
-      objects = s3List(creds, S3_INTERNAL, objectKey); // todo: need to pass client
+      objects = s3List(s3Client, S3_INTERNAL, objectKey);
       assertThat(objects.size()).isEqualTo(0);
     }
   }
