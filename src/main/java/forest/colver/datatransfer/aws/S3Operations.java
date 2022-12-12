@@ -33,18 +33,14 @@ public class S3Operations {
   private static final Logger LOG = LoggerFactory.getLogger(S3Operations.class);
 
   /**
-   * s3Put with AwsCreds. Put an object on a desired S3 bucket. Creates PutObjectRequest. Creates an
-   * S3Client--good to use this for one-off S3 operations, as opposed to doing several S3 operations
-   * and passing the client around.
+   * s3Put with AwsCreds. Put an object on a desired S3 bucket. Creates an S3Client--good to use
+   * this for one-off S3 operations, as opposed to doing several S3 operations and passing the
+   * client around.
    */
   public static void s3Put(
       AwsCredentialsProvider awsCp, String bucket, String objectKey, String payload) {
     try (var s3Client = getS3Client(awsCp)) {
-      var putObjectRequest = PutObjectRequest.builder().bucket(bucket).key(objectKey).build();
-      var requestBody = RequestBody.fromString(payload);
-      var putObjectResponse = s3Client.putObject(putObjectRequest, requestBody);
-      awsResponseValidation(putObjectResponse);
-      LOG.info("S3PUT: The object {} was put on the {} bucket.\n", objectKey, bucket);
+      s3Put(s3Client, bucket, objectKey, payload);
     }
   }
 
@@ -128,6 +124,7 @@ public class S3Operations {
     }
   }
 
+  // todo: keep this method? does it need a unit test?
   public static void s3Copy(AwsCredentialsProvider awsCp, String sourceBucket, String sourceKey,
       String destBucket, String destKey) {
     try (var s3Client = getS3Client(awsCp)) {
