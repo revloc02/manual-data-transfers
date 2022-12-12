@@ -195,34 +195,51 @@ public class S3Operations {
   }
 
   /**
-   * List all the objects at a certain directory (keyPrefix).
+   * S3List with AwsCreds, creates S3Client. List all the objects at a certain directory
+   * (keyPrefix).
    *
    * @param keyPrefix The "folder" on the S3 to list.
    */
   public static List<S3Object> s3List(AwsCredentialsProvider awsCp, String bucket,
       String keyPrefix) {
     try (var s3Client = getS3Client(awsCp)) {
-      var listObjectsRequest =
-          ListObjectsRequest.builder().bucket(bucket).prefix(keyPrefix).build();
-      var listObjectsResponse = s3Client.listObjects(listObjectsRequest);
-      awsResponseValidation(listObjectsResponse);
-      var objects = listObjectsResponse.contents();
-      for (var object : objects) {
-        LOG.info("S3LIST: The object {} is on the {} bucket.", object, bucket);
-      }
-      return objects;
+      return s3List(s3Client, bucket, keyPrefix);
     }
   }
 
   /**
-   * Delete an object from an S3.
+   * S3List with S3Client. List all the objects at a certain directory (keyPrefix).
+   *
+   * @param keyPrefix The "folder" on the S3 to list.
+   */
+  public static List<S3Object> s3List(S3Client s3Client, String bucket, String keyPrefix) {
+    var listObjectsRequest =
+        ListObjectsRequest.builder().bucket(bucket).prefix(keyPrefix).build();
+    var listObjectsResponse = s3Client.listObjects(listObjectsRequest);
+    awsResponseValidation(listObjectsResponse);
+    var objects = listObjectsResponse.contents();
+    for (var object : objects) {
+      LOG.info("S3LIST: The object {} is on the {} bucket.", object, bucket);
+    }
+    return objects;
+  }
+
+  /**
+   * S3Delete with creds, creates S3Client. Delete an object from an S3.
    */
   public static void s3Delete(AwsCredentialsProvider awsCp, String bucket, String objectKey) {
     try (var s3Client = getS3Client(awsCp)) {
-      var deleteObjectRequest = DeleteObjectRequest.builder().bucket(bucket).key(objectKey).build();
-      var deleteObjectResponse = s3Client.deleteObject(deleteObjectRequest);
-      awsResponseValidation(deleteObjectResponse);
-      LOG.info("S3DELETE: The object {} was deleted from the {} bucket.\n", objectKey, bucket);
+      s3Delete(s3Client, bucket, objectKey);
     }
+  }
+
+  /**
+   * S3Delete with S3Client. Delete an object from an S3.
+   */
+  public static void s3Delete(S3Client s3Client, String bucket, String objectKey) {
+    var deleteObjectRequest = DeleteObjectRequest.builder().bucket(bucket).key(objectKey).build();
+    var deleteObjectResponse = s3Client.deleteObject(deleteObjectRequest);
+    awsResponseValidation(deleteObjectResponse);
+    LOG.info("S3DELETE: The object {} was deleted from the {} bucket.\n", objectKey, bucket);
   }
 }
