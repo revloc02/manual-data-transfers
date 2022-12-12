@@ -42,17 +42,16 @@ public class AwsS3IntTests {
       s3Put(s3Client, S3_INTERNAL, objectKey, payload);
 
       // verify the file is in the source
-      var objects = s3List(creds, S3_INTERNAL, objectKey);
+      var objects = s3List(s3Client, S3_INTERNAL, objectKey);
       assertThat(objects.size()).isEqualTo(1);
       assertThat(objects.get(0).key()).isEqualTo(objectKey);
 
       // copy file
       var destKey = "blake/inbound/dev/some-bank/ack/testCopied.txt";
-      s3Copy(creds, S3_INTERNAL, objectKey, S3_TARGET_CUSTOMER,
-          destKey); // todo: change this to use method that take s3Client as a param
+      s3Copy(s3Client, S3_INTERNAL, objectKey, S3_TARGET_CUSTOMER, destKey);
 
       // verify the copy is in the new location
-      objects = s3List(creds, S3_TARGET_CUSTOMER, destKey);
+      objects = s3List(s3Client, S3_TARGET_CUSTOMER, destKey);
       assertThat(objects.size()).isEqualTo(1);
       assertThat(objects.get(0).key()).isEqualTo(destKey);
 
@@ -66,8 +65,8 @@ public class AwsS3IntTests {
 
       // cleanup and delete the files
       response.close();
-      s3Delete(creds, S3_INTERNAL, objectKey);
-      s3Delete(creds, S3_TARGET_CUSTOMER, destKey);
+      s3Delete(s3Client, S3_INTERNAL, objectKey);
+      s3Delete(s3Client, S3_TARGET_CUSTOMER, destKey);
     }
   }
 
