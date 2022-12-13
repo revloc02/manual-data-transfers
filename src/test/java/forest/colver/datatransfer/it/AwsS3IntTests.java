@@ -126,32 +126,48 @@ public class AwsS3IntTests {
     }
   }
 
-  // todo: finish this
+  // todo: this
   @Test
-  public void testS3PutObjectWithTagging() {
-    // put a file
-    var objectKey = "revloc02/source/test/test.txt";
-    var creds = getEmxSbCreds();
-    var tagging = "expirableObject=true";
-    var putObjectRequest = PutObjectRequest.builder()
-        .bucket(S3_INTERNAL)
-        .key(objectKey)
-        .tagging(tagging)
-        .build();
-    s3Put(creds, getDefaultPayload(), putObjectRequest);
+  public void testS3PutObjectWithMetadata() {
 
-    // todo need to use the getObject method
-    // verify the file is there
-    var objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isEqualTo(1);
-    assertThat(objects.get(0).key()).isEqualTo(objectKey);
+//    LOG.info("Metadata:");
+//    for (Map.Entry<String, String> entry : getObjectResponse.response().metadata().entrySet()) {
+//      LOG.info("  {}={}", entry.getKey(), entry.getValue());
+//    }
+  }
 
-    // delete the file
-    s3Delete(creds, S3_INTERNAL, objectKey);
+  @Test
+  public void testS3PutObjectWithTagging() throws IOException {
+    try (var s3Client = getS3Client(getEmxSbCreds())) {
+      // put a file
+      var objectKey = "revloc02/source/test/test.txt";
+      var tagging = "expirableObject=true";
+      var putObjectRequest = PutObjectRequest.builder()
+          .bucket(S3_INTERNAL)
+          .key(objectKey)
+          .tagging(tagging)
+          .build();
+      s3Put(s3Client, getDefaultPayload(), putObjectRequest);
 
-    // verify the file is gone
-    objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isEqualTo(0);
+      // verify the file is there
+      var objects = s3List(s3Client, S3_INTERNAL, objectKey);
+      assertThat(objects.size()).isOne();
+      assertThat(objects.get(0).key()).isEqualTo(objectKey);
+
+      // retrieve object and check it
+      var response = s3Get(s3Client, S3_INTERNAL, objectKey);
+      String payload = new String(response.readAllBytes());
+      assertThat(payload).isEqualTo(getDefaultPayload());
+      assertThat(response.response().tagCount()).isOne(); // todo: can I check the tag value?
+      response.close();
+
+      // delete the file
+      s3Delete(s3Client, S3_INTERNAL, objectKey);
+
+      // verify the file is gone
+      objects = s3List(s3Client, S3_INTERNAL, objectKey);
+      assertThat(objects.size()).isEqualTo(0);
+    }
   }
 
   @Test
