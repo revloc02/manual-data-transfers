@@ -156,15 +156,7 @@ public class S3Operations {
   public static ResponseInputStream<GetObjectResponse> s3Get(
       AwsCredentialsProvider awsCp, String bucket, String objectKey) {
     try (var s3Client = getS3Client(awsCp)) {
-      var getObjectRequest = GetObjectRequest.builder().bucket(bucket).key(objectKey).build();
-      var getObjectResponse = s3Client.getObject(getObjectRequest);
-      awsResponseValidation(getObjectResponse.response());
-      LOG.info("Metadata:");
-      for (Map.Entry<String, String> entry : getObjectResponse.response().metadata().entrySet()) {
-        LOG.info("  {}={}", entry.getKey(), entry.getValue());
-      }
-//      LOG.info("S3GET: The object {} was retrieved on the {} bucket.\n", getObjectResponse.readAllBytes(), bucket);
-      return getObjectResponse;
+      return s3Get(s3Client, bucket, objectKey);
     }
   }
 
@@ -188,11 +180,7 @@ public class S3Operations {
     var getObjectRequest = GetObjectRequest.builder().bucket(bucket).key(objectKey).build();
     var getObjectResponse = s3Client.getObject(getObjectRequest);
     awsResponseValidation(getObjectResponse.response());
-    LOG.info("Metadata:");
-    for (Map.Entry<String, String> entry : getObjectResponse.response().metadata().entrySet()) {
-      LOG.info("  {}={}", entry.getKey(), entry.getValue());
-    }
-//      LOG.info("S3GET: The object {} was retrieved on the {} bucket.\n", getObjectResponse.readAllBytes(), bucket);
+    LOG.info("S3GET: The object {} was retrieved from the {} bucket.\n", objectKey, bucket);
     return getObjectResponse;
   }
 
