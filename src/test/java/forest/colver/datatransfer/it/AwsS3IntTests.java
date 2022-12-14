@@ -19,6 +19,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.services.s3.model.GetObjectTaggingRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 /**
@@ -158,8 +159,14 @@ public class AwsS3IntTests {
       var response = s3Get(s3Client, S3_INTERNAL, objectKey);
       String payload = new String(response.readAllBytes());
       assertThat(payload).isEqualTo(getDefaultPayload());
-      assertThat(response.response().tagCount()).isOne(); // todo: can I check the tag value?
+      assertThat(response.response().tagCount()).isOne();
       response.close();
+
+      // check object tag values
+      var getTags = GetObjectTaggingRequest.builder().bucket(S3_INTERNAL).key(objectKey).build();
+      var result = s3Client.getObjectTagging(getTags);
+      assertThat(result.tagSet().get(0).key()).isEqualTo("expirableObject");
+      assertThat(result.tagSet().get(0).value()).isEqualTo("true");
 
       // delete the file
       s3Delete(s3Client, S3_INTERNAL, objectKey);
