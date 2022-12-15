@@ -29,7 +29,6 @@ import software.amazon.awssdk.services.s3.model.S3Object;
  */
 public class S3Operations {
 
-  // todo: this whole file needs better organization and better JavaDocs.
   private static final Logger LOG = LoggerFactory.getLogger(S3Operations.class);
 
   /**
@@ -69,16 +68,28 @@ public class S3Operations {
       AwsCredentialsProvider awsCp, String bucket, String objectKey, String payload,
       Map<String, String> metadata) {
     try (var s3Client = getS3Client(awsCp)) {
-      var putObjectRequest = PutObjectRequest.builder()
-          .bucket(bucket)
-          .key(objectKey)
-          .metadata(metadata)
-          .build();
-      var requestBody = RequestBody.fromString(payload);
-      var putObjectResponse = s3Client.putObject(putObjectRequest, requestBody);
-      awsResponseValidation(putObjectResponse);
-      LOG.info("S3PUT: The object {} was put on the {} bucket.\n", objectKey, bucket);
+      s3Put(s3Client, bucket, objectKey, payload, metadata);
     }
+  }
+
+  // todo: does this need a unit test?
+
+  /**
+   * s3Put with AwsCreds and metadata. Put an object on a desired S3 bucket including some metadata.
+   * Creates an S3Client--good to use this for one-off S3 operations, as opposed to doing several S3
+   * operations and passing the client around.
+   */
+  public static void s3Put(S3Client s3Client, String bucket, String objectKey, String payload,
+      Map<String, String> metadata) {
+    var putObjectRequest = PutObjectRequest.builder()
+        .bucket(bucket)
+        .key(objectKey)
+        .metadata(metadata)
+        .build();
+    var requestBody = RequestBody.fromString(payload);
+    var putObjectResponse = s3Client.putObject(putObjectRequest, requestBody);
+    awsResponseValidation(putObjectResponse);
+    LOG.info("S3PUT: The object {} was put on the {} bucket.\n", objectKey, bucket);
   }
 
   /**
@@ -89,11 +100,7 @@ public class S3Operations {
   public static void s3Put(
       AwsCredentialsProvider awsCp, String payload, PutObjectRequest putObjectRequest) {
     try (var s3Client = getS3Client(awsCp)) {
-      var requestBody = RequestBody.fromString(payload);
-      var putObjectResponse = s3Client.putObject(putObjectRequest, requestBody);
-      awsResponseValidation(putObjectResponse);
-      LOG.info("S3PUT: The object {} was put on the {} bucket.\n", putObjectRequest.key(),
-          putObjectRequest.bucket());
+      s3Put(s3Client, payload, putObjectRequest);
     }
   }
 
@@ -109,19 +116,30 @@ public class S3Operations {
         putObjectRequest.bucket());
   }
 
+  //todo: does this need a unit test?
+
   /**
-   * The HEAD action retrieves metadata from an object without returning the object itself. This
-   * action is useful if you're only interested in an object's metadata.
+   * s3Head with AwsCreds. The HEAD action retrieves metadata from an object without returning the
+   * object itself. This action is useful if you're only interested in an object's metadata.
    */
-  public static HeadObjectResponse s3Head(
-      AwsCredentialsProvider awsCp, String bucket, String objectKey) {
-    HeadObjectResponse headObjectResponse;
+  public static HeadObjectResponse s3Head(AwsCredentialsProvider awsCp, String bucket,
+      String objectKey) {
     try (var s3Client = getS3Client(awsCp)) {
-      var headObjectRequest = HeadObjectRequest.builder().bucket(bucket).key(objectKey).build();
-      headObjectResponse = s3Client.headObject(headObjectRequest);
-      awsResponseValidation(headObjectResponse);
-      return headObjectResponse;
+      return s3Head(s3Client, bucket, objectKey);
     }
+  }
+
+  //todo: does this need a unit test?
+
+  /**
+   * s3Head with s3Client. The HEAD action retrieves metadata from an object without returning the
+   * object itself. This action is useful if you're only interested in an object's metadata.
+   */
+  public static HeadObjectResponse s3Head(S3Client s3Client, String bucket, String objectKey) {
+    var headObjectRequest = HeadObjectRequest.builder().bucket(bucket).key(objectKey).build();
+    var headObjectResponse = s3Client.headObject(headObjectRequest);
+    awsResponseValidation(headObjectResponse);
+    return headObjectResponse;
   }
 
   // todo: keep this method? does it need a unit test?
