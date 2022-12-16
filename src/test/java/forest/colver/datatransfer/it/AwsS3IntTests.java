@@ -127,14 +127,42 @@ public class AwsS3IntTests {
     }
   }
 
-  // todo: this
   @Test
-  public void testS3PutObjectWithMetadata() {
+  public void testS3PutObjectWithMetadataPassClient() throws IOException {
+    try (var s3Client = getS3Client(getEmxSbCreds())) {
+      // put a file
+      var objectKey = "revloc02/source/test/test.txt";
+      var metadata = Map.of("key", "value", "key2", "value2");
+      var putObjectRequest = PutObjectRequest.builder()
+          .bucket(S3_INTERNAL)
+          .key(objectKey)
+          .metadata(metadata)
+          .build();
+      s3Put(s3Client, getDefaultPayload(), putObjectRequest);
 
-//    LOG.info("Metadata:");
-//    for (Map.Entry<String, String> entry : getObjectResponse.response().metadata().entrySet()) {
-//      LOG.info("  {}={}", entry.getKey(), entry.getValue());
-//    }
+      // verify the file is there
+      var objects = s3List(s3Client, S3_INTERNAL, objectKey);
+      assertThat(objects.size()).isOne();
+      assertThat(objects.get(0).key()).isEqualTo(objectKey);
+
+      // retrieve object and check it
+      var response = s3Get(s3Client, S3_INTERNAL, objectKey);
+      String payload = new String(response.readAllBytes());
+      assertThat(payload).isEqualTo(getDefaultPayload());
+      response.close();
+
+      // use head to verify metadata
+      var headObjectResponse = s3Head(s3Client, S3_INTERNAL, objectKey);
+      assertThat(headObjectResponse.metadata().get("key")).isEqualTo("value");
+      assertThat(headObjectResponse.metadata().get("key2")).isEqualTo("value2");
+
+      // delete the file
+      s3Delete(s3Client, S3_INTERNAL, objectKey);
+
+      // verify the file is gone
+      objects = s3List(s3Client, S3_INTERNAL, objectKey);
+      assertThat(objects.size()).isEqualTo(0);
+    }
   }
 
   @Test
