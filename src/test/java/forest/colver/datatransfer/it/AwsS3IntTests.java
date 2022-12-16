@@ -71,6 +71,7 @@ public class AwsS3IntTests {
     }
   }
 
+  // todo: change this to test a Put pass creds, that isn't passing the putObjectRequest in
   /**
    * Each S3 operation uses the creds to create its own S3Client.
    */
@@ -128,7 +129,7 @@ public class AwsS3IntTests {
   }
 
   @Test
-  public void testS3PutObjectWithMetadataPassClient() throws IOException {
+  public void testS3HeadPassClient() throws IOException {
     try (var s3Client = getS3Client(getEmxSbCreds())) {
       // put a file
       var objectKey = "revloc02/source/test/test.txt";
@@ -206,7 +207,7 @@ public class AwsS3IntTests {
   }
 
   @Test
-  public void testS3Head() {
+  public void testPassCredsPutListHeadDelete() {
     // put a file
     var objectKey = "revloc02/source/test/test.txt";
     var creds = getEmxSbCreds();

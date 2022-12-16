@@ -116,8 +116,6 @@ public class S3Operations {
         putObjectRequest.bucket());
   }
 
-  //todo: does this need a unit test?
-
   /**
    * s3Head with AwsCreds. The HEAD action retrieves metadata from an object without returning the
    * object itself. This action is useful if you're only interested in an object's metadata.
@@ -128,8 +126,6 @@ public class S3Operations {
       return s3Head(s3Client, bucket, objectKey);
     }
   }
-
-  //todo: does this need a unit test?
 
   /**
    * s3Head with s3Client. The HEAD action retrieves metadata from an object without returning the
