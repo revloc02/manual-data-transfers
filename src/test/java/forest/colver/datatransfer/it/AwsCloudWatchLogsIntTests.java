@@ -73,11 +73,11 @@ public class AwsCloudWatchLogsIntTests {
   public void testMultipleCloudWatchLogEvents() {
     var messagePrefix = "Multiple-messages-one-call, message generated from manual-data-transfers";
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 2; i++) {
       var streamName = STREAM_PREFIX + "-" + getUuid();
       LOG.info("stream #{}; streamName={}", i + 1, streamName);
       List<String> messages = generateLogs(messagePrefix, 1_200, 20, 45);
-      putCWLogEvents(getEmxSbCreds(), "/emx-trace-data-test", streamName, messages);
+      putCWLogEvents(getPersonalSbCreds(), "/emx-trace-data-sandbox", streamName, messages);
     }
   }
 
