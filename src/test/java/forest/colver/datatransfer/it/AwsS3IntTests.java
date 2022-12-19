@@ -30,53 +30,41 @@ public class AwsS3IntTests {
   // todo: see if I can use awaitlity on some of the asserts
   private static final Logger LOG = LoggerFactory.getLogger(AwsS3IntTests.class);
 
-  // todo: review and run each one of these (I accidentally deleted code and I want to make sure this stuff works)
   // todo: so none of these tests check the payload of the arrived file, is that too hard or something? Figure it out, then fix it or comment on it so I don't look at this again sometime.
 
-  @Test
-  public void testS3Copy() throws IOException {
-    var creds = getEmxSbCreds();
-    try (var s3Client = getS3Client(creds)) {
-      // place a file
-      var objectKey = "revloc02/source/test/test.txt";
-      var payload = getDefaultPayload();
-      s3Put(s3Client, S3_INTERNAL, objectKey, payload);
-
-      // verify the file is in the source
-      var objects = s3List(s3Client, S3_INTERNAL, objectKey);
-      assertThat(objects.size()).isEqualTo(1);
-      assertThat(objects.get(0).key()).isEqualTo(objectKey);
-
-      // copy file
-      var destKey = "blake/inbound/dev/some-bank/ack/testCopied.txt";
-      s3Copy(s3Client, S3_INTERNAL, objectKey, S3_TARGET_CUSTOMER, destKey);
-
-      // verify the copy is in the new location
-      objects = s3List(s3Client, S3_TARGET_CUSTOMER, destKey);
-      assertThat(objects.size()).isEqualTo(1);
-      assertThat(objects.get(0).key()).isEqualTo(destKey);
-
-      // check the contents
-      var response = s3Get(s3Client, S3_TARGET_CUSTOMER, destKey);
-      LOG.info("response={}", response.response());
-      LOG.info("statusCode={}", response.response().sdkHttpResponse().statusCode());
-      var respPayload = new String(response.readAllBytes(),
-          StandardCharsets.UTF_8);
-      assertThat(respPayload).isEqualTo(payload);
-
-      // cleanup and delete the files
-      response.close();
-      s3Delete(s3Client, S3_INTERNAL, objectKey);
-      s3Delete(s3Client, S3_TARGET_CUSTOMER, destKey);
-    }
-  }
-
-  // todo: change this to test a Put pass creds, that isn't passing the putObjectRequest in
   /**
    * Each S3 operation uses the creds to create its own S3Client.
    */
   @Test
-  public void testS3PutWithCreds() {
+  public void testS3PutPassCredsAndParams() {
+    // put a file
+    var objectKey = "revloc02/source/test/test.txt";
+    var creds = getEmxSbCreds();
+    var putObjectRequest = PutObjectRequest.builder()
+        .bucket(S3_INTERNAL)
+        .key(objectKey)
+        .build();
+    s3Put(creds, S3_INTERNAL, objectKey, getDefaultPayload());
+
+    // verify the file is there
+    var objects = s3List(creds, S3_INTERNAL, objectKey);
+    assertThat(objects.size()).isEqualTo(1);
+    assertThat(objects.get(0).key()).isEqualTo(objectKey);
+    // just testing the Put, so purposely not checking the payload value
+
+    // delete the file
+    s3Delete(creds, S3_INTERNAL, objectKey);
+
+    // verify the file is gone
+    objects = s3List(creds, S3_INTERNAL, objectKey);
+    assertThat(objects.size()).isEqualTo(0);
+  }
+
+  /**
+   * Each S3 operation uses the creds to create its own S3Client.
+   */
+  @Test
+  public void testS3PutPassCredsPassPutObjReq() {
     // put a file
     var objectKey = "revloc02/source/test/test.txt";
     var creds = getEmxSbCreds();
@@ -103,7 +91,7 @@ public class AwsS3IntTests {
    * One S3Client is created and then passed to each of the S3 operations.
    */
   @Test
-  public void testS3PutPassClient() {
+  public void testS3PutPassClientPassPutObjReq() {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
       // put a file
@@ -167,7 +155,7 @@ public class AwsS3IntTests {
   }
 
   @Test
-  public void testS3PutObjectWithTagging() throws IOException {
+  public void testS3PutPassClientPassObjReqWithTagging() throws IOException {
     try (var s3Client = getS3Client(getEmxSbCreds())) {
       // put a file
       var objectKey = "revloc02/source/test/test.txt";
@@ -206,6 +194,7 @@ public class AwsS3IntTests {
     }
   }
 
+  // todo: what's the test case here? Figure it out, and then rename the test
   @Test
   public void testPassCredsPutListHeadDelete() {
     // put a file
@@ -234,6 +223,44 @@ public class AwsS3IntTests {
     // verify the file is gone
     objects = s3List(creds, S3_INTERNAL, objectKey);
     assertThat(objects.size()).isEqualTo(0);
+  }
+
+  @Test
+  public void testS3CopyPassClient() throws IOException {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      // place a file
+      var objectKey = "revloc02/source/test/test.txt";
+      var payload = getDefaultPayload();
+      s3Put(s3Client, S3_INTERNAL, objectKey, payload);
+
+      // verify the file is in the source
+      var objects = s3List(s3Client, S3_INTERNAL, objectKey);
+      assertThat(objects.size()).isEqualTo(1);
+      assertThat(objects.get(0).key()).isEqualTo(objectKey);
+
+      // copy file
+      var destKey = "blake/inbound/dev/some-bank/ack/testCopied.txt";
+      s3Copy(s3Client, S3_INTERNAL, objectKey, S3_TARGET_CUSTOMER, destKey);
+
+      // verify the copy is in the new location
+      objects = s3List(s3Client, S3_TARGET_CUSTOMER, destKey);
+      assertThat(objects.size()).isEqualTo(1);
+      assertThat(objects.get(0).key()).isEqualTo(destKey);
+
+      // check the contents
+      var response = s3Get(s3Client, S3_TARGET_CUSTOMER, destKey);
+      LOG.info("response={}", response.response());
+      LOG.info("statusCode={}", response.response().sdkHttpResponse().statusCode());
+      var respPayload = new String(response.readAllBytes(),
+          StandardCharsets.UTF_8);
+      assertThat(respPayload).isEqualTo(payload);
+
+      // cleanup and delete the files
+      response.close();
+      s3Delete(s3Client, S3_INTERNAL, objectKey);
+      s3Delete(s3Client, S3_TARGET_CUSTOMER, destKey);
+    }
   }
 
   @Test
