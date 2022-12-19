@@ -19,7 +19,10 @@ public class Main {
     LOG.info("start");
 
     // todo: are my retrieve methods appropriate so that I can get a message off of the EMX replay cache? What if there are multiple messages there that I need?
-    browseForSpecificMessage(PROD, "emx-replay-cache", "emxReplayPriorTrackingNumber='89cb031a-f47e-4fb0-8666-b586760fd5cd'");
+//    browseForSpecificMessage(PROD, "emx-replay-cache", "emxReplayPriorTrackingNumber='89cb031a-f47e-4fb0-8666-b586760fd5cd'");
+
+        moveAllSpecificMessages(STAGE, "emx-error", "emxSystem='crm-missionary-recommend'", "emx-to-crm-missionary-recommend-test");
+
 
 //    sqsCopyAll(getEmxSbCreds(), "sftp-error", "blake-emxonramp-dev");
 //    sqsMoveMessagesWithPayloadLike(getEmxSbCreds(), "sftp-error", "lifeflightTestFile", "blake-emxonramp-test");
