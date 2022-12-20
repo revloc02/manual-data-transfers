@@ -109,7 +109,7 @@ public class S3Operations {
    * S3Client--good for stringing multiple S3 calls together so only one client is created.
    */
   public static void s3Put(S3Client s3Client, String payload, PutObjectRequest putObjectRequest) {
-    var requestBody = RequestBody.fromString(payload); // todo: payload should not be created here
+    var requestBody = RequestBody.fromString(payload);
     var putObjectResponse = s3Client.putObject(putObjectRequest, requestBody);
     awsResponseValidation(putObjectResponse);
     LOG.info("S3PUT: The object {} was put on the {} bucket.\n", putObjectRequest.key(),
