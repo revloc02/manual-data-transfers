@@ -185,7 +185,37 @@ public class AwsS3IntTests {
   }
 
   @Test
-  public void testS3HeadPassClient() throws IOException {
+  public void testS3HeadPassCredsPassPutObjReqWithMetadata() {
+    // put a file
+    var objectKey = "revloc02/source/test/test.txt";
+    var creds = getEmxSbCreds();
+    var metadata = Map.of("key", "value");
+    var putObjectRequest = PutObjectRequest.builder()
+        .bucket(S3_INTERNAL)
+        .key(objectKey)
+        .metadata(metadata)
+        .build();
+    s3Put(creds, getDefaultPayload(), putObjectRequest);
+
+    // verify the file is there
+    var objects = s3List(creds, S3_INTERNAL, objectKey);
+    assertThat(objects.size()).isEqualTo(1);
+    assertThat(objects.get(0).key()).isEqualTo(objectKey);
+
+    // use head to verify metadata
+    var headObjectResponse = s3Head(creds, S3_INTERNAL, objectKey);
+    assertThat(headObjectResponse.metadata().get("key")).isEqualTo("value");
+
+    // delete the file
+    s3Delete(creds, S3_INTERNAL, objectKey);
+
+    // verify the file is gone
+    objects = s3List(creds, S3_INTERNAL, objectKey);
+    assertThat(objects.size()).isEqualTo(0);
+  }
+
+  @Test
+  public void testS3HeadPassS3Client() throws IOException {
     try (var s3Client = getS3Client(getEmxSbCreds())) {
       // put a file
       var objectKey = "revloc02/source/test/test.txt";
@@ -220,36 +250,6 @@ public class AwsS3IntTests {
       objects = s3List(s3Client, S3_INTERNAL, objectKey);
       assertThat(objects.size()).isEqualTo(0);
     }
-  }
-
-  @Test
-  public void testS3HeadPassCredsPassPutObjReqWithMetadata() {
-    // put a file
-    var objectKey = "revloc02/source/test/test.txt";
-    var creds = getEmxSbCreds();
-    var metadata = Map.of("key", "value");
-    var putObjectRequest = PutObjectRequest.builder()
-        .bucket(S3_INTERNAL)
-        .key(objectKey)
-        .metadata(metadata)
-        .build();
-    s3Put(creds, getDefaultPayload(), putObjectRequest);
-
-    // verify the file is there
-    var objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isEqualTo(1);
-    assertThat(objects.get(0).key()).isEqualTo(objectKey);
-
-    // use head to verify metadata
-    var headObjectResponse = s3Head(creds, S3_INTERNAL, objectKey);
-    assertThat(headObjectResponse.metadata().get("key")).isEqualTo("value");
-
-    // delete the file
-    s3Delete(creds, S3_INTERNAL, objectKey);
-
-    // verify the file is gone
-    objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isEqualTo(0);
   }
 
   @Test
