@@ -60,6 +60,33 @@ public class AwsS3IntTests {
     assertThat(objects.size()).isEqualTo(0);
   }
 
+  @Test
+  public void testS3PutPassS3ClientAndParams() {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      // put a file
+      var objectKey = "revloc02/source/test/test.txt";
+      var putObjectRequest = PutObjectRequest.builder()
+          .bucket(S3_INTERNAL)
+          .key(objectKey)
+          .build();
+      s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
+
+      // verify the file is there
+      var objects = s3List(s3Client, S3_INTERNAL, objectKey);
+      assertThat(objects.size()).isEqualTo(1);
+      assertThat(objects.get(0).key()).isEqualTo(objectKey);
+      // just testing the Put, so purposely not checking the payload value
+
+      // delete the file
+      s3Delete(s3Client, S3_INTERNAL, objectKey);
+
+      // verify the file is gone
+      objects = s3List(s3Client, S3_INTERNAL, objectKey);
+      assertThat(objects.size()).isEqualTo(0);
+    }
+  }
+
   /**
    * Each S3 operation uses the creds to create its own S3Client.
    */

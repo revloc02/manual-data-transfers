@@ -43,8 +43,6 @@ public class S3Operations {
     }
   }
 
-  // todo: this needs a unit test
-
   /**
    * s3Put with S3Client. Put an object on a desired S3 bucket. Creates PutObjectRequest. Pass in
    * the S3Client--good for stringing multiple S3 calls together so only one client is created.
