@@ -40,10 +40,6 @@ public class AwsS3IntTests {
     // put a file
     var objectKey = "revloc02/source/test/test.txt";
     var creds = getEmxSbCreds();
-    var putObjectRequest = PutObjectRequest.builder()
-        .bucket(S3_INTERNAL)
-        .key(objectKey)
-        .build();
     s3Put(creds, S3_INTERNAL, objectKey, getDefaultPayload());
 
     // verify the file is there
@@ -66,10 +62,6 @@ public class AwsS3IntTests {
     try (var s3Client = getS3Client(creds)) {
       // put a file
       var objectKey = "revloc02/source/test/test.txt";
-      var putObjectRequest = PutObjectRequest.builder()
-          .bucket(S3_INTERNAL)
-          .key(objectKey)
-          .build();
       s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
 
       // verify the file is there
@@ -77,6 +69,62 @@ public class AwsS3IntTests {
       assertThat(objects.size()).isEqualTo(1);
       assertThat(objects.get(0).key()).isEqualTo(objectKey);
       // just testing the Put, so purposely not checking the payload value
+
+      // delete the file
+      s3Delete(s3Client, S3_INTERNAL, objectKey);
+
+      // verify the file is gone
+      objects = s3List(s3Client, S3_INTERNAL, objectKey);
+      assertThat(objects.size()).isEqualTo(0);
+    }
+  }
+
+  @Test
+  public void testS3PutPassCredsAndParamsWithMetadata() {
+    // put a file
+    var objectKey = "revloc02/source/test/test.txt";
+    var creds = getEmxSbCreds();
+    var metadata = Map.of("key", "value", "key2", "value2");
+    s3Put(creds, S3_INTERNAL, objectKey, getDefaultPayload(), metadata);
+
+    // verify the file is there
+    var objects = s3List(creds, S3_INTERNAL, objectKey);
+    assertThat(objects.size()).isEqualTo(1);
+    assertThat(objects.get(0).key()).isEqualTo(objectKey);
+    // just testing the Put, so purposely not checking the payload value
+
+    // use head to verify metadata
+    var headObjectResponse = s3Head(creds, S3_INTERNAL, objectKey);
+    assertThat(headObjectResponse.metadata().get("key")).isEqualTo("value");
+    assertThat(headObjectResponse.metadata().get("key2")).isEqualTo("value2");
+
+    // delete the file
+    s3Delete(creds, S3_INTERNAL, objectKey);
+
+    // verify the file is gone
+    objects = s3List(creds, S3_INTERNAL, objectKey);
+    assertThat(objects.size()).isEqualTo(0);
+  }
+
+  @Test
+  public void testS3PutPassS3ClientAndParamsWithMetadata() {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      // put a file
+      var objectKey = "revloc02/source/test/test.txt";
+      var metadata = Map.of("key", "value", "key2", "value2");
+      s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload(), metadata);
+
+      // verify the file is there
+      var objects = s3List(s3Client, S3_INTERNAL, objectKey);
+      assertThat(objects.size()).isEqualTo(1);
+      assertThat(objects.get(0).key()).isEqualTo(objectKey);
+      // just testing the Put, so purposely not checking the payload value
+
+      // use head to verify metadata
+      var headObjectResponse = s3Head(s3Client, S3_INTERNAL, objectKey);
+      assertThat(headObjectResponse.metadata().get("key")).isEqualTo("value");
+      assertThat(headObjectResponse.metadata().get("key2")).isEqualTo("value2");
 
       // delete the file
       s3Delete(s3Client, S3_INTERNAL, objectKey);

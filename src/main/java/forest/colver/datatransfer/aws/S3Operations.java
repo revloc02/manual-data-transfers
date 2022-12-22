@@ -55,8 +55,6 @@ public class S3Operations {
     LOG.info("S3PUT: The object {} was put on the {} bucket.\n", objectKey, bucket);
   }
 
-  // todo: does this need a unit test?
-
   /**
    * s3Put with AwsCreds and metadata. Put an object on a desired S3 bucket including some metadata.
    * Creates an S3Client--good to use this for one-off S3 operations, as opposed to doing several S3
@@ -69,8 +67,6 @@ public class S3Operations {
       s3Put(s3Client, bucket, objectKey, payload, metadata);
     }
   }
-
-  // todo: does this need a unit test?
 
   /**
    * s3Put with AwsCreds and metadata. Put an object on a desired S3 bucket including some metadata.
