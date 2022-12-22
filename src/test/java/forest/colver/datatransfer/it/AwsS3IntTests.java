@@ -32,6 +32,8 @@ public class AwsS3IntTests {
 
   // todo: so none of these tests check the payload of the arrived file, is that too hard or something? Figure it out, then fix it or comment on it so I don't look at this again sometime.
 
+  // Pass parameters to the S3 operation
+
   /**
    * Each S3 operation uses the creds to create its own S3Client.
    */
@@ -134,6 +136,8 @@ public class AwsS3IntTests {
       assertThat(objects.size()).isEqualTo(0);
     }
   }
+
+  // Pass a PutObjectRequest to the S3 operation
 
   /**
    * Each S3 operation uses the creds to create its own S3Client.
@@ -299,6 +303,9 @@ public class AwsS3IntTests {
       assertThat(objects.size()).isEqualTo(0);
     }
   }
+
+  // todo: either move these up, or figure out a better organization, or forget organization
+  // From here down are test that pass params (not PutObjectRequest)
 
   @Test
   public void testS3CopyPassClient() throws IOException {
