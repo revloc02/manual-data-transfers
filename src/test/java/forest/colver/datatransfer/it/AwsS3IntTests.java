@@ -30,8 +30,6 @@ public class AwsS3IntTests {
   // todo: see if I can use awaitlity on some of the asserts
   private static final Logger LOG = LoggerFactory.getLogger(AwsS3IntTests.class);
 
-  // todo: so none of these tests check the payload of the arrived file, is that too hard or something? Figure it out, then fix it or comment on it so I don't look at this again sometime.
-
   // Pass parameters to the S3 operation
 
   /**
@@ -255,6 +253,7 @@ public class AwsS3IntTests {
       var objects = s3List(s3Client, S3_INTERNAL, objectKey);
       assertThat(objects.size()).isEqualTo(1);
       assertThat(objects.get(0).key()).isEqualTo(objectKey);
+      // just testing the Put, so purposely not checking the payload value
 
       // delete the file
       s3Delete(s3Client, S3_INTERNAL, objectKey);
