@@ -16,6 +16,7 @@ public class JmsBrowse {
 
   private static final Logger LOG = LoggerFactory.getLogger(JmsBrowse.class);
 
+  // todo: unit test this
   public static void browseNextMessage(Environment env, String queueName) {
     var cf = new JmsConnectionFactory(env.url());
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
@@ -37,6 +38,10 @@ public class JmsBrowse {
     }
   }
 
+  /**
+   * Copies a message from a queue and returns the Message object. Retrieved Message also remains on
+   * the queue.
+   */
   public static Message browseForSpecificMessage(Environment env, String queueName,
       String selector) {
     Message message = null;
@@ -203,25 +208,5 @@ public class JmsBrowse {
           toEnv.name(),
           toQName);
     }
-  }
-
-  // todo: this needs a unit test
-
-  /**
-   * Copies a message from a queue and returns the Message object.
-   */
-  public static Message downloadSpecificMessage(Environment env, String fromQName,
-      String selector) {
-    Enumeration messages = null;
-    var cf = new JmsConnectionFactory(env.url());
-    try (var ctx = cf.createContext(getUsername(), getPassword())) {
-      var fromQ = ctx.createQueue(fromQName);
-      try (var browser = ctx.createBrowser(fromQ, selector)) {
-        messages = browser.getEnumeration();
-      } catch (JMSException e) {
-        e.printStackTrace();
-      }
-    }
-      return (Message) messages.nextElement();
   }
 }
