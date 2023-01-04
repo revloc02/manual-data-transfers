@@ -8,6 +8,7 @@ import static forest.colver.datatransfer.messaging.Environment.PROD;
 import static forest.colver.datatransfer.messaging.Environment.STAGE;
 import static forest.colver.datatransfer.messaging.JmsBrowse.browseAndCountSpecificMessages;
 import static forest.colver.datatransfer.messaging.JmsBrowse.browseForSpecificMessage;
+import static forest.colver.datatransfer.messaging.JmsBrowse.browseNextMessage;
 import static forest.colver.datatransfer.messaging.JmsBrowse.copyAllMessages;
 import static forest.colver.datatransfer.messaging.JmsBrowse.copyAllMessagesAcrossEnvironments;
 import static forest.colver.datatransfer.messaging.JmsBrowse.copySpecificMessages;
@@ -181,6 +182,22 @@ public class MessagingIntTests {
     // cleanup
     var deletedFrom = deleteAllMessagesFromQueue(env, fromQueueName);
     assertThat(deletedFrom).isEqualTo(numMessagesFrom);
+  }
+
+  @Test
+  public void testBrowseNextMessage() throws JMSException {
+    var env = STAGE;
+    var queueName = "forest-test";
+
+    // place some messages
+    sendMultipleSameMessage(env, queueName, createMessage(), 3);
+
+    // check
+    var message = browseNextMessage(STAGE, queueName);
+    assertThat(((TextMessage) message).getText()).contains("Default Payload");
+
+    // cleanup
+    purgeQueue(env, queueName);
   }
 
   @Test

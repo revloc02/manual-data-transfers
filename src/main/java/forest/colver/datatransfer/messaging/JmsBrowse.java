@@ -16,15 +16,18 @@ public class JmsBrowse {
 
   private static final Logger LOG = LoggerFactory.getLogger(JmsBrowse.class);
 
-  // todo: unit test this
-  public static void browseNextMessage(Environment env, String queueName) {
+  /**
+   * Retrieves the next message from the queue.
+   */
+  public static Message browseNextMessage(Environment env, String queueName) {
+    Message message = null;
     var cf = new JmsConnectionFactory(env.url());
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
       var q = ctx.createQueue(queueName);
       Enumeration msgs;
       try (var browser = ctx.createBrowser(q)) {
         msgs = browser.getEnumeration();
-        var message = (Message) msgs.nextElement();
+        message = (Message) msgs.nextElement();
         LOG.info(
             "Next message BROWSED Host={}, Queue={}, Message->{}",
             env.name(),
@@ -36,6 +39,7 @@ public class JmsBrowse {
         e.printStackTrace();
       }
     }
+    return message;
   }
 
   /**
