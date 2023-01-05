@@ -12,6 +12,9 @@ public class SqsAndS3 {
 
   private static final Logger LOG = LoggerFactory.getLogger(SqsAndS3.class);
 
+  /**
+   * Retrieve next message from an SQS and deliver it to an S3.
+   */
   public static void moveOneSqsToS3(
       AwsCredentialsProvider awsCreds, String sqs, String bucket, String objectKey) {
     var sqsMsg = sqsConsumeOneMessage(awsCreds, sqs);
