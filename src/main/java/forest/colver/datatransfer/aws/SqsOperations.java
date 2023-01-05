@@ -86,6 +86,7 @@ public class SqsOperations {
    */
   public static Message sqsConsumeOneMessage(AwsCredentialsProvider awsCP, String queueName) {
     var response = sqsReadOneMessage(awsCP, queueName);
+    awsResponseValidation(response);
     if (response.hasMessages()) {
       sqsDelete(awsCP, response, queueName);
       LOG.info("======== SQSCONSUME: Consumed a message from SQS: {}.=======", queueName);
