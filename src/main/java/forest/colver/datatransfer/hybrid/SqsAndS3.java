@@ -28,7 +28,6 @@ public class SqsAndS3 {
     }
   }
 
-  // todo: this needs a unit test
   /**
    * Copy (read) next message from an SQS and save it to an S3.
    */

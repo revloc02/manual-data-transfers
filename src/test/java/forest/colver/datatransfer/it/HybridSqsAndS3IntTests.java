@@ -3,6 +3,7 @@ package forest.colver.datatransfer.it;
 import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
 import static forest.colver.datatransfer.aws.S3Operations.s3Head;
 import static forest.colver.datatransfer.aws.S3Operations.s3List;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsDelete;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
@@ -11,6 +12,7 @@ import static forest.colver.datatransfer.aws.Utils.S3_INTERNAL;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
+import static forest.colver.datatransfer.hybrid.SqsAndS3.copyOneSqsToS3;
 import static forest.colver.datatransfer.hybrid.SqsAndS3.moveOneSqsToS3;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -53,7 +55,7 @@ public class HybridSqsAndS3IntTests {
     var messages = sqsReadOneMessage(creds, SQS1);
     assertThat(messages.hasMessages()).isFalse();
 
-    // cleanup
+    // cleanup S3
     s3Delete(creds, S3_INTERNAL, objectKey);
     // verify the file is gone
     objects = s3List(creds, S3_INTERNAL, objectKey);
@@ -94,11 +96,44 @@ public class HybridSqsAndS3IntTests {
     var messages = sqsReadOneMessage(creds, SQS1);
     assertThat(messages.hasMessages()).isFalse();
 
-    // cleanup
+    // cleanup S3
     s3Delete(creds, S3_INTERNAL, objectKey);
     // verify the file is gone
     objects = s3List(creds, S3_INTERNAL, objectKey);
     assertThat(objects.size()).isEqualTo(0);
+  }
 
+  @Test
+  public void testCopyOneSqsToS3() {
+    // place a message on SQS
+    LOG.info("Interacting with: sqs={}", SQS1);
+    var creds = getEmxSbCreds();
+    var payload = getDefaultPayload();
+    sqsSend(creds, SQS1, payload);
+
+    // check that it arrived
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(1));
+
+    // copy it to S3
+    var objectKey = "revloc02/source/test/test.txt";
+    copyOneSqsToS3(creds, SQS1, S3_INTERNAL, objectKey);
+
+    // check that it arrived
+    var objects = s3List(creds, S3_INTERNAL, objectKey);
+    assertThat(objects.size()).isEqualTo(1);
+    assertThat(objects.get(0).key()).isEqualTo(objectKey);
+
+    // cleanup SQS
+    var messages = sqsReadOneMessage(creds, SQS1);
+    sqsDelete(creds, messages, SQS1);
+
+    // cleanup S3
+    s3Delete(creds, S3_INTERNAL, objectKey);
+    // verify the file is gone
+    objects = s3List(creds, S3_INTERNAL, objectKey);
+    assertThat(objects.size()).isEqualTo(0);
   }
 }
