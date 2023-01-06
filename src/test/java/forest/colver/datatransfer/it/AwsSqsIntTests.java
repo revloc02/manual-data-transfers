@@ -44,6 +44,24 @@ public class AwsSqsIntTests {
 
   // todo: review and run each one of these (I accidentally deleted code and I want to make sure this stuff works)
 
+  /**
+   * This is actually not a unit test. This is a helper method that allows me to cleanup both SQS1
+   * and SQS2 in case other unit tests didn't finish correctly and cleanup after themselves.
+   */
+  @Test
+  public void helperPurge() {
+    var creds = getEmxSbCreds();
+    sqsPurge(creds, SQS1); // Note: AWS only allows 1 purge per minute for SQS queues
+    sqsPurge(creds, SQS2); // Note: AWS only allows 1 purge per minute for SQS queues
+
+    // assert SQS1 was cleared
+    var messages1 = sqsReadOneMessage(creds, SQS1);
+    assertThat(messages1.hasMessages()).isFalse();
+    // assert SQS2 was cleared
+    var messages2 = sqsReadOneMessage(creds, SQS1);
+    assertThat(messages2.hasMessages()).isFalse();
+  }
+
   @Test
   public void testSqsPurge() {
     LOG.info("Interacting with: sqs={}", SQS1);
@@ -85,16 +103,16 @@ public class AwsSqsIntTests {
     // copy the message
     sqsCopy(creds, SQS1, SQS2);
 
-    // remove message from source sqs
-    var fromQResponse = sqsReadOneMessage(creds, SQS1);
-    sqsDelete(creds, fromQResponse, SQS1);
-
     // verify the message is on the other sqs
     var toQResponse = sqsReadOneMessage(creds, SQS2);
     var body = toQResponse.messages().get(0).body();
     assertThat(body).isEqualTo(payload);
 
     // cleanup
+    // remove message from source sqs
+    var fromQResponse = sqsReadOneMessage(creds, SQS1);
+    sqsDelete(creds, fromQResponse, SQS1);
+    // remove message from target sqs
     sqsDelete(creds, toQResponse, SQS2);
   }
 
@@ -164,7 +182,14 @@ public class AwsSqsIntTests {
         "value3");
     var payload = getDefaultPayload();
     sqsSend(creds, SQS1, payload, messageProps);
+
     // check that it arrived
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .until(() -> sqsDepth(creds, SQS1) >= 1);
+
+    // check the payload and properties
     var response = sqsReadOneMessage(creds, SQS1);
     assertThat(response.messages().get(0).body()).isEqualTo(payload);
     assertThat(response.messages().get(0).hasMessageAttributes()).isEqualTo(true);
