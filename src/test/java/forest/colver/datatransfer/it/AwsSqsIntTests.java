@@ -146,9 +146,17 @@ public class AwsSqsIntTests {
     // send some stuff
     var creds = getEmxSbCreds();
     sqsSend(creds, SQS1, message);
+
     // check that it arrived
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .until(() -> sqsDepth(creds, SQS1) >= 1);
+
+    // check the payload
     var response = sqsReadOneMessage(creds, SQS1);
     assertThat(response.messages().get(0).body()).isEqualTo(payload);
+
     // cleanup
     sqsDelete(creds, response, SQS1);
   }
