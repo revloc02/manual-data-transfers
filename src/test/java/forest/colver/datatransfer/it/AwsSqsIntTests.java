@@ -42,8 +42,6 @@ public class AwsSqsIntTests {
   private static final String SQS1 = EMX_SANDBOX_TEST_SQS1;
   private static final String SQS2 = EMX_SANDBOX_TEST_SQS2;
 
-  // todo: review and run each one of these (I accidentally deleted code and I want to make sure this stuff works)
-
   /**
    * This is actually not a unit test. This is a helper method that allows me to cleanup both SQS1
    * and SQS2 in case other unit tests didn't finish correctly and cleanup after themselves.
