@@ -168,16 +168,16 @@ public class S3Operations {
     }
   }
 
-  // todo: this needs a unit test
+  // todo: this needs a unit test, it is used in other unit tests, but doesn't have it's own
 
   /**
    * Get an object from an S3 bucket. Pass in the S3Client--good for stringing multiple S3 calls
    * together so only one client is created.
    *
-   * @param s3Client Pass in the client. It was discovered that creating a client for each S3
-   * connection caused the client to be garbage collected by Java before the download was finished,
-   * and errors ensued. Passing in the client allows it to stay around longer so the operation can
-   * finish.
+   * @param s3Client Pass in the client. It was discovered that passing credentials and creating a
+   * client for each S3 connection/operation caused said client to be garbage collected by Java
+   * before the s3Client.getObject(getObjectRequest) download was finished, and errors ensued.
+   * Passing in the s3client allows it to stay around longer so that Get operation can finish.
    * @param bucket S3 bucket.
    * @param objectKey Object path and name.
    * @return Input stream that provides access to the unmarshalled POJO response returned by the
