@@ -44,5 +44,15 @@ public class SqsAndS3 {
     }
   }
 
+  // todo: this
+  /**
+   * Retrieve an object from S3, check that the size is not too big for SQS, and then place it on an
+   * SQS.
+   */
+  public static void moveS3ObjectToSqs(AwsCredentialsProvider awsCreds, String bucket,
+      String objectKey, String sqs) {
+
+  }
+
   // todo: need some more methods that transfers data from S3 to SQS and vice versa
 }
