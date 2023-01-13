@@ -174,7 +174,7 @@ public class S3Operations {
    * Get an object from an S3 bucket. Pass in the S3Client--good for stringing multiple S3 calls
    * together so only one client is created.
    *
-   * @param s3Client Pass in the client. It was discovered that passing credentials and creating a
+   * @param s3Client Pass in the S3 client. It was discovered that passing credentials and creating a
    * client for each S3 connection/operation caused said client to be garbage collected by Java
    * before the s3Client.getObject(getObjectRequest) download was finished, and errors ensued.
    * Passing in the s3client allows it to stay around longer so that Get operation can finish.
