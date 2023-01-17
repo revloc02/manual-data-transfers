@@ -155,11 +155,14 @@ public class S3Operations {
     awsResponseValidation(copyObjectResponse);
   }
 
-  // todo: this needs a unit test
-
   /**
-   * Get an object on a desired S3 bucket. Creates an S3Client--good to use this for one-off S3
-   * operations, as opposed to doing several S3 operations and passing the client around.
+   * DOES NOT WORK! Use the s3Get where you pass in the s3Client.
+   * <p>
+   * Get an object on a desired S3 bucket, creates an S3Client. This method does not work because
+   * the S3 client gets garbage collected (by Java) in the middle of the download. Error looks like
+   * this: org.apache.http.ConnectionClosedException: Premature end of Content-Length delimited
+   * message body (expected: 56; received: 0). See: <a
+   * href="https://stackoverflow.com/a/10510365">stackoverflow.com/a/10510365</a>
    */
   public static ResponseInputStream<GetObjectResponse> s3Get(
       AwsCredentialsProvider awsCp, String bucket, String objectKey) {
@@ -174,8 +177,8 @@ public class S3Operations {
    * Get an object from an S3 bucket. Pass in the S3Client--good for stringing multiple S3 calls
    * together so only one client is created.
    *
-   * @param s3Client Pass in the S3 client. It was discovered that passing credentials and creating a
-   * client for each S3 connection/operation caused said client to be garbage collected by Java
+   * @param s3Client Pass in the S3 client. It was discovered that passing credentials and creating
+   * a client for each S3 connection/operation caused said client to be garbage collected by Java
    * before the s3Client.getObject(getObjectRequest) download was finished, and errors ensued.
    * Passing in the s3client allows it to stay around longer so that Get operation can finish.
    * @param bucket S3 bucket.
