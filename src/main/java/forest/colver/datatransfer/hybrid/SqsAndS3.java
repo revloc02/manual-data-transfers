@@ -1,10 +1,18 @@
 package forest.colver.datatransfer.hybrid;
 
+import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
+import static forest.colver.datatransfer.aws.S3Operations.s3Get;
+import static forest.colver.datatransfer.aws.S3Operations.s3Head;
 import static forest.colver.datatransfer.aws.S3Operations.s3Put;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsConsumeOneMessage;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.convertSqsMessageAttributesToStrings;
+import static forest.colver.datatransfer.aws.Utils.getS3Client;
 
+import java.io.IOException;
+import java.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
@@ -44,14 +52,26 @@ public class SqsAndS3 {
     }
   }
 
-  // todo: this
   /**
    * Retrieve an object from S3, check that the size is not too big for SQS, and then place it on an
    * SQS.
    */
   public static void moveS3ObjectToSqs(AwsCredentialsProvider awsCreds, String bucket,
-      String objectKey, String sqs) {
-
+      String objectKey, String sqs) throws IOException {
+    try (var s3Client = getS3Client(awsCreds)) {
+      // find out how big the object is
+      var size = s3Head(s3Client, bucket, objectKey).contentLength();
+      LOG.info("Object size: {}", size);
+      // SQS The maximum is 262,144 bytes (256 KiB)
+      if (size < 262_144) {
+        try (var obj = s3Get(s3Client, bucket, objectKey)) {
+          sqsSend(awsCreds, sqs, new String(obj.readAllBytes()));
+        }
+        s3Delete(s3Client, bucket, objectKey);
+      } else {
+        LOG.error("Object from S3 is greater than 256K and is too big for SQS.");
+      }
+    }
   }
 
   // todo: need some more methods that transfers data from S3 to SQS and vice versa
