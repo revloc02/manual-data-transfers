@@ -177,4 +177,10 @@ public class HybridSqsAndS3IntTests {
     // cleanup
     sqsDelete(creds, response, SQS1);
   }
+
+  // todo: this
+  @Test
+  public void testMoveS3ObjectTooBigToSqs() {
+
+  }
 }
