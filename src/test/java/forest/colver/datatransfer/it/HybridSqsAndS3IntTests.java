@@ -13,6 +13,7 @@ import static forest.colver.datatransfer.aws.Utils.S3_INTERNAL;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
+import static forest.colver.datatransfer.config.Utils.readFile;
 import static forest.colver.datatransfer.hybrid.SqsAndS3.copyOneSqsToS3;
 import static forest.colver.datatransfer.hybrid.SqsAndS3.moveOneSqsToS3;
 import static forest.colver.datatransfer.hybrid.SqsAndS3.moveS3ObjectToSqs;
@@ -20,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -178,9 +180,33 @@ public class HybridSqsAndS3IntTests {
     sqsDelete(creds, response, SQS1);
   }
 
-  // todo: this
   @Test
-  public void testMoveS3ObjectTooBigToSqs() {
+  public void testMoveS3ObjectTooBigToSqs() throws IOException {
+    // put a file
+    var objectKey = "revloc02/source/test/BoMx1.txt";
+    var contents = readFile("src/test/resources/BoMx1.txt", StandardCharsets.UTF_8);
+    var creds = getEmxSbCreds();
+    var putObjectRequest = PutObjectRequest.builder()
+        .bucket(S3_INTERNAL)
+        .key(objectKey)
+        .build();
+    s3Put(creds, contents, putObjectRequest);
 
+    // verify the file is there
+    var objects = s3List(creds, S3_INTERNAL, objectKey);
+    assertThat(objects.size()).isEqualTo(1);
+    assertThat(objects.get(0).key()).isEqualTo(objectKey);
+
+    // move the file to SQS, should log an error because the file is too big
+    moveS3ObjectToSqs(creds, S3_INTERNAL, objectKey, SQS1);
+
+    // check that the SQS is, in fact, empty
+    assertThat(sqsDepth(creds, SQS1)).isZero();
+
+    // cleanup S3
+    s3Delete(creds, S3_INTERNAL, objectKey);
+    // verify the file is gone
+    objects = s3List(creds, S3_INTERNAL, objectKey);
+    assertThat(objects.size()).isEqualTo(0);
   }
 }
