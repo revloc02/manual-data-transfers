@@ -69,10 +69,30 @@ public class SqsAndS3 {
         }
         s3Delete(s3Client, bucket, objectKey);
       } else {
-        LOG.error("Object from S3 is greater than 256K and is too big for SQS.");
+        LOG.error("The S3 object size is greater than 256K, which is too big for SQS, and therefore cannot be moved.");
       }
     }
   }
 
-  // todo: need some more methods that transfers data from S3 to SQS and vice versa
+  // todo: this needs a unit test
+  /**
+   * Copy an object from S3, check that the size is not too big for SQS, and then place it on an
+   * SQS.
+   */
+  public static void copyS3ObjectToSqs(AwsCredentialsProvider awsCreds, String bucket,
+      String objectKey, String sqs) throws IOException {
+    try (var s3Client = getS3Client(awsCreds)) {
+      // find out how big the object is
+      var size = s3Head(s3Client, bucket, objectKey).contentLength();
+      LOG.info("Object size: {}", size);
+      // SQS The maximum is 262,144 bytes (256 KiB)
+      if (size < 262_144) {
+        try (var obj = s3Get(s3Client, bucket, objectKey)) {
+          sqsSend(awsCreds, sqs, new String(obj.readAllBytes()));
+        }
+      } else {
+        LOG.error("The S3 object size is greater than 256K, which is too big for SQS, and therefore cannot be copied.");
+      }
+    }
+  }
 }
