@@ -15,6 +15,7 @@ import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
 import static forest.colver.datatransfer.config.Utils.readFile;
 import static forest.colver.datatransfer.hybrid.SqsAndS3.copyOneSqsToS3;
+import static forest.colver.datatransfer.hybrid.SqsAndS3.copyS3ObjectToSqs;
 import static forest.colver.datatransfer.hybrid.SqsAndS3.moveOneSqsToS3;
 import static forest.colver.datatransfer.hybrid.SqsAndS3.moveS3ObjectToSqs;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,7 +47,7 @@ public class HybridSqsAndS3IntTests {
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(1));
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isOne());
 
     // move it to S3
     var objectKey = "revloc02/source/test/test.txt";
@@ -54,7 +55,7 @@ public class HybridSqsAndS3IntTests {
 
     // check that it arrived
     var objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isEqualTo(1);
+    assertThat(objects.size()).isOne();
     assertThat(objects.get(0).key()).isEqualTo(objectKey);
 
     // assert the SQS was cleared
@@ -65,7 +66,7 @@ public class HybridSqsAndS3IntTests {
     s3Delete(creds, S3_INTERNAL, objectKey);
     // verify the file is gone
     objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isEqualTo(0);
+    assertThat(objects.size()).isZero();
   }
 
   @Test
@@ -82,7 +83,7 @@ public class HybridSqsAndS3IntTests {
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(1));
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isOne());
 
     // move it to S3
     var objectKey = "revloc02/source/test/test.txt";
@@ -90,7 +91,7 @@ public class HybridSqsAndS3IntTests {
 
     // check that it arrived
     var objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isEqualTo(1);
+    assertThat(objects.size()).isOne();
     assertThat(objects.get(0).key()).isEqualTo(objectKey);
 
     // use head to check metadata on S3 object
@@ -106,7 +107,7 @@ public class HybridSqsAndS3IntTests {
     s3Delete(creds, S3_INTERNAL, objectKey);
     // verify the file is gone
     objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isEqualTo(0);
+    assertThat(objects.size()).isZero();
   }
 
   @Test
@@ -121,7 +122,7 @@ public class HybridSqsAndS3IntTests {
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(1));
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isOne());
 
     // copy it to S3
     var objectKey = "revloc02/source/test/test.txt";
@@ -129,7 +130,7 @@ public class HybridSqsAndS3IntTests {
 
     // check that it arrived
     var objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isEqualTo(1);
+    assertThat(objects.size()).isOne();
     assertThat(objects.get(0).key()).isEqualTo(objectKey);
 
     // cleanup SQS
@@ -140,12 +141,12 @@ public class HybridSqsAndS3IntTests {
     s3Delete(creds, S3_INTERNAL, objectKey);
     // verify the file is gone
     objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isEqualTo(0);
+    assertThat(objects.size()).isZero();
   }
 
   @Test
   public void testMoveS3ObjectToSqs() throws IOException {
-    // put a file
+    // put a file on S3
     var objectKey = "revloc02/source/test/test.txt";
     var creds = getEmxSbCreds();
     var putObjectRequest = PutObjectRequest.builder()
@@ -156,7 +157,7 @@ public class HybridSqsAndS3IntTests {
 
     // verify the file is there
     var objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isEqualTo(1);
+    assertThat(objects.size()).isOne();
     assertThat(objects.get(0).key()).isEqualTo(objectKey);
 
     // move the file to SQS
@@ -174,7 +175,7 @@ public class HybridSqsAndS3IntTests {
 
     // verify the S3 object is gone
     objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isEqualTo(0);
+    assertThat(objects.size()).isZero();
 
     // cleanup
     sqsDelete(creds, response, SQS1);
@@ -182,7 +183,7 @@ public class HybridSqsAndS3IntTests {
 
   @Test
   public void testMoveS3ObjectTooBigToSqs() throws IOException {
-    // put a file
+    // put a big file on S3
     var objectKey = "revloc02/source/test/BoMx1.txt";
     var contents = readFile("src/test/resources/BoMx1.txt", StandardCharsets.UTF_8);
     var creds = getEmxSbCreds();
@@ -194,7 +195,7 @@ public class HybridSqsAndS3IntTests {
 
     // verify the file is there
     var objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isEqualTo(1);
+    assertThat(objects.size()).isOne();
     assertThat(objects.get(0).key()).isEqualTo(objectKey);
 
     // move the file to SQS, should log an error because the file is too big
@@ -207,6 +208,44 @@ public class HybridSqsAndS3IntTests {
     s3Delete(creds, S3_INTERNAL, objectKey);
     // verify the file is gone
     objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isEqualTo(0);
+    assertThat(objects.size()).isZero();
+  }
+
+  @Test
+  public void testCopyS3ObjectToSqs() throws IOException {
+    // put a file on S3
+    var objectKey = "revloc02/source/test/test.txt";
+    var creds = getEmxSbCreds();
+    var putObjectRequest = PutObjectRequest.builder()
+        .bucket(S3_INTERNAL)
+        .key(objectKey)
+        .build();
+    s3Put(creds, getDefaultPayload(), putObjectRequest);
+
+    // verify the file is there
+    var objects = s3List(creds, S3_INTERNAL, objectKey);
+    assertThat(objects.size()).isOne();
+    assertThat(objects.get(0).key()).isEqualTo(objectKey);
+
+    // copy the file to SQS
+    copyS3ObjectToSqs(creds, S3_INTERNAL, objectKey, SQS1);
+
+    // check that it arrived
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .until(() -> sqsDepth(creds, SQS1) >= 1);
+
+    // check the payload
+    var response = sqsReadOneMessage(creds, SQS1);
+    assertThat(response.messages().get(0).body()).isEqualTo(getDefaultPayload());
+
+    // verify the S3 object is still there
+    objects = s3List(creds, S3_INTERNAL, objectKey);
+    assertThat(objects.size()).isOne();
+
+    // cleanup
+    sqsDelete(creds, response, SQS1);
+    s3Delete(creds, S3_INTERNAL, objectKey);
   }
 }
