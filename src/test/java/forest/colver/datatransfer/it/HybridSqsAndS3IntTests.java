@@ -248,4 +248,10 @@ public class HybridSqsAndS3IntTests {
     sqsDelete(creds, response, SQS1);
     s3Delete(creds, S3_INTERNAL, objectKey);
   }
+
+  // todo: this
+  @Test
+  public void testCopyS3ObjectTooBigToSqs() throws IOException {
+
+  }
 }
