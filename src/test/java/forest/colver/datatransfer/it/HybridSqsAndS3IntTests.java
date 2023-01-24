@@ -249,9 +249,33 @@ public class HybridSqsAndS3IntTests {
     s3Delete(creds, S3_INTERNAL, objectKey);
   }
 
-  // todo: this
   @Test
   public void testCopyS3ObjectTooBigToSqs() throws IOException {
+    // put a big file on S3
+    var objectKey = "revloc02/source/test/BoMx1.txt";
+    var contents = readFile("src/test/resources/BoMx1.txt", StandardCharsets.UTF_8);
+    var creds = getEmxSbCreds();
+    var putObjectRequest = PutObjectRequest.builder()
+        .bucket(S3_INTERNAL)
+        .key(objectKey)
+        .build();
+    s3Put(creds, contents, putObjectRequest);
 
+    // verify the file is there
+    var objects = s3List(creds, S3_INTERNAL, objectKey);
+    assertThat(objects.size()).isOne();
+    assertThat(objects.get(0).key()).isEqualTo(objectKey);
+
+    // copy the file to SQS, should log an error because the file is too big
+    copyS3ObjectToSqs(creds, S3_INTERNAL, objectKey, SQS1);
+
+    // check that the SQS is, in fact, empty
+    assertThat(sqsDepth(creds, SQS1)).isZero();
+
+    // cleanup S3
+    s3Delete(creds, S3_INTERNAL, objectKey);
+    // verify the file is gone
+    objects = s3List(creds, S3_INTERNAL, objectKey);
+    assertThat(objects.size()).isZero();
   }
 }
