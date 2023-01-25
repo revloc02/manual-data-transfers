@@ -5,14 +5,12 @@ import static forest.colver.datatransfer.aws.S3Operations.s3Get;
 import static forest.colver.datatransfer.aws.S3Operations.s3Head;
 import static forest.colver.datatransfer.aws.S3Operations.s3Put;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsConsumeOneMessage;
-import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.convertSqsMessageAttributesToStrings;
 import static forest.colver.datatransfer.aws.Utils.getS3Client;
 
 import java.io.IOException;
-import java.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
@@ -69,12 +67,12 @@ public class SqsAndS3 {
         }
         s3Delete(s3Client, bucket, objectKey);
       } else {
-        LOG.error("The S3 object size is greater than 256K, which is too big for SQS, and therefore cannot be moved.");
+        LOG.error(
+            "The S3 object size is greater than 256K, which is too big for SQS, and therefore cannot be moved.");
       }
     }
   }
 
-  // todo: this needs a unit test
   /**
    * Copy an object from S3, check that the size is not too big for SQS, and then place it on an
    * SQS.
@@ -91,7 +89,8 @@ public class SqsAndS3 {
           sqsSend(awsCreds, sqs, new String(obj.readAllBytes()));
         }
       } else {
-        LOG.error("The S3 object size is greater than 256K, which is too big for SQS, and therefore cannot be copied.");
+        LOG.error(
+            "The S3 object size is greater than 256K, which is too big for SQS, and therefore cannot be copied.");
       }
     }
   }
