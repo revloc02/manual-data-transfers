@@ -305,6 +305,37 @@ public class AwsS3IntTests {
   }
 
   @Test
+  public void testS3Get() throws IOException {
+    try (var s3Client = getS3Client(getEmxSbCreds())) {
+      // put a file
+      var objectKey = "revloc02/source/test/test.txt";
+      var putObjectRequest = PutObjectRequest.builder()
+          .bucket(S3_INTERNAL)
+          .key(objectKey)
+          .build();
+      s3Put(s3Client, getDefaultPayload(), putObjectRequest);
+
+      // verify the file is there
+      var objects = s3List(s3Client, S3_INTERNAL, objectKey);
+      assertThat(objects.size()).isOne();
+      assertThat(objects.get(0).key()).isEqualTo(objectKey);
+
+      // use the s3Get method and check that it works
+      var response = s3Get(s3Client, S3_INTERNAL, objectKey);
+      String payload = new String(response.readAllBytes());
+      assertThat(payload).isEqualTo(getDefaultPayload());
+      response.close();
+
+      // delete the file
+      s3Delete(s3Client, S3_INTERNAL, objectKey);
+
+      // verify the file is gone
+      objects = s3List(s3Client, S3_INTERNAL, objectKey);
+      assertThat(objects.size()).isZero();
+    }
+  }
+
+  @Test
   public void testS3Head_PassCredsPassPutObjReqWithMetadata() {
     // put a file
     var objectKey = "revloc02/source/test/test.txt";

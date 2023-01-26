@@ -171,8 +171,6 @@ public class S3Operations {
     }
   }
 
-  // todo: this needs a unit test, it is used in other unit tests, but doesn't have it's own
-
   /**
    * Get an object from an S3 bucket. Pass in the S3Client--good for stringing multiple S3 calls
    * together so only one client is created.
