@@ -44,7 +44,7 @@ public class AwsS3IntTests {
 
     // verify the file is there
     var objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isEqualTo(1);
+    assertThat(objects.size()).isOne();
     assertThat(objects.get(0).key()).isEqualTo(objectKey);
     // just testing the Put, so purposely not checking the payload value
 
@@ -53,7 +53,7 @@ public class AwsS3IntTests {
 
     // verify the file is gone
     objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isEqualTo(0);
+    assertThat(objects.size()).isZero();
   }
 
   @Test
@@ -66,7 +66,7 @@ public class AwsS3IntTests {
 
       // verify the file is there
       var objects = s3List(s3Client, S3_INTERNAL, objectKey);
-      assertThat(objects.size()).isEqualTo(1);
+      assertThat(objects.size()).isOne();
       assertThat(objects.get(0).key()).isEqualTo(objectKey);
       // just testing the Put, so purposely not checking the payload value
 
@@ -75,7 +75,7 @@ public class AwsS3IntTests {
 
       // verify the file is gone
       objects = s3List(s3Client, S3_INTERNAL, objectKey);
-      assertThat(objects.size()).isEqualTo(0);
+      assertThat(objects.size()).isZero();
     }
   }
 
@@ -89,7 +89,7 @@ public class AwsS3IntTests {
 
     // verify the file is there
     var objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isEqualTo(1);
+    assertThat(objects.size()).isOne();
     assertThat(objects.get(0).key()).isEqualTo(objectKey);
     // just testing the Put, so purposely not checking the payload value
 
@@ -103,7 +103,7 @@ public class AwsS3IntTests {
 
     // verify the file is gone
     objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isEqualTo(0);
+    assertThat(objects.size()).isZero();
   }
 
   @Test
@@ -117,7 +117,7 @@ public class AwsS3IntTests {
 
       // verify the file is there
       var objects = s3List(s3Client, S3_INTERNAL, objectKey);
-      assertThat(objects.size()).isEqualTo(1);
+      assertThat(objects.size()).isOne();
       assertThat(objects.get(0).key()).isEqualTo(objectKey);
       // just testing the Put, so purposely not checking the payload value
 
@@ -131,7 +131,7 @@ public class AwsS3IntTests {
 
       // verify the file is gone
       objects = s3List(s3Client, S3_INTERNAL, objectKey);
-      assertThat(objects.size()).isEqualTo(0);
+      assertThat(objects.size()).isZero();
     }
   }
 
@@ -146,7 +146,7 @@ public class AwsS3IntTests {
 
       // verify the file is in the source
       var objects = s3List(s3Client, S3_INTERNAL, objectKey);
-      assertThat(objects.size()).isEqualTo(1);
+      assertThat(objects.size()).isOne();
       assertThat(objects.get(0).key()).isEqualTo(objectKey);
 
       // copy file
@@ -155,7 +155,7 @@ public class AwsS3IntTests {
 
       // verify the copy is in the new location
       objects = s3List(s3Client, S3_TARGET_CUSTOMER, destKey);
-      assertThat(objects.size()).isEqualTo(1);
+      assertThat(objects.size()).isOne();
       assertThat(objects.get(0).key()).isEqualTo(destKey);
 
       // check the contents
@@ -182,7 +182,7 @@ public class AwsS3IntTests {
 
     // verify the file is there
     var objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isEqualTo(1);
+    assertThat(objects.size()).isOne();
     assertThat(objects.get(0).key()).isEqualTo(objectKey);
 
     // delete the file
@@ -190,7 +190,7 @@ public class AwsS3IntTests {
 
     // verify the file is gone
     objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isEqualTo(0);
+    assertThat(objects.size()).isZero();
   }
 
   @Test
@@ -222,7 +222,7 @@ public class AwsS3IntTests {
 
     // verify the file is there
     var objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isEqualTo(1);
+    assertThat(objects.size()).isOne();
     assertThat(objects.get(0).key()).isEqualTo(objectKey);
     // just testing the Put, so purposely not checking the payload value
 
@@ -231,7 +231,7 @@ public class AwsS3IntTests {
 
     // verify the file is gone
     objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isEqualTo(0);
+    assertThat(objects.size()).isZero();
   }
 
   /**
@@ -251,7 +251,7 @@ public class AwsS3IntTests {
 
       // verify the file is there
       var objects = s3List(s3Client, S3_INTERNAL, objectKey);
-      assertThat(objects.size()).isEqualTo(1);
+      assertThat(objects.size()).isOne();
       assertThat(objects.get(0).key()).isEqualTo(objectKey);
       // just testing the Put, so purposely not checking the payload value
 
@@ -260,7 +260,7 @@ public class AwsS3IntTests {
 
       // verify the file is gone
       objects = s3List(s3Client, S3_INTERNAL, objectKey);
-      assertThat(objects.size()).isEqualTo(0);
+      assertThat(objects.size()).isZero();
     }
   }
 
@@ -300,7 +300,7 @@ public class AwsS3IntTests {
 
       // verify the file is gone
       objects = s3List(s3Client, S3_INTERNAL, objectKey);
-      assertThat(objects.size()).isEqualTo(0);
+      assertThat(objects.size()).isZero();
     }
   }
 
@@ -350,7 +350,7 @@ public class AwsS3IntTests {
 
     // verify the file is there
     var objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isEqualTo(1);
+    assertThat(objects.size()).isOne();
     assertThat(objects.get(0).key()).isEqualTo(objectKey);
 
     // use head to verify metadata
@@ -362,7 +362,7 @@ public class AwsS3IntTests {
 
     // verify the file is gone
     objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isEqualTo(0);
+    assertThat(objects.size()).isZero();
   }
 
   @Test
@@ -399,7 +399,7 @@ public class AwsS3IntTests {
 
       // verify the file is gone
       objects = s3List(s3Client, S3_INTERNAL, objectKey);
-      assertThat(objects.size()).isEqualTo(0);
+      assertThat(objects.size()).isZero();
     }
   }
 }
