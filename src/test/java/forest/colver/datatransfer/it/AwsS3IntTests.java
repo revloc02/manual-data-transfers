@@ -36,7 +36,7 @@ public class AwsS3IntTests {
    * Each S3 operation uses the creds to create its own S3Client.
    */
   @Test
-  public void testS3PutPassCredsAndParams() {
+  public void testS3Put_PassCredsAndParams() {
     // put a file
     var objectKey = "revloc02/source/test/test.txt";
     var creds = getEmxSbCreds();
@@ -57,7 +57,7 @@ public class AwsS3IntTests {
   }
 
   @Test
-  public void testS3PutPassS3ClientAndParams() {
+  public void testS3Put_PassS3ClientAndParams() {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
       // put a file
@@ -80,7 +80,7 @@ public class AwsS3IntTests {
   }
 
   @Test
-  public void testS3PutPassCredsAndParamsWithMetadata() {
+  public void testS3Put_PassCredsAndParamsWithMetadata() {
     // put a file
     var objectKey = "revloc02/source/test/test.txt";
     var creds = getEmxSbCreds();
@@ -107,7 +107,7 @@ public class AwsS3IntTests {
   }
 
   @Test
-  public void testS3PutPassS3ClientAndParamsWithMetadata() {
+  public void testS3Put_PassS3ClientAndParamsWithMetadata() {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
       // put a file
@@ -136,7 +136,7 @@ public class AwsS3IntTests {
   }
 
   @Test
-  public void testS3CopyPassClient() throws IOException {
+  public void testS3Copy_PassClient() throws IOException {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
       // place a file
@@ -210,7 +210,7 @@ public class AwsS3IntTests {
    * Each S3 operation uses the creds to create its own S3Client.
    */
   @Test
-  public void testS3PutPassCredsPassPutObjReq() {
+  public void testS3Put_PassCredsPassPutObjReq() {
     // put a file
     var objectKey = "revloc02/source/test/test.txt";
     var creds = getEmxSbCreds();
@@ -238,7 +238,7 @@ public class AwsS3IntTests {
    * One S3Client is created and then passed to each of the S3 operations.
    */
   @Test
-  public void testS3PutPassClientPassPutObjReq() {
+  public void testS3Put_PassClientPassPutObjReq() {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
       // put a file
@@ -265,7 +265,7 @@ public class AwsS3IntTests {
   }
 
   @Test
-  public void testS3PutPassClientPassObjReqWithTagging() throws IOException {
+  public void testS3Put_PassClientPassObjReqWithTagging() throws IOException {
     try (var s3Client = getS3Client(getEmxSbCreds())) {
       // put a file
       var objectKey = "revloc02/source/test/test.txt";
@@ -305,7 +305,7 @@ public class AwsS3IntTests {
   }
 
   @Test
-  public void testS3HeadPassCredsPassPutObjReqWithMetadata() {
+  public void testS3Head_PassCredsPassPutObjReqWithMetadata() {
     // put a file
     var objectKey = "revloc02/source/test/test.txt";
     var creds = getEmxSbCreds();
@@ -335,7 +335,7 @@ public class AwsS3IntTests {
   }
 
   @Test
-  public void testS3HeadPassS3Client() throws IOException {
+  public void testS3Head_PassS3Client() throws IOException {
     try (var s3Client = getS3Client(getEmxSbCreds())) {
       // put a file
       var objectKey = "revloc02/source/test/test.txt";
