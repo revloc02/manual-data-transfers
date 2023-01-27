@@ -44,7 +44,6 @@ public class Utils {
   public static final String TQ_STAGE = userCreds.getProperty("tq.stage");
   public static final String TQ_PROD = userCreds.getProperty("tq.prod");
 
-  // todo: I think this could use a unit test
   /**
    * Used to read a file from disk, usually used for a payload of a message.
    *
@@ -62,7 +61,6 @@ public class Utils {
     return new String(encoded, encoding);
   }
 
-  // todo: prolly be good to unit test this too
   /**
    * Used to write a file to disk, most useful when a message payload is too big to peruse in a
    * log.
