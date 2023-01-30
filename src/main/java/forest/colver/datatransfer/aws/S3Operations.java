@@ -142,15 +142,8 @@ public class S3Operations {
 
   public static void s3Copy(S3Client s3Client, String sourceBucket, String sourceKey,
       String destBucket, String destKey) {
-    String encodedUrl = null;
-    try {
-      encodedUrl = URLEncoder.encode(sourceBucket + "/" + sourceKey,
-          StandardCharsets.UTF_8.toString());
-    } catch (UnsupportedEncodingException e) {
-      System.out.println("URL could not be encoded: " + e.getMessage());
-    }
-    var copyObjectRequest = CopyObjectRequest.builder().copySource(encodedUrl)
-        .destinationBucket(destBucket).destinationKey(destKey).build();
+    var copyObjectRequest = CopyObjectRequest.builder().sourceBucket(sourceBucket)
+        .sourceKey(sourceKey).destinationBucket(destBucket).destinationKey(destKey).build();
     var copyObjectResponse = s3Client.copyObject(copyObjectRequest);
     awsResponseValidation(copyObjectResponse);
   }
