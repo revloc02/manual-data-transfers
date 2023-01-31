@@ -174,6 +174,44 @@ public class AwsS3IntTests {
   }
 
   @Test
+  public void testS3Copy_PassCreds() throws IOException {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      // place a file
+      var objectKey = "revloc02/source/test/test.txt";
+      var payload = getDefaultPayload();
+      s3Put(s3Client, S3_INTERNAL, objectKey, payload);
+
+      // verify the file is in the source
+      var objects = s3List(s3Client, S3_INTERNAL, objectKey);
+      assertThat(objects.size()).isOne();
+      assertThat(objects.get(0).key()).isEqualTo(objectKey);
+
+      // copy file
+      var destKey = "blake/inbound/dev/some-bank/ack/testCopied.txt";
+      s3Copy(creds, S3_INTERNAL, objectKey, S3_TARGET_CUSTOMER, destKey);
+
+      // verify the copy is in the new location
+      objects = s3List(s3Client, S3_TARGET_CUSTOMER, destKey);
+      assertThat(objects.size()).isOne();
+      assertThat(objects.get(0).key()).isEqualTo(destKey);
+
+      // check the contents
+      var response = s3Get(s3Client, S3_TARGET_CUSTOMER, destKey);
+      LOG.info("response={}", response.response());
+      LOG.info("statusCode={}", response.response().sdkHttpResponse().statusCode());
+      var respPayload = new String(response.readAllBytes(),
+          StandardCharsets.UTF_8);
+      assertThat(respPayload).isEqualTo(payload);
+
+      // cleanup and delete the files
+      response.close();
+      s3Delete(s3Client, S3_INTERNAL, objectKey);
+      s3Delete(s3Client, S3_TARGET_CUSTOMER, destKey);
+    }
+  }
+
+  @Test
   public void testS3Delete() {
     // put a file
     var objectKey = "revloc02/source/test/test.txt";

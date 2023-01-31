@@ -132,7 +132,10 @@ public class S3Operations {
     return headObjectResponse;
   }
 
-  // todo: keep this method? does it need a unit test?
+  /**
+   * Yeah, so...s3Copy with AwsCreds. Copies an object. Yeah, so...this might not actually be that
+   * useful.
+   */
   public static void s3Copy(AwsCredentialsProvider awsCp, String sourceBucket, String sourceKey,
       String destBucket, String destKey) {
     try (var s3Client = getS3Client(awsCp)) {
@@ -140,6 +143,9 @@ public class S3Operations {
     }
   }
 
+  /**
+   * s3Copy with s3Client. Copies an object from one s3 to another.
+   */
   public static void s3Copy(S3Client s3Client, String sourceBucket, String sourceKey,
       String destBucket, String destKey) {
     var copyObjectRequest = CopyObjectRequest.builder().sourceBucket(sourceBucket)
