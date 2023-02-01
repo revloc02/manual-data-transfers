@@ -3,9 +3,6 @@ package forest.colver.datatransfer.aws;
 import static forest.colver.datatransfer.aws.Utils.awsResponseValidation;
 import static forest.colver.datatransfer.aws.Utils.getS3Client;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
