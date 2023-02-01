@@ -27,7 +27,6 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
  */
 public class AwsS3IntTests {
 
-  // todo: see if I can use awaitlity on some of the asserts
   private static final Logger LOG = LoggerFactory.getLogger(AwsS3IntTests.class);
 
   // Pass parameters to the S3 operation
