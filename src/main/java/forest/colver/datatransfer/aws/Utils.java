@@ -147,4 +147,17 @@ public class Utils {
           "Unsuccessful AWS request. Status Code: " + responseCode);
     }
   }
+
+  /**
+   * Calculate Visibility Timeout for SQS, using the current depth of the SQS queue. FYI, the
+   * default visibilityTimeout on SQS is 30 sec., max is 12 hours.
+   */
+  public static int sqsCalcVisTimeout(int depth) {
+    var min = 10; // minimum of 10 seconds
+    var visibilityTimeout = min + (depth / 4); // estimate processing 4 messages per second
+    if (visibilityTimeout > 43_200) {
+      visibilityTimeout = 43_200; // 12 hour max visibilityTimeout
+    }
+    return visibilityTimeout;
+  }
 }
