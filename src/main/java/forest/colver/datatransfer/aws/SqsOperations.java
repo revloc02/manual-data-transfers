@@ -3,6 +3,7 @@ package forest.colver.datatransfer.aws;
 import static forest.colver.datatransfer.aws.Utils.awsResponseValidation;
 import static forest.colver.datatransfer.aws.Utils.createSqsMessageAttributes;
 import static forest.colver.datatransfer.aws.Utils.getSqsClient;
+import static forest.colver.datatransfer.aws.Utils.sqsCalcVisTimeout;
 
 import java.util.List;
 import java.util.Map;
@@ -394,7 +395,7 @@ public class SqsOperations {
     var counter = 0;
     if (depth < maxDepth) {
       // from queue depth calculate visibility timeout
-      var visibilityTimeout = 10 + (depth);
+      var visibilityTimeout = sqsCalcVisTimeout(depth);
       var moreMessages = true;
       try (var sqsClient = getSqsClient(awsCP)) {
         do {
@@ -451,8 +452,8 @@ public class SqsOperations {
     var maxDepth = 500; // This could probably go as high as 40k
     var counter = 0;
     if (depth < maxDepth) {
-      // from queue depth calculate visibility timeout
-      var visibilityTimeout = 10 + (depth);
+      // from queue depth calculate visibility timeout in seconds
+      var visibilityTimeout = sqsCalcVisTimeout(depth);
       var moreMessages = true;
       try (var sqsClient = getSqsClient(awsCP)) {
         do {
@@ -486,7 +487,7 @@ public class SqsOperations {
     } else {
       counter = -1;
       LOG.info(
-          "Queue {} is too deep ({}), for selective message moving, max depth is currently {}.",
+          "Queue {} is too deep ({}) for selective message moving, max depth is currently set to {}.",
           fromSqs,
           depth, maxDepth);
     }

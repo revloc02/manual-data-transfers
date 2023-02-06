@@ -374,7 +374,7 @@ public class AwsSqsIntTests {
     var creds = getEmxSbCreds();
     var payload = getDefaultPayload();
     // send some messages
-    var numMsgs = 6;
+    var numMsgs = 8;
     for (var i = 0; i < numMsgs; i++) {
       sqsSend(creds, SQS1, payload + i);
     }
@@ -385,7 +385,7 @@ public class AwsSqsIntTests {
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs));
 
-    // move the specific messages
+    // moving only the specific message that has a "2" appended
     assertThat(
         sqsMoveMessagesWithPayloadLike(creds, SQS1, payload + "2", SQS2)).isEqualTo(1);
 
@@ -421,7 +421,7 @@ public class AwsSqsIntTests {
         "specificValue");
     sqsSend(creds, SQS1, getDefaultPayload(), specificProps);
     // send some generic messages
-    var numMsgs = 102;
+    var numMsgs = 102; // sqsMoveMessagesWithSelectedAttribute() limit is currently hardcoded to 100
     for (var i = 0; i < numMsgs; i++) {
       var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key" + i, "value" + i);
       sqsSend(creds, SQS1, getDefaultPayload(), messageProps);
