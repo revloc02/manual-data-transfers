@@ -1,5 +1,8 @@
 package forest.colver.datatransfer;
 
+import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveMessagesWithPayloadLike;
+import static forest.colver.datatransfer.aws.Utils.getEmxNpCreds;
+import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.messaging.Environment.PROD;
 import static forest.colver.datatransfer.messaging.JmsBrowse.browseAndCountSpecificMessages;
 import static forest.colver.datatransfer.messaging.JmsBrowse.browseForSpecificMessage;
@@ -10,12 +13,20 @@ import static forest.colver.datatransfer.messaging.JmsConsume.deleteAllSpecificM
  * specific applications of the general messaging tools.
  */
 public class CommonTasks {
-  // todo: a way to clean up sftp-error sqs removing only certain messages e.g. all health check errors and not interchange errors
+
+  /**
+   * Clears Lifeflight health checks from the sftp-error queue. Occasionally a Lifeflight health
+   * check will fail for some random reason and leave an error in the sftp error queue. These errors
+   * are typically anomalies and not valuable since the health check clears the next run.
+   */
   public static void cleanupSftpErrorSqsStage() {
-    // I need an example health check in the error queue
+    // Sandbox. Obviously get sandbox creds before running this.
+//    sqsMoveMessagesWithPayloadLike(getEmxSbCreds(), "sftp-error", "lifeflightTestFile", "blake-emxonramp-test");
 
-
-    // this is the pseudo sqs selector, or a variation of it that looks at the payload.
+    // todo: after I've verfified that this does what I think it does, I need to not move the messages, but rather delete them likely requiring a new method
+    // Stage. Obviously get sandbox creds before running this.
+    sqsMoveMessagesWithPayloadLike(getEmxNpCreds(), "sftp-error", "lifeflightTestFile",
+        "test-queue");
   }
 
   /**
@@ -32,7 +43,8 @@ public class CommonTasks {
     var timestamp = "1638297326591"; // messages older than ~ 30Nov2021
 
     // 1. find a timestamp to use in the "timestamp" var above, get this from the list of messages in the queue. Use whatever selector is helpful to do this.
-    browseForSpecificMessage(PROD, "ops", "emxTraceOnrampMessageName='CFISLDS-GTM-INDUS-05-ACH-20210817111659.xml'");
+    browseForSpecificMessage(PROD, "ops",
+        "emxTraceOnrampMessageName='CFISLDS-GTM-INDUS-05-ACH-20210817111659.xml'");
 
     // 2. Once you have set the timestamp var above, check how many messages are going to be deleted according that timestamp
     browseAndCountSpecificMessages(PROD, "ops", "emxTraceSourceTimestamp<=" + timestamp);

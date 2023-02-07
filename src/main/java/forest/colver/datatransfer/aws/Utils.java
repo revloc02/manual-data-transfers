@@ -154,7 +154,7 @@ public class Utils {
    */
   public static int sqsCalcVisTimeout(int depth) {
     var min = 10; // minimum of 10 seconds
-    var visibilityTimeout = min + (depth / 4); // generous estimate processing 4 messages per sec
+    var visibilityTimeout = min + (depth / 4); // conservative estimate processing 4 messages per sec
     if (visibilityTimeout > 43_200) {
       visibilityTimeout = 43_200; // 12 hour max visibilityTimeout
     }
