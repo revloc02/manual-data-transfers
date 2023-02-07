@@ -149,8 +149,12 @@ public class Utils {
   }
 
   /**
-   * Calculate Visibility Timeout for SQS, using the current depth of the SQS queue. FYI, the
-   * default visibilityTimeout on SQS is 30 sec., max is 12 hours.
+   * Calculate Visibility Timeout for SQS, using the current depth of the SQS queue. This would be
+   * typically used to iterate through the whole stack of messages on an SQS as the
+   * visibilityTimeout makes an individual message not available (visible). Obviously there's
+   * limitations if the SQS depth is too large, but this can allow a semblance of coding a message
+   * selector, if used correctly. FYI, the default visibilityTimeout on SQS is 30 sec., max is 12
+   * hours.
    */
   public static int sqsCalcVisTimeout(int depth) {
     var min = 10; // minimum of 10 seconds
