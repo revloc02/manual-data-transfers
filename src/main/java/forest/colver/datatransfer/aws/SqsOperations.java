@@ -344,8 +344,8 @@ public class SqsOperations {
 
   /**
    * Move all messages from one SQS to another, with less log verbosity. I was also attempting to
-   * make this method faster, but it is only about twice as fast as {@link
-   * #sqsMoveAllVerbose(AwsCredentialsProvider, String, String) sqsMoveAllVerbose}.
+   * make this method faster, but it is only about twice as fast as
+   * {@link #sqsMoveAllVerbose(AwsCredentialsProvider, String, String) sqsMoveAllVerbose}.
    */
   public static void sqsMoveAll(AwsCredentialsProvider awsCP, String fromSqs, String toSqs) {
     var counter = 0;
@@ -366,7 +366,9 @@ public class SqsOperations {
         // send
         if (response.hasMessages()) {
           for (var message : response.messages()) {
-            counter = moveMessage(fromSqs, toSqs, counter, sqsClient, message);
+            sqsMoveMessage(sqsClient, fromSqs, toSqs, message);
+            counter++;
+            LOG.info("Moved message #{}", counter);
           }
         } else {
           moreMessages = false;
@@ -417,7 +419,9 @@ public class SqsOperations {
                 if (message.messageAttributes().get(selectKey) != null) {
                   if (message.messageAttributes().get(selectKey).stringValue()
                       .equals(selectValue)) {
-                    counter = moveMessage(fromSqs, toSqs, counter, sqsClient, message);
+                    sqsMoveMessage(sqsClient, fromSqs, toSqs, message);
+                    counter++;
+                    LOG.info("Moved message #{}", counter);
                   } else {
                     LOG.info("This message doesn't have any matching attributes, bypassing it.");
                   }
@@ -472,7 +476,9 @@ public class SqsOperations {
             for (var message : response.messages()) {
               // check each one for selector stuff
               if (message.body().contains(payloadLike)) {
-                counter = moveMessage(fromSqs, toSqs, counter, sqsClient, message);
+                sqsMoveMessage(sqsClient, fromSqs, toSqs, message);
+                counter++;
+                LOG.info("Moved message #{}", counter);
               } else {
                 LOG.info("Message does not have contents containing criteria, bypassing it.");
               }
@@ -494,20 +500,13 @@ public class SqsOperations {
     return counter;
   }
 
-  // todo: this needs a Javadoc
-  // todo: I hate that this has a counter arg, it makes it too specialized
-  private static int moveMessage(String fromSqs, String toSqs, int counter, SqsClient sqsClient,
+  // todo: this needs a Javadoc. And possibly a unit test.
+  private static void sqsMoveMessage(SqsClient sqsClient, String fromSqs, String toSqs,
       Message message) {
-    // if it matches move it and then delete it using the receiptHandle()
-    counter++;
     var sendMessageRequest =
         SendMessageRequest.builder()
             .messageBody(message.body())
             .messageAttributes(message.messageAttributes())
-            // todo: fix this and everything that touches it. previous line is correct, following 2 commented lines are wrong
-//            .messageAttributes(
-//                createMessageAttributes(message.attributesAsStrings()))
-            // todo: furthermore, look for other usages of createMessageAttributes(message.attributesAsStrings()) should also be changed
             .queueUrl(qUrl(sqsClient, toSqs))
             .build();
     sqsClient.sendMessage(sendMessageRequest);
@@ -517,7 +516,5 @@ public class SqsOperations {
             .receiptHandle(message.receiptHandle())
             .build();
     sqsClient.deleteMessage(deleteMessageRequest);
-    LOG.info("Moved message #{}", counter);
-    return counter;
   }
 }
