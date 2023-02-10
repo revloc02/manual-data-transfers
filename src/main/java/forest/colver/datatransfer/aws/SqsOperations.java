@@ -500,7 +500,15 @@ public class SqsOperations {
     return counter;
   }
 
-  // todo: this needs a Javadoc. And possibly a unit test.
+  /**
+   * Given a Message already retrieved from an SQS, send that message to another SQS and delete it
+   * from the source SQS.
+   *
+   * @param sqsClient The Client for connecting to SQS.
+   * @param fromSqs Source SQS.
+   * @param toSqs Target SQS.
+   * @param message SQS {@link software.amazon.awssdk.services.sqs.model.Message Message}.
+   */
   private static void sqsMoveMessage(SqsClient sqsClient, String fromSqs, String toSqs,
       Message message) {
     var sendMessageRequest =
