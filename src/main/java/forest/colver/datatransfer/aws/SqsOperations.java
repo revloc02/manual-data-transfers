@@ -89,7 +89,7 @@ public class SqsOperations {
     var response = sqsReadOneMessage(awsCP, queueName);
     awsResponseValidation(response);
     if (response.hasMessages()) {
-      sqsDelete(awsCP, response, queueName);
+      sqsDeleteMessages(awsCP, response, queueName);
       LOG.info("======== SQSCONSUME: Consumed a message from SQS: {}.=======", queueName);
       return response.messages().get(0);
     } else {
@@ -197,6 +197,7 @@ public class SqsOperations {
     return queueUrl;
   }
 
+  // todo: hmm, does this need a unit test?
   /**
    * Gets a list of messages from a given SQS.
    */
@@ -223,7 +224,7 @@ public class SqsOperations {
    *
    * @param response ReceiveMessageResponse which contains the list of messages to be deleted.
    */
-  public static void sqsDelete(
+  public static void sqsDeleteMessages(
       AwsCredentialsProvider awsCP, ReceiveMessageResponse response, String queueName) {
     try (var sqsClient = getSqsClient(awsCP)) {
       for (Message message : response.messages()) {
@@ -238,6 +239,8 @@ public class SqsOperations {
       }
     }
   }
+
+  // todo: make a delete method that only deletes a single message
 
   /**
    * Copy a message from one SQS queue to another.
@@ -524,5 +527,57 @@ public class SqsOperations {
             .receiptHandle(message.receiptHandle())
             .build();
     sqsClient.deleteMessage(deleteMessageRequest);
+  }
+
+  // todo: this needs a unit test
+  public static int sqsDeleteMessagesWithPayloadLike(AwsCredentialsProvider awsCP, String sqs,
+      String payloadLike) {
+    // check queue depth, if it is too deep just stop
+    var depth = sqsDepth(awsCP, sqs);
+    var maxDepth = 500; // This could probably go as high as 40k
+    var counter = 0;
+    if (depth < maxDepth) {
+      // from queue depth calculate visibility timeout in seconds
+      var visibilityTimeout = sqsCalcVisTimeout(depth);
+      var moreMessages = true;
+      try (var sqsClient = getSqsClient(awsCP)) {
+        do {
+          // receive 10 messages
+          var receiveMessageRequest =
+              ReceiveMessageRequest.builder()
+                  .waitTimeSeconds(2)
+                  .messageAttributeNames("All")
+                  .attributeNames(QueueAttributeName.ALL)
+                  .queueUrl(qUrl(sqsClient, sqs))
+                  .maxNumberOfMessages(10)
+                  .visibilityTimeout(visibilityTimeout) // default 30 sec
+                  .build();
+          var response = sqsClient.receiveMessage(receiveMessageRequest);
+          if (response.hasMessages()) {
+            for (var message : response.messages()) {
+              // check each one for selector stuff
+              if (message.body().contains(payloadLike)) {
+                sqsDeleteMessages(awsCP, response, sqs); // todo: hmm, not sure this is going to work, response has up to 10 messages and potentially only 1 of them needs to be deleted
+                counter++;
+                LOG.info("Deleted message #{}", counter);
+              } else {
+                LOG.info("Message does not have contents containing criteria, bypassing it.");
+              }
+            }
+          } else {
+            moreMessages = false;
+          }
+        } while (moreMessages);
+      }
+      // display summary: num messages checked, num messages moved
+      LOG.info("Deleted {} messages with payload containing: {}", counter, payloadLike);
+    } else {
+      counter = -1;
+      LOG.info(
+          "Queue {} is too deep ({}) for selective message moving, max depth is currently set to {}.",
+          sqs,
+          depth, maxDepth);
+    }
+    return counter;
   }
 }

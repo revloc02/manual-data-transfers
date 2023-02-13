@@ -3,7 +3,7 @@ package forest.colver.datatransfer.it;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsConsumeOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsCopy;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsCopyAll;
-import static forest.colver.datatransfer.aws.SqsOperations.sqsDelete;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessages;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMove;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveAll;
@@ -109,9 +109,9 @@ public class AwsSqsIntTests {
     // cleanup
     // remove message from source sqs
     var fromQResponse = sqsReadOneMessage(creds, SQS1);
-    sqsDelete(creds, fromQResponse, SQS1);
+    sqsDeleteMessages(creds, fromQResponse, SQS1);
     // remove message from target sqs
-    sqsDelete(creds, toQResponse, SQS2);
+    sqsDeleteMessages(creds, toQResponse, SQS2);
   }
 
   @Test
@@ -125,7 +125,7 @@ public class AwsSqsIntTests {
     var response = sqsReadOneMessage(creds, SQS1);
     assertThat(response.messages().get(0).body()).isEqualTo(payload);
     // cleanup
-    sqsDelete(creds, response, SQS1);
+    sqsDeleteMessages(creds, response, SQS1);
   }
 
   /**
@@ -156,7 +156,7 @@ public class AwsSqsIntTests {
     assertThat(response.messages().get(0).body()).isEqualTo(payload);
 
     // cleanup
-    sqsDelete(creds, response, SQS1);
+    sqsDeleteMessages(creds, response, SQS1);
   }
 
   @Test
@@ -205,7 +205,7 @@ public class AwsSqsIntTests {
         "value3");
 
     // cleanup
-    sqsDelete(creds, response, SQS1);
+    sqsDeleteMessages(creds, response, SQS1);
   }
 
   @Test
@@ -237,7 +237,7 @@ public class AwsSqsIntTests {
     assertThat(body).isEqualTo(payload);
 
     // cleanup
-    sqsDelete(creds, toQResponse, SQS2);
+    sqsDeleteMessages(creds, toQResponse, SQS2);
   }
 
   @Test

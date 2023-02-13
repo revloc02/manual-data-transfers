@@ -3,7 +3,7 @@ package forest.colver.datatransfer.it;
 import static forest.colver.datatransfer.aws.LambdaOps.lambdaInvoke;
 import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
 import static forest.colver.datatransfer.aws.S3Operations.s3Put;
-import static forest.colver.datatransfer.aws.SqsOperations.sqsDelete;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessages;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
 import static forest.colver.datatransfer.aws.Utils.S3_SOURCE_CACHE;
@@ -63,7 +63,7 @@ public class AwsLambdaIntTests {
         "\"key\": \"ext-aiko1/outbound/dev/flox/dd/1test.txt\"");
 
     // Cleanup the queue and the s3.
-    sqsDelete(creds, messageResp, SQS1);
+    sqsDeleteMessages(creds, messageResp, SQS1);
     s3Delete(creds, S3_SOURCE_CACHE, objectKey);
   }
 

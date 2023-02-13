@@ -4,7 +4,7 @@ import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
 import static forest.colver.datatransfer.aws.S3Operations.s3Head;
 import static forest.colver.datatransfer.aws.S3Operations.s3List;
 import static forest.colver.datatransfer.aws.S3Operations.s3Put;
-import static forest.colver.datatransfer.aws.SqsOperations.sqsDelete;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessages;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
@@ -135,7 +135,7 @@ public class HybridSqsAndS3IntTests {
 
     // cleanup SQS
     var messages = sqsReadOneMessage(creds, SQS1);
-    sqsDelete(creds, messages, SQS1);
+    sqsDeleteMessages(creds, messages, SQS1);
 
     // cleanup S3
     s3Delete(creds, S3_INTERNAL, objectKey);
@@ -178,7 +178,7 @@ public class HybridSqsAndS3IntTests {
     assertThat(objects.size()).isZero();
 
     // cleanup
-    sqsDelete(creds, response, SQS1);
+    sqsDeleteMessages(creds, response, SQS1);
   }
 
   @Test
@@ -245,7 +245,7 @@ public class HybridSqsAndS3IntTests {
     assertThat(objects.size()).isOne();
 
     // cleanup
-    sqsDelete(creds, response, SQS1);
+    sqsDeleteMessages(creds, response, SQS1);
     s3Delete(creds, S3_INTERNAL, objectKey);
   }
 

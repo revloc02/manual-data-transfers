@@ -1,7 +1,7 @@
 package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.aws.SqsOperations.sqsConsumeOneMessage;
-import static forest.colver.datatransfer.aws.SqsOperations.sqsDelete;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessages;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
@@ -65,7 +65,7 @@ public class HybridJmsAndSqsIntTests {
         "value3");
 
     // cleanup
-    sqsDelete(creds, response, SQS1);
+    sqsDeleteMessages(creds, response, SQS1);
   }
 
   @Test

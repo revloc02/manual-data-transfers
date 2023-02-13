@@ -2,7 +2,7 @@ package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.aws.SnsOperations.getSnsTopicAttributes;
 import static forest.colver.datatransfer.aws.SnsOperations.publishTopic;
-import static forest.colver.datatransfer.aws.SqsOperations.sqsDelete;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessages;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.Utils.PERSONAL_SANDBOX_SQS_SUB_SNS;
@@ -62,6 +62,6 @@ public class AwsSnsIntTests {
     assertThat(jo.getString("TopicArn")).isEqualTo(SNS_ARN);
     assertThat(jo.getString("Message")).isEqualTo(message);
     // cleanup
-    sqsDelete(creds, response, SQS);
+    sqsDeleteMessages(creds, response, SQS);
   }
 }
