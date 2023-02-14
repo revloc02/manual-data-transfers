@@ -198,6 +198,7 @@ public class SqsOperations {
   }
 
   // todo: hmm, does this need a unit test?
+
   /**
    * Gets a list of messages from a given SQS.
    */
@@ -240,7 +241,23 @@ public class SqsOperations {
     }
   }
 
-  // todo: make a delete method that only deletes a single message
+  // todo: this needs a unit test
+  /**
+   * Deletes a message from the SQS.
+   */
+  public static void sqsDeleteMessage(
+      AwsCredentialsProvider awsCP, String queueName, Message message) {
+    try (var sqsClient = getSqsClient(awsCP)) {
+      var deleteMessageRequest =
+          DeleteMessageRequest.builder()
+              .queueUrl(qUrl(sqsClient, queueName))
+              .receiptHandle(message.receiptHandle())
+              .build();
+      var deleteResponse = sqsClient.deleteMessage(deleteMessageRequest);
+      awsResponseValidation(deleteResponse);
+      LOG.info("DELETE: message {}.", message);
+    }
+  }
 
   /**
    * Copy a message from one SQS queue to another.
