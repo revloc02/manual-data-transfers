@@ -109,9 +109,9 @@ public class AwsSqsIntTests {
     // cleanup
     // remove message from source sqs
     var fromQResponse = sqsReadOneMessage(creds, SQS1);
-    sqsDeleteMessages(creds, fromQResponse, SQS1);
+    sqsDeleteMessages(creds, SQS1, fromQResponse);
     // remove message from target sqs
-    sqsDeleteMessages(creds, toQResponse, SQS2);
+    sqsDeleteMessages(creds, SQS2, toQResponse);
   }
 
   @Test
@@ -125,7 +125,7 @@ public class AwsSqsIntTests {
     var response = sqsReadOneMessage(creds, SQS1);
     assertThat(response.messages().get(0).body()).isEqualTo(payload);
     // cleanup
-    sqsDeleteMessages(creds, response, SQS1);
+    sqsDeleteMessages(creds, SQS1, response);
   }
 
   /**
@@ -156,7 +156,7 @@ public class AwsSqsIntTests {
     assertThat(response.messages().get(0).body()).isEqualTo(payload);
 
     // cleanup
-    sqsDeleteMessages(creds, response, SQS1);
+    sqsDeleteMessages(creds, SQS1, response);
   }
 
   @Test
@@ -205,7 +205,7 @@ public class AwsSqsIntTests {
         "value3");
 
     // cleanup
-    sqsDeleteMessages(creds, response, SQS1);
+    sqsDeleteMessages(creds, SQS1, response);
   }
 
   @Test
@@ -237,7 +237,7 @@ public class AwsSqsIntTests {
     assertThat(body).isEqualTo(payload);
 
     // cleanup
-    sqsDeleteMessages(creds, toQResponse, SQS2);
+    sqsDeleteMessages(creds, SQS2, toQResponse);
   }
 
   @Test

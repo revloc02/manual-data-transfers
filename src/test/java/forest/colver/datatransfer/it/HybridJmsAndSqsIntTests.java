@@ -65,7 +65,7 @@ public class HybridJmsAndSqsIntTests {
         "value3");
 
     // cleanup
-    sqsDeleteMessages(creds, response, SQS1);
+    sqsDeleteMessages(creds, SQS1, response);
   }
 
   @Test

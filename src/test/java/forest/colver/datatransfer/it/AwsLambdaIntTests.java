@@ -63,7 +63,7 @@ public class AwsLambdaIntTests {
         "\"key\": \"ext-aiko1/outbound/dev/flox/dd/1test.txt\"");
 
     // Cleanup the queue and the s3.
-    sqsDeleteMessages(creds, messageResp, SQS1);
+    sqsDeleteMessages(creds, SQS1, messageResp);
     s3Delete(creds, S3_SOURCE_CACHE, objectKey);
   }
 

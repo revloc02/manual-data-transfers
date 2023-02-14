@@ -89,7 +89,7 @@ public class SqsOperations {
     var response = sqsReadOneMessage(awsCP, queueName);
     awsResponseValidation(response);
     if (response.hasMessages()) {
-      sqsDeleteMessages(awsCP, response, queueName);
+      sqsDeleteMessages(awsCP, queueName, response);
       LOG.info("======== SQSCONSUME: Consumed a message from SQS: {}.=======", queueName);
       return response.messages().get(0);
     } else {
@@ -226,7 +226,7 @@ public class SqsOperations {
    * @param response ReceiveMessageResponse which contains the list of messages to be deleted.
    */
   public static void sqsDeleteMessages(
-      AwsCredentialsProvider awsCP, ReceiveMessageResponse response, String queueName) {
+      AwsCredentialsProvider awsCP, String queueName, ReceiveMessageResponse response) {
     try (var sqsClient = getSqsClient(awsCP)) {
       for (Message message : response.messages()) {
         var deleteMessageRequest =
@@ -574,7 +574,8 @@ public class SqsOperations {
             for (var message : response.messages()) {
               // check each one for selector stuff
               if (message.body().contains(payloadLike)) {
-                sqsDeleteMessages(awsCP, response, sqs); // todo: hmm, not sure this is going to work, response has up to 10 messages and potentially only 1 of them needs to be deleted
+                sqsDeleteMessages(awsCP, sqs, response
+                ); // todo: hmm, not sure this is going to work, response has up to 10 messages and potentially only 1 of them needs to be deleted
                 counter++;
                 LOG.info("Deleted message #{}", counter);
               } else {

@@ -135,7 +135,7 @@ public class HybridSqsAndS3IntTests {
 
     // cleanup SQS
     var messages = sqsReadOneMessage(creds, SQS1);
-    sqsDeleteMessages(creds, messages, SQS1);
+    sqsDeleteMessages(creds, SQS1, messages);
 
     // cleanup S3
     s3Delete(creds, S3_INTERNAL, objectKey);
@@ -178,7 +178,7 @@ public class HybridSqsAndS3IntTests {
     assertThat(objects.size()).isZero();
 
     // cleanup
-    sqsDeleteMessages(creds, response, SQS1);
+    sqsDeleteMessages(creds, SQS1, response);
   }
 
   @Test
@@ -245,7 +245,7 @@ public class HybridSqsAndS3IntTests {
     assertThat(objects.size()).isOne();
 
     // cleanup
-    sqsDeleteMessages(creds, response, SQS1);
+    sqsDeleteMessages(creds, SQS1, response);
     s3Delete(creds, S3_INTERNAL, objectKey);
   }
 

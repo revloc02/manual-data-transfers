@@ -62,6 +62,6 @@ public class AwsSnsIntTests {
     assertThat(jo.getString("TopicArn")).isEqualTo(SNS_ARN);
     assertThat(jo.getString("Message")).isEqualTo(message);
     // cleanup
-    sqsDeleteMessages(creds, response, SQS);
+    sqsDeleteMessages(creds, SQS, response);
   }
 }
