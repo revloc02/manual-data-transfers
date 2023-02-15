@@ -98,6 +98,7 @@ public class SqsOperations {
     }
   }
 
+  // todo: this should return one Message. See if all of the usages can handle that change.
   /**
    * Reads one message from the SQS, and then displays the data and properties of it.
    */
@@ -220,6 +221,7 @@ public class SqsOperations {
     return messages;
   }
 
+  // todo: this does not have a dedicated unit test
   /**
    * Deletes a list of messages from the given SQS.
    *
@@ -241,7 +243,6 @@ public class SqsOperations {
     }
   }
 
-  // todo: this needs a unit test
   /**
    * Deletes a message from the SQS.
    */

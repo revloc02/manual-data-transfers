@@ -3,6 +3,7 @@ package forest.colver.datatransfer.it;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsConsumeOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsCopy;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsCopyAll;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessages;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMove;
@@ -480,5 +481,24 @@ public class AwsSqsIntTests {
     // cleanup
     sqsPurge(creds, SQS2);
     sqsPurge(creds, SQS1);
+  }
+
+  @Test
+  public void testSqsDeleteMessage() {
+    LOG.info("Interacting with: sqs={}", SQS1);
+    // send a message
+    var creds = getEmxSbCreds();
+    var payload = "message with payload only, no MessageAttributes";
+    sqsSend(creds, SQS1, payload);
+    // check that it arrived
+    var message = sqsReadOneMessage(creds, SQS1).messages().get(0);
+    assertThat(message.body()).isEqualTo(payload);
+    // cleanup
+    sqsDeleteMessage(creds, SQS1, message);
+    // check the SQS is empty
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isZero());
   }
 }
