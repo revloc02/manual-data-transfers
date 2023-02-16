@@ -12,6 +12,7 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveAllVerbose;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveMessagesWithPayloadLike;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveMessagesWithSelectedAttribute;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsReadMessages;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
@@ -408,7 +409,8 @@ public class AwsSqsIntTests {
   }
 
   /**
-   * Put more than 100 messages on the first SQS, and then try a {@link
+   * Put more than 100 messages on the first SQS, and then try a
+   * {@link
    * forest.colver.datatransfer.aws.SqsOperations#sqsMoveMessagesWithSelectedAttribute(AwsCredentialsProvider,
    * String, String, String, String) sqsMoveMessagesWithSelectedAttribute} and have it fail because
    * the queue is too deep.
@@ -484,6 +486,32 @@ public class AwsSqsIntTests {
   }
 
   @Test
+  public void testSqsDeleteMessages() {
+    LOG.info("Interacting with: sqs={}", SQS1);
+    var creds = getEmxSbCreds();
+    var payload = getDefaultPayload();
+    // send some messages
+    var numMsgs = 4;
+    for (var i = 0; i < numMsgs; i++) {
+      sqsSend(creds, SQS1, payload);
+    }
+    // check that they arrived
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs));
+    // now delete them
+    var response = sqsReadMessages(creds, SQS1);
+    // todo: there's a disconnect here. sqsDeleteMessages() is actually working correctly, but sqsReadMessages() doesn't guarantee a minimum number of messages, so they all don't get read and thus deleted. Not sure yet how to read all of the messages off of the queue.
+    sqsDeleteMessages(creds, SQS1, response);
+    // check the SQS is empty
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isZero());
+  }
+
+  @Test
   public void testSqsDeleteMessage() {
     LOG.info("Interacting with: sqs={}", SQS1);
     // send a message
@@ -495,7 +523,7 @@ public class AwsSqsIntTests {
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isOne());
-    // cleanup
+    // now delete
     var message = sqsReadOneMessage(creds, SQS1).messages().get(0);
     sqsDeleteMessage(creds, SQS1, message);
     // check the SQS is empty

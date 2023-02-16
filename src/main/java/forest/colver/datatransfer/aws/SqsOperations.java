@@ -98,7 +98,7 @@ public class SqsOperations {
     }
   }
 
-  // todo: this should return one Message. See if all of the usages can handle that change.
+  // todo: this should return one Message (not the response). See if all of the usages can handle that change.
   /**
    * Reads one message from the SQS, and then displays the data and properties of it.
    */
@@ -121,6 +121,30 @@ public class SqsOperations {
       return response;
     }
   }
+
+  // todo: this needs a unit test
+  /**
+   * Reads one message from the SQS, and then displays the data and properties of it.
+   */
+  public static ReceiveMessageResponse sqsReadMessages(
+      AwsCredentialsProvider awsCP, String queueName) {
+    try (var sqsClient = getSqsClient(awsCP)) {
+      var receiveMessageRequest =
+          ReceiveMessageRequest.builder()
+              .waitTimeSeconds(2)
+              .messageAttributeNames("All")
+              .attributeNames(QueueAttributeName.ALL)
+              .queueUrl(qUrl(sqsClient, queueName))
+              .maxNumberOfMessages(10) // max 10
+              .visibilityTimeout(1) // default 30 sec
+              .build();
+      var response = sqsClient.receiveMessage(receiveMessageRequest);
+      awsResponseValidation(response);
+      LOG.info("SQSREAD: {} has messages: {}. Read {} messages.", queueName, response.hasMessages(), response.messages().size());
+      return response;
+    }
+  }
+
 
   /**
    * Clears an SQS.
@@ -199,7 +223,7 @@ public class SqsOperations {
   }
 
   // todo: hmm, does this need a unit test?
-
+  // todo: And it could have a companion method that deletes a List<Message>
   /**
    * Gets a list of messages from a given SQS.
    */
@@ -229,6 +253,7 @@ public class SqsOperations {
    */
   public static void sqsDeleteMessages(
       AwsCredentialsProvider awsCP, String queueName, ReceiveMessageResponse response) {
+    var count = 0;
     try (var sqsClient = getSqsClient(awsCP)) {
       for (Message message : response.messages()) {
         var deleteMessageRequest =
@@ -239,7 +264,9 @@ public class SqsOperations {
         var deleteResponse = sqsClient.deleteMessage(deleteMessageRequest);
         awsResponseValidation(deleteResponse);
         LOG.info("DELETE: message {}.", message);
+        count++;
       }
+      LOG.info("DELETED {} message(s).", count);
     }
   }
 
