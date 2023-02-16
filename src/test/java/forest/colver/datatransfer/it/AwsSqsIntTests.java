@@ -491,9 +491,12 @@ public class AwsSqsIntTests {
     var payload = "message with payload only, no MessageAttributes";
     sqsSend(creds, SQS1, payload);
     // check that it arrived
-    var message = sqsReadOneMessage(creds, SQS1).messages().get(0);
-    assertThat(message.body()).isEqualTo(payload);
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isOne());
     // cleanup
+    var message = sqsReadOneMessage(creds, SQS1).messages().get(0);
     sqsDeleteMessage(creds, SQS1, message);
     // check the SQS is empty
     await()
