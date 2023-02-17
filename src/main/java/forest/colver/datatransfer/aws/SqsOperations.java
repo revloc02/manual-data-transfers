@@ -136,7 +136,7 @@ public class SqsOperations {
               .attributeNames(QueueAttributeName.ALL)
               .queueUrl(qUrl(sqsClient, queueName))
               .maxNumberOfMessages(10) // max 10
-              .visibilityTimeout(1) // default 30 sec
+              .visibilityTimeout(0) // default 30 sec
               .build();
       var response = sqsClient.receiveMessage(receiveMessageRequest);
       awsResponseValidation(response);

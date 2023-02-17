@@ -491,7 +491,7 @@ public class AwsSqsIntTests {
     var creds = getEmxSbCreds();
     var payload = getDefaultPayload();
     // send some messages
-    var numMsgs = 4;
+    var numMsgs = 12;
     for (var i = 0; i < numMsgs; i++) {
       sqsSend(creds, SQS1, payload);
     }
@@ -501,9 +501,11 @@ public class AwsSqsIntTests {
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs));
     // now delete them
-    var response = sqsReadMessages(creds, SQS1);
-    // todo: there's a disconnect here. sqsDeleteMessages() is actually working correctly, but sqsReadMessages() doesn't guarantee a minimum number of messages, so they all don't get read and thus deleted. Not sure yet how to read all of the messages off of the queue.
-    sqsDeleteMessages(creds, SQS1, response);
+    do {
+      // Soo...it's not elegant, and it relies on the .visibilityTimeout in sqsReadMessages() to be zero, but it works.
+      var response = sqsReadMessages(creds, SQS1);
+      sqsDeleteMessages(creds, SQS1, response);
+    } while (sqsDepth(creds, SQS1) > 0);
     // check the SQS is empty
     await()
         .pollInterval(Duration.ofSeconds(3))
