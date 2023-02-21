@@ -485,6 +485,39 @@ public class AwsSqsIntTests {
     sqsPurge(creds, SQS1);
   }
 
+  /**
+   * This is not a very good test. It would be nice to have sqsReadMessages() guaranteed to read
+   * more than 1 message, but I don't know how to do that.
+   */
+  @Test
+  public void testSqsReadMessages() {
+    LOG.info("Interacting with: sqs={}", SQS1);
+    var creds = getEmxSbCreds();
+    var payload = getDefaultPayload();
+    // send some messages
+    var numMsgs = 6;
+    for (var i = 0; i < numMsgs; i++) {
+      sqsSend(creds, SQS1, payload);
+    }
+    // check that they arrived
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs));
+    // assert that 1 or more messages can be read
+    assertThat(sqsReadMessages(creds, SQS1).messages().size()).isGreaterThanOrEqualTo(1);
+    // now delete them
+    do {
+      var response = sqsReadMessages(creds, SQS1);
+      sqsDeleteMessages(creds, SQS1, response);
+    } while (sqsDepth(creds, SQS1) > 0);
+    // check the SQS is empty
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isZero());
+  }
+
   @Test
   public void testSqsDeleteMessages() {
     LOG.info("Interacting with: sqs={}", SQS1);
@@ -502,7 +535,9 @@ public class AwsSqsIntTests {
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs));
     // now delete them
     do {
+      // todo: the whole premise here probably is bad and I may need to abandon these methods
       // Soo...it's not elegant, and it relies on the .visibilityTimeout in sqsReadMessages() to be zero, but it works.
+      // But...since the .visibilityTimeout is zero, it reads the same messages multiple times before they finally get deleted. It's not really...good.
       var response = sqsReadMessages(creds, SQS1);
       sqsDeleteMessages(creds, SQS1, response);
     } while (sqsDepth(creds, SQS1) > 0);

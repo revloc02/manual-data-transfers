@@ -122,9 +122,8 @@ public class SqsOperations {
     }
   }
 
-  // todo: this needs a unit test
   /**
-   * Reads one message from the SQS, and then displays the data and properties of it.
+   * Reads one or more message from the SQS, and then displays how many were read.
    */
   public static ReceiveMessageResponse sqsReadMessages(
       AwsCredentialsProvider awsCP, String queueName) {
