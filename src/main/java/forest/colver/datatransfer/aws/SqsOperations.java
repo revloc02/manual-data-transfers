@@ -144,6 +144,28 @@ public class SqsOperations {
     }
   }
 
+  // todo: hmm, does this need a unit test?
+  // todo: And it could have a companion method that deletes a List<Message>
+  /**
+   * Gets a list of messages from a given SQS.
+   */
+  private static List<Message> sqsReadMessages(SqsClient sqsClient, String queueUrl) {
+    ReceiveMessageRequest.Builder receiveMessageRequestBuilder =
+        ReceiveMessageRequest.builder()
+            .waitTimeSeconds(1)
+            .messageAttributeNames("All")
+            .attributeNames(QueueAttributeName.ALL)
+            .queueUrl(queueUrl)
+            .maxNumberOfMessages(10);
+    ReceiveMessageResponse receiveMessageResponse =
+        sqsClient.receiveMessage(receiveMessageRequestBuilder.build());
+    List<Message> messages = receiveMessageResponse.messages();
+    LOG.info("count={}", messages.size());
+    if (!messages.isEmpty()) {
+      LOG.info("Body[0]={}", messages.get(0).body());
+    }
+    return messages;
+  }
 
   /**
    * Clears an SQS.
@@ -219,29 +241,6 @@ public class SqsOperations {
         sqsClient.getQueueUrl(GetQueueUrlRequest.builder().queueName(queueName).build()).queueUrl();
 //    LOG.info("Queue URL={}", queueUrl);
     return queueUrl;
-  }
-
-  // todo: hmm, does this need a unit test?
-  // todo: And it could have a companion method that deletes a List<Message>
-  /**
-   * Gets a list of messages from a given SQS.
-   */
-  private static List<Message> getMessages(SqsClient sqsClient, String queueUrl) {
-    ReceiveMessageRequest.Builder receiveMessageRequestBuilder =
-        ReceiveMessageRequest.builder()
-            .waitTimeSeconds(1)
-            .messageAttributeNames("All")
-            .attributeNames(QueueAttributeName.ALL)
-            .queueUrl(queueUrl)
-            .maxNumberOfMessages(10);
-    ReceiveMessageResponse receiveMessageResponse =
-        sqsClient.receiveMessage(receiveMessageRequestBuilder.build());
-    List<Message> messages = receiveMessageResponse.messages();
-    LOG.info("count={}", messages.size());
-    if (!messages.isEmpty()) {
-      LOG.info("Body[0]={}", messages.get(0).body());
-    }
-    return messages;
   }
 
   // todo: this does not have a dedicated unit test
