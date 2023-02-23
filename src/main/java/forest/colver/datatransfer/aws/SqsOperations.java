@@ -99,6 +99,7 @@ public class SqsOperations {
   }
 
   // todo: this should return one Message (not the response). See if all of the usages can handle that change.
+
   /**
    * Reads one message from the SQS, and then displays the data and properties of it.
    */
@@ -139,13 +140,15 @@ public class SqsOperations {
               .build();
       var response = sqsClient.receiveMessage(receiveMessageRequest);
       awsResponseValidation(response);
-      LOG.info("SQSREAD: {} has messages: {}. Read {} messages.", queueName, response.hasMessages(), response.messages().size());
+      LOG.info("SQSREAD: {} has messages: {}. Read {} messages.", queueName, response.hasMessages(),
+          response.messages().size());
       return response;
     }
   }
 
   // todo: hmm, does this need a unit test?
   // todo: And it could have a companion method that deletes a List<Message>
+
   /**
    * Gets a list of messages from a given SQS.
    */
@@ -244,6 +247,7 @@ public class SqsOperations {
   }
 
   // todo: this does not have a dedicated unit test
+
   /**
    * Deletes a list of messages from the given SQS.
    *
@@ -283,6 +287,24 @@ public class SqsOperations {
       awsResponseValidation(deleteResponse);
       LOG.info("DELETE: message {}.", message);
     }
+  }
+
+  // todo: this needs a unit test
+  public static void sqsDeleteMessageList(
+      SqsClient sqsClient, String queueName, List<Message> messages) {
+    var count = 0;
+    for (Message message : messages) {
+      var deleteMessageRequest =
+          DeleteMessageRequest.builder()
+              .queueUrl(qUrl(sqsClient, queueName))
+              .receiptHandle(message.receiptHandle())
+              .build();
+      var deleteResponse = sqsClient.deleteMessage(deleteMessageRequest);
+      awsResponseValidation(deleteResponse);
+      LOG.info("DELETE: message {}.", message);
+      count++;
+    }
+    LOG.info("DELETED {} message(s).", count);
   }
 
   /**
