@@ -123,6 +123,7 @@ public class SqsOperations {
     }
   }
 
+  // todo: my premise is wrong. getting a list of more than one messages is not guaranteed, so testing that is moot. Keeping the method might still be okay, but testing that it returns a list of messages plural, won't work.
   /**
    * Reads one or more message from the SQS, and then displays how many were read.
    */
@@ -146,13 +147,14 @@ public class SqsOperations {
     }
   }
 
+  // todo: my premise is wrong. getting a list of more than one messages is not guaranteed, so testing that is moot
   // todo: hmm, does this need a unit test?
   // todo: And it could have a companion method that deletes a List<Message>
 
   /**
    * Gets a list of messages from a given SQS.
    */
-  private static List<Message> sqsReadMessages(SqsClient sqsClient, String queueUrl) {
+  public static List<Message> sqsGetMessageList(SqsClient sqsClient, String queueUrl) {
     ReceiveMessageRequest.Builder receiveMessageRequestBuilder =
         ReceiveMessageRequest.builder()
             .waitTimeSeconds(1)
@@ -163,7 +165,7 @@ public class SqsOperations {
     ReceiveMessageResponse receiveMessageResponse =
         sqsClient.receiveMessage(receiveMessageRequestBuilder.build());
     List<Message> messages = receiveMessageResponse.messages();
-    LOG.info("count={}", messages.size());
+    LOG.info("sqsGetMessageList() message list size={}", messages.size());
     if (!messages.isEmpty()) {
       LOG.info("Body[0]={}", messages.get(0).body());
     }

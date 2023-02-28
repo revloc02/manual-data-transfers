@@ -4,8 +4,10 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsConsumeOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsCopy;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsCopyAll;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessage;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessageList;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessages;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsGetMessageList;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMove;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveAll;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveAllVerbose;
@@ -19,6 +21,7 @@ import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS2;
 import static forest.colver.datatransfer.aws.Utils.createSqsMessageAttributes;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
+import static forest.colver.datatransfer.aws.Utils.getSqsClient;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
 import static forest.colver.datatransfer.config.Utils.getUuid;
@@ -546,6 +549,46 @@ public class AwsSqsIntTests {
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isZero());
+  }
+
+  @Test
+  public void testSqsReadMessageList() {
+    LOG.info("Interacting with: sqs={}", SQS1);
+    var creds = getEmxSbCreds();
+    var payload = getDefaultPayload();
+    // send some messages
+    var numMsgs = 6;
+    for (var i = 0; i < numMsgs; i++) {
+      sqsSend(creds, SQS1, payload);
+    }
+    // check that they arrived
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs));
+    LOG.info("ARRIVED");
+    // now read them
+    try (var sqsClient = getSqsClient(creds)) {
+      // ok the default visibilityTimeout, which is being used in sqsGetMessageList(), is 30 sec. So the pollInterval on the await() needs to be greater than 30 sec. What was happening was each individual message was being read as it became available, but then it would become unavailable because of the visibilityTimeout. Never were all the of the messages being read at once.
+      // the above was going on, now I have no idea what's going on. It read 2 messages at a time, so never more than 6.
+      await()
+          .pollInterval(Duration.ofSeconds(40))
+          .atMost(Duration.ofSeconds(140))
+          .untilAsserted(
+              () -> assertThat(sqsGetMessageList(sqsClient, SQS1).size()).isGreaterThanOrEqualTo(
+                  numMsgs));
+      LOG.info("READED");
+//      do {
+      var list = sqsGetMessageList(sqsClient, SQS1);
+      sqsDeleteMessageList(sqsClient, SQS1, list);
+//      } while (sqsDepth(creds, SQS1) > 0);
+      LOG.info("DELETED");
+      // check the SQS is empty
+      await()
+          .pollInterval(Duration.ofSeconds(3))
+          .atMost(Duration.ofSeconds(60))
+          .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isZero());
+    }
   }
 
   @Test
