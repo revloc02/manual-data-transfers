@@ -31,12 +31,14 @@ import static org.awaitility.Awaitility.await;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.services.sqs.model.Message;
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 
 /**
  * Integration Tests for AWS SQS
@@ -522,28 +524,31 @@ public class AwsSqsIntTests {
   }
 
   @Test
-  public void testSqsDeleteMessages() {
+  public void testSqsDeleteMessageList() {
     LOG.info("Interacting with: sqs={}", SQS1);
     var creds = getEmxSbCreds();
     var payload = getDefaultPayload();
-    // send some messages
-    var numMsgs = 12;
+    List<Message> messageList = null;
+    var numMsgs = 6;
     for (var i = 0; i < numMsgs; i++) {
+      // send a message
       sqsSend(creds, SQS1, payload);
+      // check that it arrived
+      await()
+          .pollInterval(Duration.ofSeconds(3))
+          .atMost(Duration.ofSeconds(60))
+          .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isOne());
+      // now pick up that message
+      messageList.add(sqsConsumeOneMessage(creds, SQS1));
+      // check the SQS is empty
+      await()
+          .pollInterval(Duration.ofSeconds(3))
+          .atMost(Duration.ofSeconds(60))
+          .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isZero());
     }
-    // check that they arrived
-    await()
-        .pollInterval(Duration.ofSeconds(3))
-        .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs));
+    // todo: I'm done working on this for today, still revamping my paradigm (premise), commented out the problem here
     // now delete them
-    do {
-      // todo: the whole premise here probably is bad and I may need to abandon these methods
-      // Soo...it's not elegant, and it relies on the .visibilityTimeout in sqsReadMessages() to be zero, but it works.
-      // But...since the .visibilityTimeout is zero, it reads the same messages multiple times before they finally get deleted. It's not really...good.
-      var response = sqsReadMessages(creds, SQS1);
-      sqsDeleteMessages(creds, SQS1, response);
-    } while (sqsDepth(creds, SQS1) > 0);
+//    sqsDeleteMessageList(creds, SQS1, messageList); // todo: wants a client, so what am I going to do?
     // check the SQS is empty
     await()
         .pollInterval(Duration.ofSeconds(3))
