@@ -539,6 +539,7 @@ public class AwsSqsIntTests {
           .atMost(Duration.ofSeconds(60))
           .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isOne());
       // now pick up that message
+      // todo: this might even be dumber than the last idea. If I consume the message, it's gone and there is no need to delete it. So my premise is still off, continue to fix it.
       messageList.add(sqsConsumeOneMessage(creds, SQS1));
       // check the SQS is empty
       await()
