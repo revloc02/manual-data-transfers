@@ -125,7 +125,7 @@ public class SqsOperations {
 
   // todo: my premise is wrong. getting a list of more than one messages is not guaranteed, so testing that is moot. Keeping the method might still be okay, but testing that it returns a list of messages plural, won't work.
   /**
-   * Reads one or more message from the SQS, and then displays how many were read.
+   * Reads one or more message from the SQS, note that the visibilityTimeout is zero, and then displays how many were read.
    */
   public static ReceiveMessageResponse sqsReadMessages(
       AwsCredentialsProvider awsCP, String queueName) {
