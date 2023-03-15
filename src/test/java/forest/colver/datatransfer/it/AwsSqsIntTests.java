@@ -88,7 +88,7 @@ public class AwsSqsIntTests {
     sqsPurge(creds, SQS1); // Note: AWS only allows 1 purge per minute for SQS queues
 
     // assert the sqs was cleared
-    var messages = sqsReadOneMessage(creds, SQS1);
+    var messages = sqsReadMessages(creds, SQS1);
     assertThat(messages.hasMessages()).isFalse();
   }
 
