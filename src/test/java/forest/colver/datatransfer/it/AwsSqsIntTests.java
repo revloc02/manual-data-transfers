@@ -15,7 +15,7 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveMessagesWithPa
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveMessagesWithSelectedAttribute;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadMessages;
-import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessageOld;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS2;
@@ -109,13 +109,13 @@ public class AwsSqsIntTests {
     sqsCopy(creds, SQS1, SQS2);
 
     // verify the message is on the other sqs
-    var toQResponse = sqsReadOneMessage(creds, SQS2);
+    var toQResponse = sqsReadOneMessageOld(creds, SQS2);
     var body = toQResponse.messages().get(0).body();
     assertThat(body).isEqualTo(payload);
 
     // cleanup
     // remove message from source sqs
-    var fromQResponse = sqsReadOneMessage(creds, SQS1);
+    var fromQResponse = sqsReadOneMessageOld(creds, SQS1);
     sqsDeleteMessages(creds, SQS1, fromQResponse);
     // remove message from target sqs
     sqsDeleteMessages(creds, SQS2, toQResponse);
@@ -129,7 +129,7 @@ public class AwsSqsIntTests {
     var payload = "message with payload only, no MessageAttributes";
     sqsSend(creds, SQS1, payload);
     // check that it arrived
-    var response = sqsReadOneMessage(creds, SQS1);
+    var response = sqsReadOneMessageOld(creds, SQS1);
     assertThat(response.messages().get(0).body()).isEqualTo(payload);
     // cleanup
     sqsDeleteMessages(creds, SQS1, response);
@@ -159,7 +159,7 @@ public class AwsSqsIntTests {
         .until(() -> sqsDepth(creds, SQS1) >= 1);
 
     // check the payload
-    var response = sqsReadOneMessage(creds, SQS1);
+    var response = sqsReadOneMessageOld(creds, SQS1);
     assertThat(response.messages().get(0).body()).isEqualTo(payload);
 
     // cleanup
@@ -182,7 +182,7 @@ public class AwsSqsIntTests {
     var message = sqsConsumeOneMessage(creds, SQS1);
     assertThat(message.body()).isEqualTo(payload);
     // assert the sqs was cleared
-    var messages = sqsReadOneMessage(creds, SQS1);
+    var messages = sqsReadOneMessageOld(creds, SQS1);
     assertThat(messages.hasMessages()).isFalse();
   }
 
@@ -203,7 +203,7 @@ public class AwsSqsIntTests {
         .until(() -> sqsDepth(creds, SQS1) >= 1);
 
     // check the payload and properties
-    var response = sqsReadOneMessage(creds, SQS1);
+    var response = sqsReadOneMessageOld(creds, SQS1);
     assertThat(response.messages().get(0).body()).isEqualTo(payload);
     assertThat(response.messages().get(0).hasMessageAttributes()).isEqualTo(true);
     assertThat(response.messages().get(0).messageAttributes().get("key2").stringValue()).isEqualTo(
@@ -239,7 +239,7 @@ public class AwsSqsIntTests {
         .until(() -> sqsDepth(creds, SQS1) == 0);
 
     // verify the message is on the other sqs
-    var toQResponse = sqsReadOneMessage(creds, SQS2);
+    var toQResponse = sqsReadOneMessageOld(creds, SQS2);
     var body = toQResponse.messages().get(0).body();
     assertThat(body).isEqualTo(payload);
 
@@ -626,7 +626,7 @@ public class AwsSqsIntTests {
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isOne());
     // now delete
-    var message = sqsReadOneMessage(creds, SQS1).messages().get(0);
+    var message = sqsReadOneMessageOld(creds, SQS1).messages().get(0);
     sqsDeleteMessage(creds, SQS1, message);
     // check the SQS is empty
     await()

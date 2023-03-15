@@ -86,7 +86,7 @@ public class SqsOperations {
    * @return A Message.
    */
   public static Message sqsConsumeOneMessage(AwsCredentialsProvider awsCP, String queueName) {
-    var response = sqsReadOneMessage(awsCP, queueName);
+    var response = sqsReadOneMessageOld(awsCP, queueName);
     awsResponseValidation(response);
     if (response.hasMessages()) {
       sqsDeleteMessages(awsCP, queueName, response);
@@ -103,7 +103,7 @@ public class SqsOperations {
   /**
    * Reads one message from the SQS, and then displays the data and properties of it.
    */
-  public static ReceiveMessageResponse sqsReadOneMessage(
+  public static ReceiveMessageResponse sqsReadOneMessageOld(
       AwsCredentialsProvider awsCP, String queueName) {
     try (var sqsClient = getSqsClient(awsCP)) {
       var receiveMessageRequest =
@@ -120,6 +120,28 @@ public class SqsOperations {
       LOG.info("SQSREAD: {} has messages: {}", queueName, response.hasMessages());
       displayMessageAttributes(response);
       return response;
+    }
+  }
+  /**
+   * Reads one message from the SQS, and then displays the data and properties of it.
+   */
+  public static Message sqsReadOneMessage(
+      AwsCredentialsProvider awsCP, String queueName) {
+    try (var sqsClient = getSqsClient(awsCP)) {
+      var receiveMessageRequest =
+          ReceiveMessageRequest.builder()
+              .waitTimeSeconds(2)
+              .messageAttributeNames("All")
+              .attributeNames(QueueAttributeName.ALL)
+              .queueUrl(qUrl(sqsClient, queueName))
+              .maxNumberOfMessages(1)
+              .visibilityTimeout(3) // default 30 sec
+              .build();
+      var response = sqsClient.receiveMessage(receiveMessageRequest);
+      awsResponseValidation(response);
+      LOG.info("SQSREAD: {} has messages: {}", queueName, response.hasMessages());
+      displayMessageAttributes(response);
+      return response.messages().get(0);
     }
   }
 
@@ -313,7 +335,7 @@ public class SqsOperations {
    * Copy a message from one SQS queue to another.
    */
   public static void sqsCopy(AwsCredentialsProvider awsCP, String fromSqs, String toSqs) {
-    var response = sqsReadOneMessage(awsCP, fromSqs);
+    var response = sqsReadOneMessageOld(awsCP, fromSqs);
     for (Message message : response.messages()) {
       sqsSend(awsCP, toSqs, message.body());
     }
