@@ -15,6 +15,7 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveMessagesWithPa
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveMessagesWithSelectedAttribute;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadMessages;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessageOld;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
@@ -109,16 +110,14 @@ public class AwsSqsIntTests {
     sqsCopy(creds, SQS1, SQS2);
 
     // verify the message is on the other sqs
-    var toQResponse = sqsReadOneMessageOld(creds, SQS2);
-    var body = toQResponse.messages().get(0).body();
-    assertThat(body).isEqualTo(payload);
+    var toQMsg = sqsReadOneMessage(creds, SQS2);
+    assertThat(toQMsg.body()).isEqualTo(payload);
 
     // cleanup
     // remove message from source sqs
-    var fromQResponse = sqsReadOneMessageOld(creds, SQS1);
-    sqsDeleteMessages(creds, SQS1, fromQResponse);
+    sqsDeleteMessage(creds, SQS1, sqsReadOneMessage(creds, SQS1));
     // remove message from target sqs
-    sqsDeleteMessages(creds, SQS2, toQResponse);
+    sqsDeleteMessage(creds, SQS2, toQMsg);
   }
 
   @Test
