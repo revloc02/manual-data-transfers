@@ -123,15 +123,15 @@ public class AwsSqsIntTests {
   @Test
   public void testSqsSend() {
     LOG.info("Interacting with: sqs={}", SQS1);
-    // send some stuff
+    // send a message
     var creds = getEmxSbCreds();
     var payload = "message with payload only, no MessageAttributes";
     sqsSend(creds, SQS1, payload);
     // check that it arrived
-    var response = sqsReadOneMessageOld(creds, SQS1);
-    assertThat(response.messages().get(0).body()).isEqualTo(payload);
+    var msg = sqsReadOneMessage(creds, SQS1);
+    assertThat(msg.body()).isEqualTo(payload);
     // cleanup
-    sqsDeleteMessages(creds, SQS1, response);
+    sqsDeleteMessage(creds, SQS1, msg);
   }
 
   /**
