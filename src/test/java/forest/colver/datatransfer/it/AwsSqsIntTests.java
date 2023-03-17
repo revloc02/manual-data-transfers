@@ -236,12 +236,11 @@ public class AwsSqsIntTests {
         .until(() -> sqsDepth(creds, SQS1) == 0);
 
     // verify the message is on the other sqs
-    var toQResponse = sqsReadOneMessageOld(creds, SQS2);
-    var body = toQResponse.messages().get(0).body();
-    assertThat(body).isEqualTo(payload);
+    var toQMsg = sqsReadOneMessage(creds, SQS2);
+    assertThat(toQMsg.body()).isEqualTo(payload);
 
     // cleanup
-    sqsDeleteMessages(creds, SQS2, toQResponse);
+    sqsDeleteMessage(creds, SQS2, toQMsg);
   }
 
   @Test
