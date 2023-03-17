@@ -202,16 +202,14 @@ public class AwsSqsIntTests {
         .until(() -> sqsDepth(creds, SQS1) >= 1);
 
     // check the payload and properties
-    var response = sqsReadOneMessageOld(creds, SQS1);
-    assertThat(response.messages().get(0).body()).isEqualTo(payload);
-    assertThat(response.messages().get(0).hasMessageAttributes()).isEqualTo(true);
-    assertThat(response.messages().get(0).messageAttributes().get("key2").stringValue()).isEqualTo(
-        "value2");
-    assertThat(response.messages().get(0).messageAttributes().get("key3").stringValue()).isEqualTo(
-        "value3");
+    var msg = sqsReadOneMessage(creds, SQS1);
+    assertThat(msg.body()).isEqualTo(payload);
+    assertThat(msg.hasMessageAttributes()).isEqualTo(true);
+    assertThat(msg.messageAttributes().get("key2").stringValue()).isEqualTo("value2");
+    assertThat(msg.messageAttributes().get("key3").stringValue()).isEqualTo("value3");
 
     // cleanup
-    sqsDeleteMessages(creds, SQS1, response);
+    sqsDeleteMessage(creds, SQS1, msg);
   }
 
   @Test
