@@ -2,9 +2,9 @@ package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.aws.SnsOperations.getSnsTopicAttributes;
 import static forest.colver.datatransfer.aws.SnsOperations.publishTopic;
-import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessages;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
-import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessageOld;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.Utils.PERSONAL_SANDBOX_SQS_SUB_SNS;
 import static forest.colver.datatransfer.aws.Utils.PERSONAL_SANDBOX_TEST_SNS_TOPIC_ARN;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
@@ -42,26 +42,32 @@ public class AwsSnsIntTests {
     getSnsTopicAttributes(getEmxSbCreds(), SNS_ARN);
   }
 
+  /**
+   * Tests publishTopic. Requires Terraform to be run in advance in a personal AWS sandbox.
+   */
   @Test
   public void testSnsPublishTopic() {
     LOG.info("SNS ARN: {}", SNS_ARN);
-    var creds = getPersonalSbCreds();
+    var creds = getPersonalSbCreds(); // runs in a personal sandbox
+    // publish message
     var message = "testing SNS publish topic via SQS subscription";
     publishTopic(getPersonalSbCreds(), SNS_ARN, message);
 
+    // await its arrival in the queue
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
         .until(() -> sqsDepth(creds, SQS) >= 1);
 
-    // check that it arrived
-    var response = sqsReadOneMessageOld(creds, SQS);
-    LOG.info("response.messages().get(0).body():{}", response.messages().get(0).body());
-    var jo = new JSONObject(response.messages().get(0).body());
+    // check the data
+    var msg = sqsReadOneMessage(creds, SQS);
+    LOG.info("msg.body():{}", msg.body());
+    var jo = new JSONObject(msg.body());
     assertThat(jo.getString("Type")).isEqualTo("Notification");
     assertThat(jo.getString("TopicArn")).isEqualTo(SNS_ARN);
     assertThat(jo.getString("Message")).isEqualTo(message);
+
     // cleanup
-    sqsDeleteMessages(creds, SQS, response);
+    sqsDeleteMessage(creds, SQS, msg);
   }
 }
