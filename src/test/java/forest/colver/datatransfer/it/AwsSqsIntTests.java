@@ -147,7 +147,7 @@ public class AwsSqsIntTests {
         .messageAttributes(createSqsMessageAttributes(attributes))
         .messageId(getUuid())
         .build();
-    // send some stuff
+    // send a message
     var creds = getEmxSbCreds();
     sqsSend(creds, SQS1, message);
 
@@ -158,11 +158,11 @@ public class AwsSqsIntTests {
         .until(() -> sqsDepth(creds, SQS1) >= 1);
 
     // check the payload
-    var response = sqsReadOneMessageOld(creds, SQS1);
-    assertThat(response.messages().get(0).body()).isEqualTo(payload);
+    var msg = sqsReadOneMessage(creds, SQS1);
+    assertThat(msg.body()).isEqualTo(payload);
 
     // cleanup
-    sqsDeleteMessages(creds, SQS1, response);
+    sqsDeleteMessage(creds, SQS1, msg);
   }
 
   @Test
