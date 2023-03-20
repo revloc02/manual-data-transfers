@@ -181,7 +181,7 @@ public class AwsSqsIntTests {
     var message = sqsConsumeOneMessage(creds, SQS1);
     assertThat(message.body()).isEqualTo(payload);
     // assert the sqs was cleared
-    var messages = sqsReadOneMessageOld(creds, SQS1);
+    var messages = sqsReadMessages(creds, SQS1);
     assertThat(messages.hasMessages()).isFalse();
   }
 
