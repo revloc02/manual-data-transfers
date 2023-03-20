@@ -622,7 +622,7 @@ public class AwsSqsIntTests {
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isOne());
     // now delete
-    var message = sqsReadOneMessageOld(creds, SQS1).messages().get(0);
+    var message = sqsReadOneMessage(creds, SQS1);
     sqsDeleteMessage(creds, SQS1, message);
     // check the SQS is empty
     await()
