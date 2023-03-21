@@ -1,9 +1,10 @@
 package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.aws.SqsOperations.sqsConsumeOneMessage;
-import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessages;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessageOld;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
@@ -56,16 +57,14 @@ public class HybridJmsAndSqsIntTests {
     moveOneJmsToSqs(STAGE, queueName, creds, SQS1);
 
     // check that it arrived
-    var response = sqsReadOneMessageOld(creds, SQS1);
-    assertThat(response.messages().get(0).body()).isEqualTo(payload);
-    assertThat(response.messages().get(0).hasMessageAttributes()).isEqualTo(true);
-    assertThat(response.messages().get(0).messageAttributes().get("key2").stringValue()).isEqualTo(
-        "value2");
-    assertThat(response.messages().get(0).messageAttributes().get("key3").stringValue()).isEqualTo(
-        "value3");
+    var msg = sqsReadOneMessage(creds, SQS1);
+    assertThat(msg.body()).isEqualTo(payload);
+    assertThat(msg.hasMessageAttributes()).isEqualTo(true);
+    assertThat(msg.messageAttributes().get("key2").stringValue()).isEqualTo("value2");
+    assertThat(msg.messageAttributes().get("key3").stringValue()).isEqualTo("value3");
 
     // cleanup
-    sqsDeleteMessages(creds, SQS1, response);
+    sqsDeleteMessage(creds, SQS1, msg);
   }
 
   @Test
