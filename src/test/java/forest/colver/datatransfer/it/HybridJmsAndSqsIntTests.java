@@ -4,6 +4,7 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsConsumeOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsReadMessages;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessageOld;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
@@ -88,7 +89,7 @@ public class HybridJmsAndSqsIntTests {
     moveOneSqsToJms(creds, SQS1, STAGE, queue);
 
     // assert the SQS was cleared
-    var messages = sqsReadOneMessageOld(creds, SQS1);
+    var messages = sqsReadMessages(creds, SQS1);
     assertThat(messages.hasMessages()).isFalse();
 
     // check that it arrived
