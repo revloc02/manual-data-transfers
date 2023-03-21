@@ -39,8 +39,6 @@ public class HybridJmsAndSqsIntTests {
   private static final Logger LOG = LoggerFactory.getLogger(HybridJmsAndSqsIntTests.class);
   private static final String SQS1 = EMX_SANDBOX_TEST_SQS1;
 
-  // todo: review and run each one of these (I accidentally deleted code and I want to make sure this stuff works)
-
   /**
    * This tests moving a message from Qpid to AWS SQS.
    */
