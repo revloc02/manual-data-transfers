@@ -4,10 +4,11 @@ import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
 import static forest.colver.datatransfer.aws.S3Operations.s3Head;
 import static forest.colver.datatransfer.aws.S3Operations.s3List;
 import static forest.colver.datatransfer.aws.S3Operations.s3Put;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessages;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadMessages;
-import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessageOld;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.S3_INTERNAL;
@@ -171,15 +172,15 @@ public class HybridSqsAndS3IntTests {
         .until(() -> sqsDepth(creds, SQS1) >= 1);
 
     // check the payload
-    var response = sqsReadOneMessageOld(creds, SQS1);
-    assertThat(response.messages().get(0).body()).isEqualTo(getDefaultPayload());
+    var msg = sqsReadOneMessage(creds, SQS1);
+    assertThat(msg.body()).isEqualTo(getDefaultPayload());
 
     // verify the S3 object is gone
     objects = s3List(creds, S3_INTERNAL, objectKey);
     assertThat(objects.size()).isZero();
 
     // cleanup
-    sqsDeleteMessages(creds, SQS1, response);
+    sqsDeleteMessage(creds, SQS1, msg);
   }
 
   @Test
@@ -238,15 +239,15 @@ public class HybridSqsAndS3IntTests {
         .until(() -> sqsDepth(creds, SQS1) >= 1);
 
     // check the payload
-    var response = sqsReadOneMessageOld(creds, SQS1);
-    assertThat(response.messages().get(0).body()).isEqualTo(getDefaultPayload());
+    var msg = sqsReadOneMessage(creds, SQS1);
+    assertThat(msg.body()).isEqualTo(getDefaultPayload());
 
     // verify the S3 object is still there
     objects = s3List(creds, S3_INTERNAL, objectKey);
     assertThat(objects.size()).isOne();
 
     // cleanup
-    sqsDeleteMessages(creds, SQS1, response);
+    sqsDeleteMessage(creds, SQS1, msg);
     s3Delete(creds, S3_INTERNAL, objectKey);
   }
 
