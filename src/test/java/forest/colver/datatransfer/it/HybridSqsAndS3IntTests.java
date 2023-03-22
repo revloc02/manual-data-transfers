@@ -6,6 +6,7 @@ import static forest.colver.datatransfer.aws.S3Operations.s3List;
 import static forest.colver.datatransfer.aws.S3Operations.s3Put;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessages;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsReadMessages;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessageOld;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
@@ -59,7 +60,7 @@ public class HybridSqsAndS3IntTests {
     assertThat(objects.get(0).key()).isEqualTo(objectKey);
 
     // assert the SQS was cleared
-    var messages = sqsReadOneMessageOld(creds, SQS1);
+    var messages = sqsReadMessages(creds, SQS1);
     assertThat(messages.hasMessages()).isFalse();
 
     // cleanup S3
@@ -100,7 +101,7 @@ public class HybridSqsAndS3IntTests {
     assertThat(headObjectResponse.metadata().get("key3")).isEqualTo("value3");
 
     // assert the SQS was cleared
-    var messages = sqsReadOneMessageOld(creds, SQS1);
+    var messages = sqsReadMessages(creds, SQS1);
     assertThat(messages.hasMessages()).isFalse();
 
     // cleanup S3
@@ -134,7 +135,7 @@ public class HybridSqsAndS3IntTests {
     assertThat(objects.get(0).key()).isEqualTo(objectKey);
 
     // cleanup SQS
-    var messages = sqsReadOneMessageOld(creds, SQS1);
+    var messages = sqsReadMessages(creds, SQS1);
     sqsDeleteMessages(creds, SQS1, messages);
 
     // cleanup S3
