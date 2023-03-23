@@ -6,7 +6,6 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadMessages;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
-import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessageOld;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
@@ -163,7 +162,7 @@ public class HybridJmsAndSqsIntTests {
     moveAllMessagesFromSqsToJms(creds, SQS1, STAGE, queue);
 
     // assert the SQS was cleared
-    var messages = sqsReadOneMessageOld(creds, SQS1);
+    var messages = sqsReadMessages(creds, SQS1);
     assertThat(messages.hasMessages()).isFalse();
 
     // check that they arrived
