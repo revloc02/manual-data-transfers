@@ -3,14 +3,14 @@ package forest.colver.datatransfer.it;
 import static forest.colver.datatransfer.aws.LambdaOps.lambdaInvoke;
 import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
 import static forest.colver.datatransfer.aws.S3Operations.s3Put;
-import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessages;
-import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessageOld;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
-import static forest.colver.datatransfer.aws.Utils.S3_SOURCE_CACHE;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
+import static forest.colver.datatransfer.aws.Utils.S3_SOURCE_CACHE;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
-import static forest.colver.datatransfer.config.Utils.readFile;
 import static forest.colver.datatransfer.config.Utils.pause;
+import static forest.colver.datatransfer.config.Utils.readFile;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
@@ -40,16 +40,15 @@ public class AwsLambdaIntTests {
     s3Put(creds, S3_SOURCE_CACHE, objectKey, contents);
 
     // The initial placement triggered the bridge lambda, so verify that...
-    var messageResp = sqsReadOneMessageOld(creds, SQS1);
-    assertThat(messageResp.hasMessages()).isTrue();
-    assertThat(messageResp.messages().get(0).body()).contains(
+    var messageResp = sqsReadOneMessage(creds, SQS1);
+    assertThat(messageResp.body()).contains(
         "\"key\": \"ext-aiko1/outbound/dev/flox/dd/1test.txt\"");
 
     // ...and then clean it up.
     sqsPurge(creds, SQS1);
 
     // Now invoke the BridgeLambda on the object...
-    var function = "sftpBridgeLambda";
+    var function = "sftp-sandbox-source-bridge";
     var payload = readFile("src/test/resources/invokeLambdaReq.json", StandardCharsets.UTF_8);
     var response = lambdaInvoke(creds, function, payload);
     assertThat(response.statusCode()).isEqualTo(200);
@@ -57,13 +56,12 @@ public class AwsLambdaIntTests {
     pause(1);
 
     // ...and ensure the SQS got the new message.
-    messageResp = sqsReadOneMessageOld(creds, SQS1);
-    assertThat(messageResp.hasMessages()).isTrue();
-    assertThat(messageResp.messages().get(0).body()).contains(
+    messageResp = sqsReadOneMessage(creds, SQS1);
+    assertThat(messageResp.body()).contains(
         "\"key\": \"ext-aiko1/outbound/dev/flox/dd/1test.txt\"");
 
     // Cleanup the queue and the s3.
-    sqsDeleteMessages(creds, SQS1, messageResp);
+    sqsDeleteMessage(creds, SQS1, messageResp);
     s3Delete(creds, S3_SOURCE_CACHE, objectKey);
   }
 
