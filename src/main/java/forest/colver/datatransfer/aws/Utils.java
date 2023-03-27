@@ -35,7 +35,7 @@ public class Utils {
   public static final String PROD_KEY_ID = userCreds.getProperty("aws-access-prod.access-key-id");
   public static final String PROD_SECRET = userCreds.getProperty("aws-access-prod.secret-access-key");
 
-  // todo: see if I can make a config file separate from the creds file to contain these queue names
+  // probably overkill, but this hides some resource names in the creds config file
   public static final String EMX_SANDBOX_TEST_SQS1 = userCreds.getProperty("aws-emx-sandbox-test-sqs1");
   public static final String EMX_SANDBOX_TEST_SQS2 = userCreds.getProperty("aws-emx-sandbox-test-sqs2");
   public static final String S3_INTERNAL = userCreds.getProperty("aws-enterprise-sandbox-test-s3-internal");
