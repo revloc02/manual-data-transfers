@@ -27,6 +27,7 @@ import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
 import static forest.colver.datatransfer.config.Utils.getUuid;
 import static forest.colver.datatransfer.config.Utils.readFile;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.awaitility.Awaitility.await;
 
 import java.nio.charset.StandardCharsets;
@@ -628,5 +629,31 @@ public class AwsSqsIntTests {
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isZero());
+  }
+
+  @Test
+  public void testReadOneMessageWhenNoneExists() {
+    var creds = getEmxSbCreds();
+//    Throwable thrown = catchThrowable(() -> {
+//      var message = sqsReadOneMessage(creds, SQS1);
+//    });
+//    assertThat(thrown)
+//        .isInstanceOf(RuntimeException.class)
+//        .hasMessageContaining("has NO messages.");
+    var message = sqsReadOneMessage(creds, SQS1);
+    assertThat(message).isNull();
+  }
+
+  @Test
+  public void testConsumeOneMessageWhenNoneExists() {
+    var creds = getEmxSbCreds();
+//    Throwable thrown = catchThrowable(() -> {
+//      var message = sqsReadOneMessage(creds, SQS1);
+//    });
+//    assertThat(thrown)
+//        .isInstanceOf(RuntimeException.class)
+//        .hasMessageContaining("has NO messages.");
+    var message = sqsConsumeOneMessage(creds, SQS1);
+    assertThat(message).isNull();
   }
 }

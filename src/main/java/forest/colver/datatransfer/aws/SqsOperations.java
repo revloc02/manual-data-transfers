@@ -85,17 +85,14 @@ public class SqsOperations {
    *
    * @return A Message.
    */
-  public static Message sqsConsumeOneMessage(AwsCredentialsProvider awsCP, String queueName) {
-    var response = sqsReadOneMessageOld(awsCP, queueName);
-    awsResponseValidation(response);
-    if (response.hasMessages()) {
-      sqsDeleteMessages(awsCP, queueName, response);
+  public static Message sqsConsumeOneMessage(AwsCredentialsProvider awsCP,
+      String queueName) { // todo: this got refactored, rerun all tests.
+    var msg = sqsReadOneMessage(awsCP, queueName);
+    if (msg != null) {
+      sqsDeleteMessage(awsCP, queueName, msg);
       LOG.info("======== SQSCONSUME: Consumed a message from SQS: {}.=======", queueName);
-      return response.messages().get(0);
-    } else {
-      LOG.info("======== SQSCONSUME: No messages to consume from SQS: {}.=======", queueName);
-      return null;
     }
+    return msg;
   }
 
   // todo: this should return one Message (not the response). See if all of the usages can handle that change.
@@ -122,10 +119,11 @@ public class SqsOperations {
       return response;
     }
   }
+
   /**
    * Reads one message from the SQS, and then displays the data and properties of it.
    */
-  public static Message sqsReadOneMessage(
+  public static Message sqsReadOneMessage( //todo: this got refactored, rerun all tests
       AwsCredentialsProvider awsCP, String queueName) {
     try (var sqsClient = getSqsClient(awsCP)) {
       var receiveMessageRequest =
@@ -139,15 +137,23 @@ public class SqsOperations {
               .build();
       var response = sqsClient.receiveMessage(receiveMessageRequest);
       awsResponseValidation(response);
-      LOG.info("SQSREAD: {} has messages: {}", queueName, response.hasMessages());
-      displayMessageAttributes(response);
-      return response.messages().get(0);
+      if (response.hasMessages()) {
+        LOG.info("SQS_READ_ONE_MESSAGE: {} has a message.", queueName);
+        displayMessageAttributes(response);
+        return response.messages().get(0);
+      } else { // todo: a unit test should test this case
+        LOG.info("SQS_READ_ONE_MESSAGE: {} has NO messages.", queueName);
+//        throw new RuntimeException("SQS_READ_ONE_MESSAGE: " + queueName + " has NO messages.");
+        return null; // todo: should this return null? should it? really?
+      }
     }
   }
 
   // todo: my premise is wrong. getting a list of more than one messages is not guaranteed, so testing that is moot. Keeping the method might still be okay, but testing that it returns a list of messages plural, won't work.
+
   /**
-   * Reads one or more message from the SQS, note that the visibilityTimeout is zero, and then displays how many were read.
+   * Reads one or more message from the SQS, note that the visibilityTimeout is zero, and then
+   * displays how many were read.
    */
   public static ReceiveMessageResponse sqsReadMessages(
       AwsCredentialsProvider awsCP, String queueName) {
