@@ -237,6 +237,7 @@ public class AwsSqsIntTests {
 
     // verify the message is on the other sqs
     var toQMsg = sqsReadOneMessage(creds, SQS2);
+    assert toQMsg != null;
     assertThat(toQMsg.body()).isEqualTo(payload);
 
     // cleanup
@@ -623,6 +624,7 @@ public class AwsSqsIntTests {
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isOne());
     // now delete
     var message = sqsReadOneMessage(creds, SQS1);
+    assert message != null;
     sqsDeleteMessage(creds, SQS1, message);
     // check the SQS is empty
     await()
@@ -647,12 +649,6 @@ public class AwsSqsIntTests {
   @Test
   public void testConsumeOneMessageWhenNoneExists() {
     var creds = getEmxSbCreds();
-//    Throwable thrown = catchThrowable(() -> {
-//      var message = sqsReadOneMessage(creds, SQS1);
-//    });
-//    assertThat(thrown)
-//        .isInstanceOf(RuntimeException.class)
-//        .hasMessageContaining("has NO messages.");
     var message = sqsConsumeOneMessage(creds, SQS1);
     assertThat(message).isNull();
   }
