@@ -26,8 +26,8 @@ import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
 import static forest.colver.datatransfer.config.Utils.getUuid;
 import static forest.colver.datatransfer.config.Utils.readFile;
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.awaitility.Awaitility.await;
 
 import java.nio.charset.StandardCharsets;
@@ -111,11 +111,12 @@ public class AwsSqsIntTests {
 
     // verify the message is on the other sqs
     var toQMsg = sqsReadOneMessage(creds, SQS2);
+    assert toQMsg != null;
     assertThat(toQMsg.body()).isEqualTo(payload);
 
     // cleanup
     // remove message from source sqs
-    sqsDeleteMessage(creds, SQS1, sqsReadOneMessage(creds, SQS1));
+    sqsDeleteMessage(creds, SQS1, requireNonNull(sqsReadOneMessage(creds, SQS1)));
     // remove message from target sqs
     sqsDeleteMessage(creds, SQS2, toQMsg);
   }
@@ -129,6 +130,7 @@ public class AwsSqsIntTests {
     sqsSend(creds, SQS1, payload);
     // check that it arrived
     var msg = sqsReadOneMessage(creds, SQS1);
+    assert msg != null;
     assertThat(msg.body()).isEqualTo(payload);
     // cleanup
     sqsDeleteMessage(creds, SQS1, msg);
@@ -159,6 +161,7 @@ public class AwsSqsIntTests {
 
     // check the payload
     var msg = sqsReadOneMessage(creds, SQS1);
+    assert msg != null;
     assertThat(msg.body()).isEqualTo(payload);
 
     // cleanup
@@ -203,6 +206,7 @@ public class AwsSqsIntTests {
 
     // check the payload and properties
     var msg = sqsReadOneMessage(creds, SQS1);
+    assert msg != null;
     assertThat(msg.body()).isEqualTo(payload);
     assertThat(msg.hasMessageAttributes()).isEqualTo(true);
     assertThat(msg.messageAttributes().get("key2").stringValue()).isEqualTo("value2");
