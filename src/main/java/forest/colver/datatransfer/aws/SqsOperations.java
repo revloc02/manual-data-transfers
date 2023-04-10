@@ -209,7 +209,7 @@ public class SqsOperations {
           PurgeQueueRequest.builder().queueUrl(qUrl(sqsClient, queueName)).build();
       var response = sqsClient.purgeQueue(purgeQueueRequest);
       awsResponseValidation(response);
-      LOG.info("SQSPURGE: The SQS {} has beeen purged.", queueName);
+      LOG.info("SQSPURGE: The SQS {} has been purged.", queueName);
     }
   }
 
