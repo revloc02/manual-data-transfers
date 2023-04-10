@@ -1,5 +1,6 @@
 package forest.colver.datatransfer.it;
 
+import static forest.colver.datatransfer.aws.SqsOperations.sqsClear;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsConsumeOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsCopy;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsCopyAll;
@@ -86,6 +87,30 @@ public class AwsSqsIntTests {
         .until(() -> sqsDepth(creds, SQS1) >= numMsgs);
 
     sqsPurge(creds, SQS1); // Note: AWS only allows 1 purge per minute for SQS queues
+
+    // assert the sqs was cleared
+    var messages = sqsReadMessages(creds, SQS1);
+    assertThat(messages.hasMessages()).isFalse();
+  }
+
+  @Test
+  public void testSqsClear() {
+    LOG.info("Interacting with: sqs={}", SQS1);
+    // place some messages
+    var creds = getEmxSbCreds();
+    var numMsgs = 5;
+    for (var i = 0; i < numMsgs; i++) {
+      sqsSend(
+          creds,
+          SQS1,
+          readFile("src/test/resources/1test.txt", StandardCharsets.UTF_8));
+    }
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .until(() -> sqsDepth(creds, SQS1) >= numMsgs);
+
+    sqsClear(creds, SQS1);
 
     // assert the sqs was cleared
     var messages = sqsReadMessages(creds, SQS1);

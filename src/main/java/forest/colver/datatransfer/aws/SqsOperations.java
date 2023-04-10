@@ -201,7 +201,7 @@ public class SqsOperations {
   }
 
   /**
-   * Clears an SQS.
+   * Clears an SQS, using Purge, which can only happen once every 60 sec on an SQS.
    */
   public static void sqsPurge(AwsCredentialsProvider awsCP, String queueName) {
     try (var sqsClient = getSqsClient(awsCP)) {
@@ -211,6 +211,47 @@ public class SqsOperations {
       awsResponseValidation(response);
       LOG.info("SQSPURGE: The SQS {} has been purged.", queueName);
     }
+  }
+
+  /**
+   * Clears an SQS, by consuming the messages.
+   */
+  public static void sqsClear(AwsCredentialsProvider awsCP, String queueName) {
+    var depth = sqsDepth(awsCP, queueName);
+    var maxDepth = 100;
+    var counter = 0;
+    if (depth < maxDepth) { // just to be cautious
+      var moreMessages = true;
+      try (var sqsClient = getSqsClient(awsCP)) {
+        do {
+          var receiveMessageRequest =
+              ReceiveMessageRequest.builder()
+                  .waitTimeSeconds(2)
+                  .queueUrl(qUrl(sqsClient, queueName))
+                  .maxNumberOfMessages(10)
+                  .build();
+          var response = sqsClient.receiveMessage(receiveMessageRequest);
+          if (response.hasMessages()) {
+            for (var message : response.messages()) {
+              counter++;
+              var deleteMessageRequest =
+                  DeleteMessageRequest.builder()
+                      .queueUrl(qUrl(sqsClient, queueName))
+                      .receiptHandle(message.receiptHandle())
+                      .build();
+              sqsClient.deleteMessage(deleteMessageRequest);
+            }
+          } else {
+            moreMessages = false;
+          }
+        } while (moreMessages);
+      }
+    } else {
+      LOG.info("Queue {} has {} messages, you should probably just use sqsPurge() instead.",
+          queueName,
+          depth);
+    }
+    LOG.info("SQSCLEAR: The SQS {} has been cleared of {} messages.", queueName, counter);
   }
 
   /**
