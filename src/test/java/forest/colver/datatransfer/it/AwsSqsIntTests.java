@@ -100,10 +100,7 @@ public class AwsSqsIntTests {
     var creds = getEmxSbCreds();
     var numMsgs = 5;
     for (var i = 0; i < numMsgs; i++) {
-      sqsSend(
-          creds,
-          SQS1,
-          readFile("src/test/resources/1test.txt", StandardCharsets.UTF_8));
+      sqsSend(creds, SQS1, getDefaultPayload());
     }
     await()
         .pollInterval(Duration.ofSeconds(3))
@@ -113,8 +110,33 @@ public class AwsSqsIntTests {
     sqsClear(creds, SQS1);
 
     // assert the sqs was cleared
-    var messages = sqsReadMessages(creds, SQS1);
-    assertThat(messages.hasMessages()).isFalse();
+    var receiveMessageResponse = sqsReadMessages(creds, SQS1);
+    assertThat(receiveMessageResponse.hasMessages()).isFalse();
+  }
+
+  @Test
+  public void testSqsDeleteMessages() {
+    LOG.info("Interacting with: sqs={}", SQS1);
+    // place some messages
+    var creds = getEmxSbCreds();
+    var numMsgs = 5;
+    for (var i = 0; i < numMsgs; i++) {
+      sqsSend(creds, SQS1, getDefaultPayload());
+    }
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .until(() -> sqsDepth(creds, SQS1) >= numMsgs);
+    // now delete them
+    do {
+      var response = sqsReadMessages(creds, SQS1);
+      sqsDeleteMessages(creds, SQS1, response);
+    } while (sqsDepth(creds, SQS1) > 0);
+    // check the SQS is empty
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isZero());
   }
 
   @Test
@@ -590,7 +612,8 @@ public class AwsSqsIntTests {
     // todo: I'm done working on this for today, still revamping my paradigm (premise), commented out the problem here
     try (var sqsClient = getSqsClient(creds)) {
       // now delete them
-    sqsDeleteMessageList(sqsClient, SQS1, messageList); // todo: wants a client, so what am I going to do?
+      sqsDeleteMessageList(sqsClient, SQS1,
+          messageList); // todo: wants a client, so what am I going to do?
     }
     // check the SQS is empty
     await()

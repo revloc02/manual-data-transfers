@@ -318,8 +318,6 @@ public class SqsOperations {
     return queueUrl;
   }
 
-  // todo: this does not have a dedicated unit test
-
   /**
    * Deletes a list of messages from the given SQS.
    *
