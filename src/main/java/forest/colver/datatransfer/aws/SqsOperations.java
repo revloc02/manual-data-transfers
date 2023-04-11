@@ -214,7 +214,8 @@ public class SqsOperations {
   }
 
   /**
-   * Clears an SQS, by consuming the messages.
+   * Clears an SQS, by consuming the messages. This exists because an SQS purge can only happen once
+   * every 60 sec, and this provides a way to do it more often than that.
    */
   public static void sqsClear(AwsCredentialsProvider awsCP, String queueName) {
     var depth = sqsDepth(awsCP, queueName);
