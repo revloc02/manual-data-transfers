@@ -381,7 +381,7 @@ public class SqsOperations {
    * Copy a message from one SQS queue to another.
    */
   public static void sqsCopy(AwsCredentialsProvider awsCP, String fromSqs, String toSqs) {
-    var response = sqsReadOneMessageOld(awsCP, fromSqs);
+    var response = sqsReadMessages(awsCP, fromSqs);
     for (Message message : response.messages()) {
       sqsSend(awsCP, toSqs, message.body());
     }
