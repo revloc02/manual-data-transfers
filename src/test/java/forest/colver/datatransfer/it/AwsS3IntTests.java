@@ -358,10 +358,10 @@ public class AwsS3IntTests {
       assertThat(objects.get(0).key()).isEqualTo(objectKey);
 
       // use the s3Get method and check that it works
-      var response = s3Get(s3Client, S3_INTERNAL, objectKey);
-      String payload = new String(response.readAllBytes());
-      assertThat(payload).isEqualTo(getDefaultPayload());
-      response.close();
+      try (var response = s3Get(s3Client, S3_INTERNAL, objectKey)){
+        String payload = new String(response.readAllBytes());
+        assertThat(payload).isEqualTo(getDefaultPayload());
+      }
 
       // delete the file
       s3Delete(s3Client, S3_INTERNAL, objectKey);
