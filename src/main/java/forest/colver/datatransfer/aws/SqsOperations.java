@@ -121,7 +121,11 @@ public class SqsOperations {
   }
 
   /**
-   * Reads one message from the SQS, and then displays the data and properties of it.
+   * Reads one message from the SQS, and then displays the data and properties of it. My current
+   * opinion is that this method should not be generally used, rather the
+   * {@link #sqsReadMessages(AwsCredentialsProvider, String)} which returns the Response object
+   * should be used. This method has been used in a lot of unit tests, but that does not mean it is
+   * better.
    */
   public static Message sqsReadOneMessage( //todo: this got refactored, rerun all tests
       AwsCredentialsProvider awsCP, String queueName) {
@@ -144,16 +148,14 @@ public class SqsOperations {
       } else { // todo: a unit test should test this case
         LOG.info("SQS_READ_ONE_MESSAGE: {} has NO messages.", queueName);
 //        throw new RuntimeException("SQS_READ_ONE_MESSAGE: " + queueName + " has NO messages.");
-        return null; // todo: should this return null? should it? really?
+        return null; // I'm still not sure this choice was best
       }
     }
   }
 
-  // todo: my premise is wrong. getting a list of more than one messages is not guaranteed, so testing that is moot. Keeping the method might still be okay, but testing that it returns a list of messages plural, won't work.
-
   /**
-   * Reads one or more message from the SQS, note that the visibilityTimeout is zero, and then
-   * displays how many were read.
+   * Reads one or more message from the SQS. Note that the visibilityTimeout is zero so reading the
+   * message doesn't tie it up in any way. This also displays how many messages were read.
    */
   public static ReceiveMessageResponse sqsReadMessages(
       AwsCredentialsProvider awsCP, String queueName) {
@@ -312,10 +314,8 @@ public class SqsOperations {
    * Goes and gets the queueUrl so that queue can be accessed for operations.
    */
   private static String qUrl(SqsClient sqsClient, String queueName) {
-    String queueUrl =
-        sqsClient.getQueueUrl(GetQueueUrlRequest.builder().queueName(queueName).build()).queueUrl();
-//    LOG.info("Queue URL={}", queueUrl);
-    return queueUrl;
+    return sqsClient.getQueueUrl(GetQueueUrlRequest.builder().queueName(queueName).build())
+        .queueUrl();
   }
 
   /**
