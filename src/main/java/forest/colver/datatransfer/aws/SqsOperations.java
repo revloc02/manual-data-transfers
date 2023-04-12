@@ -716,4 +716,5 @@ public class SqsOperations {
     }
     return counter;
   }
+  // todo: learn, write, and test code that exercises virtual queues. https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-temporary-queues.html
 }
