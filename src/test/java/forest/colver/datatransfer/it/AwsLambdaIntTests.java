@@ -4,6 +4,7 @@ import static forest.colver.datatransfer.aws.LambdaOps.lambdaInvoke;
 import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
 import static forest.colver.datatransfer.aws.S3Operations.s3Put;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessage;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
@@ -12,8 +13,10 @@ import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.config.Utils.pause;
 import static forest.colver.datatransfer.config.Utils.readFile;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,12 +42,19 @@ public class AwsLambdaIntTests {
     var contents = readFile("src/test/resources/1test.txt", StandardCharsets.UTF_8);
     s3Put(creds, S3_SOURCE_CACHE, objectKey, contents);
 
+    // wait for the message to get to the sqs
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isOne());
+
     // The initial placement triggered the bridge lambda, so verify that...
     var messageResp = sqsReadOneMessage(creds, SQS1);
+    assert messageResp != null;
     assertThat(messageResp.body()).contains(
         "\"key\": \"ext-aiko1/outbound/dev/flox/dd/1test.txt\"");
 
-    // ...and then clean it up.
+    // ...and then clean it up, so we can test invoking the Lambda directly using that object.
     sqsPurge(creds, SQS1);
 
     // Now invoke the BridgeLambda on the object...
@@ -53,7 +63,11 @@ public class AwsLambdaIntTests {
     var response = lambdaInvoke(creds, function, payload);
     assertThat(response.statusCode()).isEqualTo(200);
 
-    pause(1);
+    // ...wait for the message to get to the sqs...
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isOne());
 
     // ...and ensure the SQS got the new message.
     messageResp = sqsReadOneMessage(creds, SQS1);
