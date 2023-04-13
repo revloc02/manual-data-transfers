@@ -688,12 +688,6 @@ public class AwsSqsIntTests {
   @Test
   public void testReadOneMessageWhenNoneExists() {
     var creds = getEmxSbCreds();
-//    Throwable thrown = catchThrowable(() -> {
-//      var message = sqsReadOneMessage(creds, SQS1);
-//    });
-//    assertThat(thrown)
-//        .isInstanceOf(RuntimeException.class)
-//        .hasMessageContaining("has NO messages.");
     var message = sqsReadOneMessage(creds, SQS1);
     assertThat(message).isNull();
   }

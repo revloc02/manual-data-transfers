@@ -145,7 +145,7 @@ public class SqsOperations {
         LOG.info("SQS_READ_ONE_MESSAGE: {} has a message.", queueName);
         displayMessageAttributes(response);
         return response.messages().get(0);
-      } else { // todo: a unit test should test this case
+      } else {
         LOG.info("SQS_READ_ONE_MESSAGE: {} has NO messages.", queueName);
 //        throw new RuntimeException("SQS_READ_ONE_MESSAGE: " + queueName + " has NO messages.");
         return null; // I'm still not sure this choice was best
