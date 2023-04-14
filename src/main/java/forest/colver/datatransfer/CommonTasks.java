@@ -3,16 +3,39 @@ package forest.colver.datatransfer;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveMessagesWithPayloadLike;
 import static forest.colver.datatransfer.aws.Utils.getEmxNpCreds;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
+import static forest.colver.datatransfer.config.Utils.writeFile;
 import static forest.colver.datatransfer.messaging.Environment.PROD;
 import static forest.colver.datatransfer.messaging.JmsBrowse.browseAndCountSpecificMessages;
 import static forest.colver.datatransfer.messaging.JmsBrowse.browseForSpecificMessage;
 import static forest.colver.datatransfer.messaging.JmsConsume.deleteAllSpecificMessages;
+import static forest.colver.datatransfer.messaging.Utils.getJmsMsgPayload;
 
 /**
  * This defines methods that perform tasks I commonly use in my work or during watchman. They are
  * specific applications of the general messaging tools.
  */
 public class CommonTasks {
+
+  /**
+   * Retrieves a message from the Qpid Replay Caches and writes it as a file to the local Downloads directory.
+   */
+  public static void retrieveMessageFromQpidReplayCache() {
+    // possible selectors
+//    emxReplayEnvironmentName = prod
+//    datatype             = finance.payment.eft
+//    sourceSystem         = cubs
+//    emxReplayTimestamp   = 1681237803973
+//    traceparent          = 00-ab1cd1673eca0818d440923099cb9123-6a72088af80545d8-01
+//    name                 = gtmbancoindustrialACH20230411123003061.xml
+//    targetSystem         = ext-banco-industrial
+
+    // edit the selector
+    var message = browseForSpecificMessage(PROD, "emx-replay-cache", "name='gtmbancoindustrialACH20230411123003061.xml'");
+    // edit the file name you would like
+    var path = "/Users/revloc02/Downloads/gtmbancoindustrialACH20230411123003061.xml";
+    var payload = getJmsMsgPayload(message);
+    writeFile(path, payload.getBytes());
+  }
 
   /**
    * Clears Lifeflight health checks from the sftp-error queue. Occasionally a Lifeflight health
