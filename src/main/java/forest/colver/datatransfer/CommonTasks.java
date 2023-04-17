@@ -52,8 +52,8 @@ public class CommonTasks {
     // Sandbox. Obviously get sandbox creds before running this.
 //    sqsMoveMessagesWithPayloadLike(getEmxSbCreds(), "sftp-error", "lifeflightTestFile", "blake-emxonramp-test");
 
-    // todo: after I've verified that this does what I think it does and nothing more than that, I need to not move the messages, but rather delete them likely requiring a new method
-    // Stage. Obviously get sandbox creds before running this.
+    // todo: after I've verified that this does what I think it does and nothing more than that, I need to not move the messages, but rather delete them using sqsDeleteMessagesWithPayloadLike() when it is ready
+    // Stage. Obviously get stage creds before running this.
     sqsMoveMessagesWithPayloadLike(getEmxNpCreds(), "sftp-error", "lifeflightTestFile",
         "test-queue");
   }
