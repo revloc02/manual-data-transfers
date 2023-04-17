@@ -178,8 +178,6 @@ public class SqsOperations {
   }
 
   // todo: my premise is wrong. getting a list of more than one messages is not guaranteed, so testing that is moot
-  // todo: hmm, does this need a unit test?
-  // todo: And it could have a companion method that deletes a List<Message>
 
   /**
    * Gets a list of messages from a given SQS.
@@ -359,7 +357,7 @@ public class SqsOperations {
     }
   }
 
-  // todo: this needs a unit test
+  // todo: probably delete this because there is no guarantee that you will get a list of messages when retrieving from an SQS
   public static void sqsDeleteMessageList(
       SqsClient sqsClient, String queueName, List<Message> messages) {
     var count = 0;
