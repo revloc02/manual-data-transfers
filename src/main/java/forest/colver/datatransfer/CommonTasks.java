@@ -17,24 +17,30 @@ import static forest.colver.datatransfer.messaging.Utils.getJmsMsgPayload;
 public class CommonTasks {
 
   /**
-   * Retrieves a message from the Qpid Replay Caches and writes it as a file to the local Downloads directory.
+   * Retrieves a message from the Qpid Replay Caches and writes it as a file to the local Downloads
+   * directory.
+   *
+   * @param selector JMS selector for identifying a unique message. Example:
+   * "name='gtmbancoindustrialACH20230331123002258.xml'"
+   * @param fullyQualifiedPath The path to write the file. Example:
+   * "/Users/revloc02/Downloads/gtmbancoindustrialACH20230331123002258.xml"
    */
-  public static void retrieveMessageFromQpidReplayCache() {
-    // possible selectors
-//    emxReplayEnvironmentName = prod
-//    datatype             = finance.payment.eft
-//    sourceSystem         = cubs
-//    emxReplayTimestamp   = 1681237803973
-//    traceparent          = 00-ab1cd1673eca0818d440923099cb9123-6a72088af80545d8-01
-//    name                 = gtmbancoindustrialACH20230411123003061.xml
-//    targetSystem         = ext-banco-industrial
+  public static void retrieveMessageFromQpidReplayCache(String selector,
+      String fullyQualifiedPath) {
+    // possible selectors:
+    //    emxReplayEnvironmentName = prod
+    //    datatype             = finance.payment.eft
+    //    sourceSystem         = cubs
+    //    emxReplayTimestamp   = 1681237803973
+    //    traceparent          = 00-ab1cd1673eca0818d440923099cb9123-6a72088af80545d8-01
+    //    name                 = gtmbancoindustrialACH20230411123003061.xml
+    //    targetSystem         = ext-banco-industrial
 
     // edit the selector
-    var message = browseForSpecificMessage(PROD, "emx-replay-cache", "name='gtmbancoindustrialACH20230411123003061.xml'");
+    var message = browseForSpecificMessage(PROD, "emx-replay-cache", selector);
     // edit the file name you would like
-    var path = "/Users/revloc02/Downloads/gtmbancoindustrialACH20230411123003061.xml";
     var payload = getJmsMsgPayload(message);
-    writeFile(path, payload.getBytes());
+    writeFile(fullyQualifiedPath, payload.getBytes());
   }
 
   /**
