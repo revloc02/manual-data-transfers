@@ -65,7 +65,7 @@ public class AwsSqsIntTests {
     var messages1 = sqsReadMessages(creds, SQS1);
     assertThat(messages1.hasMessages()).isFalse();
     // assert SQS2 was cleared
-    var messages2 = sqsReadMessages(creds, SQS1);
+    var messages2 = sqsReadMessages(creds, SQS2);
     assertThat(messages2.hasMessages()).isFalse();
   }
 
