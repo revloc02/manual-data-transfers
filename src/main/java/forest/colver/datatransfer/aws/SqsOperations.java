@@ -95,31 +95,6 @@ public class SqsOperations {
     return msg;
   }
 
-  // todo: this should return one Message (not the response). See if all of the usages can handle that change.
-
-  /**
-   * Reads one message from the SQS, and then displays the data and properties of it.
-   */
-  public static ReceiveMessageResponse sqsReadOneMessageOld(
-      AwsCredentialsProvider awsCP, String queueName) {
-    try (var sqsClient = getSqsClient(awsCP)) {
-      var receiveMessageRequest =
-          ReceiveMessageRequest.builder()
-              .waitTimeSeconds(2)
-              .messageAttributeNames("All")
-              .attributeNames(QueueAttributeName.ALL)
-              .queueUrl(qUrl(sqsClient, queueName))
-              .maxNumberOfMessages(1)
-              .visibilityTimeout(3) // default 30 sec
-              .build();
-      var response = sqsClient.receiveMessage(receiveMessageRequest);
-      awsResponseValidation(response);
-      LOG.info("SQSREAD: {} has messages: {}", queueName, response.hasMessages());
-      displayMessageAttributes(response);
-      return response;
-    }
-  }
-
   /**
    * Reads one message from the SQS, and then displays the data and properties of it. My current
    * opinion is that this method should not be generally used, rather the
