@@ -5,7 +5,7 @@ import static forest.colver.datatransfer.aws.S3Operations.s3Get;
 import static forest.colver.datatransfer.aws.S3Operations.s3Head;
 import static forest.colver.datatransfer.aws.S3Operations.s3Put;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsConsumeOneMessage;
-import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessageOld;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.convertSqsMessageAttributesToStrings;
 import static forest.colver.datatransfer.aws.Utils.getS3Client;
@@ -39,8 +39,7 @@ public class SqsAndS3 {
    */
   public static void copyOneSqsToS3(
       AwsCredentialsProvider awsCreds, String sqs, String bucket, String objectKey) {
-    var response = sqsReadOneMessageOld(awsCreds, sqs);
-    var sqsMsg = response.messages().get(0);
+    var sqsMsg = sqsReadOneMessage(awsCreds, sqs);
     if (sqsMsg != null) {
       // send body and properties to s3
       s3Put(awsCreds, bucket, objectKey, sqsMsg.body(),
