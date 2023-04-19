@@ -86,7 +86,7 @@ public class SqsOperations {
    * @return A Message.
    */
   public static Message sqsConsumeOneMessage(AwsCredentialsProvider awsCP,
-      String queueName) { // todo: this got refactored, rerun all tests.
+      String queueName) {
     var msg = sqsReadOneMessage(awsCP, queueName);
     if (msg != null) {
       sqsDeleteMessage(awsCP, queueName, msg);
