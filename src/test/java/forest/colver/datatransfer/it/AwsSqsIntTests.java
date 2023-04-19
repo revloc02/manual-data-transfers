@@ -58,6 +58,11 @@ public class AwsSqsIntTests {
   @Test
   public void helperPurge() {
     var creds = getEmxSbCreds();
+
+    // log how many messages are on the SQS
+    sqsReadMessages(creds, SQS1);
+    sqsReadMessages(creds, SQS2);
+
     sqsPurge(creds, SQS1); // Note: AWS only allows 1 purge per minute for SQS queues
     sqsPurge(creds, SQS2); // Note: AWS only allows 1 purge per minute for SQS queues
 
