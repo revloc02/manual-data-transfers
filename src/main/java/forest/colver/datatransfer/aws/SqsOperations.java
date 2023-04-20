@@ -152,29 +152,6 @@ public class SqsOperations {
     }
   }
 
-  // todo: my premise is wrong. getting a list of more than one messages is not guaranteed, so testing that is moot
-
-  /**
-   * Gets a list of messages from a given SQS.
-   */
-  public static List<Message> sqsGetMessageList(SqsClient sqsClient, String queueUrl) {
-    ReceiveMessageRequest.Builder receiveMessageRequestBuilder =
-        ReceiveMessageRequest.builder()
-            .waitTimeSeconds(1)
-            .messageAttributeNames("All")
-            .attributeNames(QueueAttributeName.ALL)
-            .queueUrl(queueUrl)
-            .maxNumberOfMessages(10);
-    ReceiveMessageResponse receiveMessageResponse =
-        sqsClient.receiveMessage(receiveMessageRequestBuilder.build());
-    List<Message> messages = receiveMessageResponse.messages();
-    LOG.info("sqsGetMessageList() message list size={}", messages.size());
-    if (!messages.isEmpty()) {
-      LOG.info("Body[0]={}", messages.get(0).body());
-    }
-    return messages;
-  }
-
   /**
    * Clears an SQS, using Purge, which can only happen once every 60 sec on an SQS.
    */
