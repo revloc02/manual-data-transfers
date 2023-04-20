@@ -102,7 +102,7 @@ public class SqsOperations {
    * should be used. This method has been used in a lot of unit tests, but that does not mean it is
    * better.
    */
-  public static Message sqsReadOneMessage( //todo: this got refactored, rerun all tests
+  public static Message sqsReadOneMessage(
       AwsCredentialsProvider awsCP, String queueName) {
     try (var sqsClient = getSqsClient(awsCP)) {
       var receiveMessageRequest =
