@@ -309,24 +309,6 @@ public class SqsOperations {
     }
   }
 
-  // todo: probably delete this because there is no guarantee that you will get a list of messages when retrieving from an SQS
-  public static void sqsDeleteMessageList(
-      SqsClient sqsClient, String queueName, List<Message> messages) {
-    var count = 0;
-    for (Message message : messages) {
-      var deleteMessageRequest =
-          DeleteMessageRequest.builder()
-              .queueUrl(qUrl(sqsClient, queueName))
-              .receiptHandle(message.receiptHandle())
-              .build();
-      var deleteResponse = sqsClient.deleteMessage(deleteMessageRequest);
-      awsResponseValidation(deleteResponse);
-      LOG.info("DELETE: message {}.", message);
-      count++;
-    }
-    LOG.info("DELETED {} message(s).", count);
-  }
-
   /**
    * Copy a message from one SQS queue to another.
    */

@@ -5,7 +5,6 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsConsumeOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsCopy;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsCopyAll;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessage;
-import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessageList;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessages;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMove;
@@ -21,7 +20,6 @@ import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS2;
 import static forest.colver.datatransfer.aws.Utils.createSqsMessageAttributes;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
-import static forest.colver.datatransfer.aws.Utils.getSqsClient;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
 import static forest.colver.datatransfer.config.Utils.getUuid;
@@ -32,8 +30,6 @@ import static org.awaitility.Awaitility.await;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -568,57 +564,6 @@ public class AwsSqsIntTests {
       var response = sqsReadMessages(creds, SQS1);
       sqsDeleteMessages(creds, SQS1, response);
     } while (sqsDepth(creds, SQS1) > 0);
-    // check the SQS is empty
-    await()
-        .pollInterval(Duration.ofSeconds(3))
-        .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isZero());
-  }
-
-  @Test
-  public void testSqsDeleteMessageList() {
-    LOG.info("Interacting with: sqs={}", SQS1);
-    var creds = getEmxSbCreds();
-    var payload = getDefaultPayload();
-    List<Message> messageList = new ArrayList<>();
-    // send some messages
-    var numMsgs = 6;
-    for (var i = 0; i < numMsgs; i++) {
-      sqsSend(creds, SQS1, payload);
-    }
-    // check that they arrived
-    await()
-        .pollInterval(Duration.ofSeconds(3))
-        .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs));
-    // read each message setting an appropriate visibilityTimeout so we can get through the whole queue
-    // then wait for all of the visibilityTimeouts to lapse
-    // then delete the list
-
-    // below this is all old code, should be deleted
-    for (var i = 0; i < numMsgs; i++) {
-      // send a message
-      sqsSend(creds, SQS1, payload);
-      // check that it arrived
-      await()
-          .pollInterval(Duration.ofSeconds(3))
-          .atMost(Duration.ofSeconds(60))
-          .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isOne());
-      // now pick up that message
-      // todo: this might even be dumber than the last idea. If I consume the message, it's gone and there is no need to delete it. So my premise is still off, continue to fix it.
-      messageList.add(sqsConsumeOneMessage(creds, SQS1));
-      // check the SQS is empty
-      await()
-          .pollInterval(Duration.ofSeconds(3))
-          .atMost(Duration.ofSeconds(60))
-          .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isZero());
-    }
-    // todo: I'm done working on this for today, still revamping my paradigm (premise), commented out the problem here
-    try (var sqsClient = getSqsClient(creds)) {
-      // now delete them
-      sqsDeleteMessageList(sqsClient, SQS1,
-          messageList); // todo: wants a client, so what am I going to do?
-    }
     // check the SQS is empty
     await()
         .pollInterval(Duration.ofSeconds(3))
