@@ -6,6 +6,7 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsCopy;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsCopyAll;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessages;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessagesWithPayloadLike;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMove;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveAll;
@@ -459,6 +460,44 @@ public class AwsSqsIntTests {
     // cleanup
     sqsPurge(creds, SQS2);
     sqsPurge(creds, SQS1);
+  }
+
+  @Test
+  public void testSqsDeleteMessagesWithPayloadLike() {
+    LOG.info("Interacting with: sqs={}; sqs={}", SQS1, SQS2);
+    var creds = getEmxSbCreds();
+    // send some messages with default payload
+    var payload = getDefaultPayload();
+    var numMsgs1 = 8;
+    for (var i = 0; i < numMsgs1; i++) {
+      sqsSend(creds, SQS1, payload + i);
+    }
+    // send some more messages with a specific payload
+    var specificPayload = "This is a specific payload.";
+    var numMsgs2 = 5;
+    for (var i = 0; i < numMsgs2; i++) {
+      sqsSend(creds, SQS1, specificPayload);
+    }
+
+    // verify messages are on the sqs
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs1+numMsgs2));
+
+    // delete the messages with the specific payload
+    assertThat(
+        sqsDeleteMessagesWithPayloadLike(creds, SQS1, "specific payload")).isEqualTo(numMsgs2);
+
+    // assert first sqs has correct number of messages left on it
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMsgs1));
+
+    // cleanup
+    sqsClear(creds, SQS2);
+    sqsClear(creds, SQS1);
   }
 
   /**

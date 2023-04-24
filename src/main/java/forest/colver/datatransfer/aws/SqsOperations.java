@@ -596,10 +596,9 @@ public class SqsOperations {
     sqsClient.deleteMessage(deleteMessageRequest);
   }
 
-  // todo: this needs a unit test
   public static int sqsDeleteMessagesWithPayloadLike(AwsCredentialsProvider awsCP, String sqs,
       String payloadLike) {
-    // check queue depth, if it is too deep just stop
+    // check queue depth, if it is too deep just stop (see sqsCalcVisTimeout() JavaDoc)
     var depth = sqsDepth(awsCP, sqs);
     var maxDepth = 500; // This could probably go as high as 40k
     var counter = 0;
@@ -609,7 +608,6 @@ public class SqsOperations {
       var moreMessages = true;
       try (var sqsClient = getSqsClient(awsCP)) {
         do {
-          // receive 10 messages
           var receiveMessageRequest =
               ReceiveMessageRequest.builder()
                   .waitTimeSeconds(2)
@@ -624,8 +622,7 @@ public class SqsOperations {
             for (var message : response.messages()) {
               // check each one for selector stuff
               if (message.body().contains(payloadLike)) {
-                sqsDeleteMessages(awsCP, sqs, response
-                ); // todo: hmm, not sure this is going to work, response has up to 10 messages and potentially only 1 of them needs to be deleted
+                sqsDeleteMessage(awsCP, sqs, message);
                 counter++;
                 LOG.info("Deleted message #{}", counter);
               } else {
