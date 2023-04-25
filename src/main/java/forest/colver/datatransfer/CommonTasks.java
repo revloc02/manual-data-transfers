@@ -1,6 +1,6 @@
 package forest.colver.datatransfer;
 
-import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveMessagesWithPayloadLike;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessagesWithPayloadLike;
 import static forest.colver.datatransfer.aws.Utils.getEmxNpCreds;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.config.Utils.writeFile;
@@ -49,13 +49,11 @@ public class CommonTasks {
    * are typically anomalies and not valuable since the health check clears the next run.
    */
   public static void cleanupSftpErrorSqsStage() {
-    // Sandbox. Obviously get sandbox creds before running this.
-//    sqsMoveMessagesWithPayloadLike(getEmxSbCreds(), "sftp-error", "lifeflightTestFile", "blake-emxonramp-test");
+    // Sandbox. Obviously refresh sandbox ~/.aws/credentials before running this.
+    sqsDeleteMessagesWithPayloadLike(getEmxSbCreds(), "sftp-error", "lifeflightTestFile");
 
-    // todo: after I've verified that this does what I think it does and nothing more than that, I need to not move the messages, but rather delete them using sqsDeleteMessagesWithPayloadLike() when it is ready
-    // Stage. Obviously get stage creds before running this.
-    sqsMoveMessagesWithPayloadLike(getEmxNpCreds(), "sftp-error", "lifeflightTestFile",
-        "test-queue");
+    // Stage. Obviously refresh stage ~/.aws/credentials before running this.
+    sqsDeleteMessagesWithPayloadLike(getEmxNpCreds(), "sftp-error", "lifeflightTestFile");
   }
 
   /**
