@@ -483,7 +483,8 @@ public class AwsSqsIntTests {
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs1+numMsgs2));
+        .untilAsserted(
+            () -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs1 + numMsgs2));
 
     // delete the messages with the specific payload
     assertThat(
