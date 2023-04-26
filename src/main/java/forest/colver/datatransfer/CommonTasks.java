@@ -1,20 +1,30 @@
 package forest.colver.datatransfer;
 
+import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
+import static forest.colver.datatransfer.aws.S3Operations.s3ListWithResponse;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessagesWithPayloadLike;
 import static forest.colver.datatransfer.aws.Utils.getEmxNpCreds;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
+import static forest.colver.datatransfer.aws.Utils.getS3Client;
 import static forest.colver.datatransfer.config.Utils.writeFile;
 import static forest.colver.datatransfer.messaging.Environment.PROD;
 import static forest.colver.datatransfer.messaging.JmsBrowse.browseAndCountSpecificMessages;
 import static forest.colver.datatransfer.messaging.JmsBrowse.browseForSpecificMessage;
-import static forest.colver.datatransfer.messaging.JmsConsume.deleteAllSpecificMessages;
 import static forest.colver.datatransfer.messaging.Utils.getJmsMsgPayload;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.services.s3.model.GetObjectTaggingRequest;
 
 /**
  * This defines methods that perform tasks I commonly use in my work or during watchman. They are
  * specific applications of the general messaging tools.
  */
 public class CommonTasks {
+
+  private static final Logger LOG = LoggerFactory.getLogger(CommonTasks.class);
 
   /**
    * Retrieves a message from the Qpid Replay Caches and writes it as a file to the local Downloads
@@ -78,5 +88,43 @@ public class CommonTasks {
 
     // 3. If those results look good, actually delete the messages (uncomment and run, then re-comment the code)
 //    deleteAllSpecificMessages(PROD, "ops", "emxTraceSourceTimestamp<=" + timestamp);
+  }
+
+  /**
+   * Delete up to 1000 objects more than 2 weeks old from a s3 directory.
+   *
+   * @param bucket The S3 bucket to work on.
+   * @param objectKey The directory on the S3 to work on. E.g. "emx-health-check1/inbound"
+   */
+  public static void cleanS3Directory(String bucket, String objectKey) {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      var twoWeeksAgo = Instant.now().minus(14, ChronoUnit.DAYS);
+      var deleted = 0;
+      var skipped = 0;
+      var objects = s3ListWithResponse(s3Client, bucket, objectKey, 2000);
+      if (objects.hasContents()) {
+        for (var object : objects.contents()) {
+          if (object.size() > 0) {
+            if (object.lastModified().isBefore(twoWeeksAgo)) {
+              LOG.info("key={}; lastModified={}", object.key(), object.lastModified());
+              s3Delete(s3Client, bucket, object.key());
+              deleted++;
+            } else {
+              skipped++;
+              LOG.info("TOO RECENT: {}", object.key());
+              var getTags = GetObjectTaggingRequest.builder().bucket(bucket).key(object.key())
+                  .build();
+              var result = s3Client.getObjectTagging(getTags);
+              if (result.hasTagSet()) {
+                LOG.info("     tags: {}={}", result.tagSet().get(0).key(),
+                    result.tagSet().get(0).value());
+              }
+            }
+          }
+        }
+      }
+      LOG.info("deleted={}; skipped={}", deleted, skipped);
+    }
   }
 }
