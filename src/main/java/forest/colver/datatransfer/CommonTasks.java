@@ -69,7 +69,7 @@ public class CommonTasks {
   public static void cleanupOpsQueue() {
     var timestamp = "1638297326591"; // messages older than ~ 30Nov2021
 
-    // 1. find a timestamp to use in the "timestamp" var above, get this from the list of messages in the queue. Use whatever selector is helpful to do this.
+    // 1. You need to find a timestamp to use in the "timestamp" var above, get this from the list of messages in the queue. Use whatever selector is helpful to do this.
     browseForSpecificMessage(PROD, "ops",
         "emxTraceOnrampMessageName='CFISLDS-GTM-INDUS-05-ACH-20210817111659.xml'");
 
