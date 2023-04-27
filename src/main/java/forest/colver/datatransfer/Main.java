@@ -1,12 +1,7 @@
 package forest.colver.datatransfer;
 
-import static forest.colver.datatransfer.CommonTasks.cleanupSftpErrorSqsStage;
-import static forest.colver.datatransfer.aws.SqsOperations.*;
+import static forest.colver.datatransfer.CommonTasks.cleanS3Directory;
 import static forest.colver.datatransfer.aws.Utils.*;
-import static forest.colver.datatransfer.messaging.Environment.*;
-import static forest.colver.datatransfer.messaging.JmsConsume.*;
-import static forest.colver.datatransfer.messaging.JmsBrowse.*;
-import static forest.colver.datatransfer.messaging.JmsSend.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,13 +14,15 @@ public class Main {
   public static void main(String[] args) {
     LOG.info("main start");
 
-    cleanupSftpErrorSqsStage();
+    cleanS3Directory(S3_TARGET_CUSTOMER, "emx-health-check1/inbound");
 
-//    browseForSpecificMessage(PROD, "emx-replay-cache", "emxReplayPriorTrackingNumber='89cb031a-f47e-4fb0-8666-b586760fd5cd'");
+//    cleanupSftpErrorSqsStage();
 
 //    moveAllSpecificMessages(PROD, "emx-error", "emxSystem='si-services' AND emxSystemEnvironment='prod'", "emx-to-si-services-prod");
 //    moveAllSpecificMessages(STAGE, "emx-error", "emxSystem='si-services' AND emxSystemEnvironment='test'", "emx-to-si-services-test");
 //    moveAllSpecificMessages(STAGE, "emx-error", "emxSystem='si-services' AND emxSystemEnvironment='stage'", "emx-to-si-services-stage");
+
+//    retrieveMessageFromQpidReplayCache("name='gtmbancoindustrialACH20230411123003061.xml'", "/Users/revloc02/Downloads/gtmbancoindustrialACH20230411123003061.xml");
 
 //    moveAllSpecificMessages(PROD, "emx-error",
 //        "emxSystem='identity-vault' AND emxErrorMessage LIKE '%HttpTimeoutException: request timed out%'",
