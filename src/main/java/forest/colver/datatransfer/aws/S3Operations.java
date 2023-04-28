@@ -209,7 +209,7 @@ public class S3Operations {
    * @param keyPrefix The "folder" on the S3 to list.
    */
   public static List<S3Object> s3List(S3Client s3Client, String bucket, String keyPrefix) {
-    // todo: this got refactor rerun all unit tests
+    // todo: this got refactored rerun all unit tests
     // returns a list of only 10 items or fewer. If you need more, use the other method.
     return s3List(s3Client, bucket, keyPrefix, 10);
   }
@@ -232,14 +232,28 @@ public class S3Operations {
     return objects;
   }
 
-  // todo: probably refactor all the other s3Lists to use this one with the Response since it is better.
+  // todo: this needs a unit test
+  /**
+   * S3List with AwsCreds, creates S3Client. List up to 10 of the objects at a certain directory
+   * (keyPrefix).
+   *
+   * @param keyPrefix The "folder" on the S3 to list. E.g. "revloc02/source/test/test.txt"
+   */
+  public static ListObjectsResponse s3ListResponse(AwsCredentialsProvider awsCp, String bucket,
+      String keyPrefix) {
+    try (var s3Client = getS3Client(awsCp)) {
+      return s3ListResponse(s3Client, bucket, keyPrefix, 10);
+    }
+  }
+
+  // todo: this needs a unit test
   /**
    * S3List with S3Client. List objects at a certain directory (keyPrefix).
    *
    * @param keyPrefix The "folder" on the S3 to list.
    * @param maxKeys Sets the maximum number of keys returned in the response.
    */
-  public static ListObjectsResponse s3ListWithResponse(S3Client s3Client, String bucket, String keyPrefix, int maxKeys) {
+  public static ListObjectsResponse s3ListResponse(S3Client s3Client, String bucket, String keyPrefix, int maxKeys) {
     var listObjectsRequest =
         ListObjectsRequest.builder().bucket(bucket).prefix(keyPrefix).maxKeys(maxKeys).build();
     var listObjectsResponse = s3Client.listObjects(listObjectsRequest);

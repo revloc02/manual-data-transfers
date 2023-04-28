@@ -1,7 +1,7 @@
 package forest.colver.datatransfer;
 
 import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
-import static forest.colver.datatransfer.aws.S3Operations.s3ListWithResponse;
+import static forest.colver.datatransfer.aws.S3Operations.s3List;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessagesWithPayloadLike;
 import static forest.colver.datatransfer.aws.Utils.getEmxNpCreds;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
@@ -102,24 +102,22 @@ public class CommonTasks {
       var twoWeeksAgo = Instant.now().minus(14, ChronoUnit.DAYS);
       var deleted = 0;
       var skipped = 0;
-      var objects = s3ListWithResponse(s3Client, bucket, objectKey, 2000);
-      if (objects.hasContents()) {
-        for (var object : objects.contents()) {
-          if (object.size() > 0) {
-            if (object.lastModified().isBefore(twoWeeksAgo)) {
-              LOG.info("key={}; lastModified={}", object.key(), object.lastModified());
-              s3Delete(s3Client, bucket, object.key());
-              deleted++;
-            } else {
-              skipped++;
-              LOG.info("TOO RECENT: {}", object.key());
-              var getTags = GetObjectTaggingRequest.builder().bucket(bucket).key(object.key())
-                  .build();
-              var result = s3Client.getObjectTagging(getTags);
-              if (result.hasTagSet()) {
-                LOG.info("     tags: {}={}", result.tagSet().get(0).key(),
-                    result.tagSet().get(0).value());
-              }
+      var objects = s3List(s3Client, bucket, objectKey, 1000);
+      for (var object : objects) {
+        if (object.size() > 0) {
+          if (object.lastModified().isBefore(twoWeeksAgo)) {
+            LOG.info("key={}; lastModified={}", object.key(), object.lastModified());
+            s3Delete(s3Client, bucket, object.key());
+            deleted++;
+          } else {
+            skipped++;
+            LOG.info("TOO RECENT: {}", object.key());
+            var getTags = GetObjectTaggingRequest.builder().bucket(bucket).key(object.key())
+                .build();
+            var result = s3Client.getObjectTagging(getTags);
+            if (result.hasTagSet()) {
+              LOG.info("     tags: {}={}", result.tagSet().get(0).key(),
+                  result.tagSet().get(0).value());
             }
           }
         }
