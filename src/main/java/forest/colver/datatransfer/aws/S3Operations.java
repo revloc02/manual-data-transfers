@@ -209,7 +209,6 @@ public class S3Operations {
    * @param keyPrefix The "folder" on the S3 to list.
    */
   public static List<S3Object> s3List(S3Client s3Client, String bucket, String keyPrefix) {
-    // todo: this got refactored rerun all unit tests
     // returns a list of only 10 items or fewer. If you need more, use the other method.
     return s3List(s3Client, bucket, keyPrefix, 10);
   }
