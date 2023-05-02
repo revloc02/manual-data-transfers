@@ -5,6 +5,7 @@ import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
 import static forest.colver.datatransfer.aws.S3Operations.s3Get;
 import static forest.colver.datatransfer.aws.S3Operations.s3Head;
 import static forest.colver.datatransfer.aws.S3Operations.s3List;
+import static forest.colver.datatransfer.aws.S3Operations.s3ListResponse;
 import static forest.colver.datatransfer.aws.S3Operations.s3Put;
 import static forest.colver.datatransfer.aws.Utils.S3_INTERNAL;
 import static forest.colver.datatransfer.aws.Utils.S3_TARGET_CUSTOMER;
@@ -238,6 +239,17 @@ public class AwsS3IntTests {
     var objects = s3List(creds, S3_INTERNAL, "revloc02/target/test");
     assertThat(objects.get(1).key()).isEqualTo(objectKey);
     assertThat(objects.get(1).size()).isEqualTo(40L);
+    s3Delete(creds, S3_INTERNAL, objectKey);
+  }
+
+  @Test
+  public void testS3ListResponse() {
+    var creds = getEmxSbCreds();
+    var objectKey = "revloc02/target/test/mdtTest1.txt";
+    s3Put(creds, S3_INTERNAL, objectKey, getDefaultPayload());
+    var response = s3ListResponse(creds, S3_INTERNAL, "revloc02/target/test");
+    assertThat(response.contents().get(1).key()).isEqualTo(objectKey);
+    assertThat(response.contents().get(1).size()).isEqualTo(40L);
     s3Delete(creds, S3_INTERNAL, objectKey);
   }
 

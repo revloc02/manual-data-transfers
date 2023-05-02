@@ -203,6 +203,7 @@ public class S3Operations {
     }
   }
 
+  // todo: I think this needs a unit test
   /**
    * S3List with S3Client. Lists up to 10 of the objects at a certain directory (keyPrefix).
    *
@@ -231,7 +232,6 @@ public class S3Operations {
     return objects;
   }
 
-  // todo: this needs a unit test
   /**
    * S3List with AwsCreds, creates S3Client. List up to 10 of the objects at a certain directory
    * (keyPrefix).
