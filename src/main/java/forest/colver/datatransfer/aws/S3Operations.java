@@ -203,7 +203,6 @@ public class S3Operations {
     }
   }
 
-  // todo: I think this needs a unit test
   /**
    * S3List with S3Client. Lists up to 10 of the objects at a certain directory (keyPrefix).
    *
@@ -214,6 +213,7 @@ public class S3Operations {
     return s3List(s3Client, bucket, keyPrefix, 10);
   }
 
+  // todo: I think this needs a unit test
   /**
    * S3List with S3Client. List objects at a certain directory (keyPrefix).
    *
@@ -245,7 +245,6 @@ public class S3Operations {
     }
   }
 
-  // todo: this needs a unit test
   /**
    * S3List with S3Client. List objects at a certain directory (keyPrefix).
    *

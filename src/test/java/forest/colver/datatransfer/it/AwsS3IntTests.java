@@ -231,6 +231,9 @@ public class AwsS3IntTests {
     assertThat(objects.size()).isZero();
   }
 
+  /**
+   * Tests s3List that requires creds and returns a List of objects.
+   */
   @Test
   public void testS3List() {
     var creds = getEmxSbCreds();
@@ -242,6 +245,9 @@ public class AwsS3IntTests {
     s3Delete(creds, S3_INTERNAL, objectKey);
   }
 
+  /**
+   * Tests the s3List that requires creds and returns a ListObjectResponse.
+   */
   @Test
   public void testS3ListResponse() {
     var creds = getEmxSbCreds();
@@ -251,6 +257,22 @@ public class AwsS3IntTests {
     assertThat(response.contents().get(1).key()).isEqualTo(objectKey);
     assertThat(response.contents().get(1).size()).isEqualTo(40L);
     s3Delete(creds, S3_INTERNAL, objectKey);
+  }
+
+  /**
+   * Tests the s3List that requires S3 Client and maxKeys, and returns a ListObjectsResponse.
+   */
+  @Test
+  public void testS3ListResponseWithMaxKeys() {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      var objectKey = "revloc02/target/test/mdtTest1.txt";
+      s3Put(creds, S3_INTERNAL, objectKey, getDefaultPayload());
+      var response = s3ListResponse(s3Client, S3_INTERNAL, "revloc02/target/test", 50);
+      assertThat(response.contents().get(1).key()).isEqualTo(objectKey);
+      assertThat(response.contents().get(1).size()).isEqualTo(40L);
+      s3Delete(creds, S3_INTERNAL, objectKey);
+    }
   }
 
   // Pass a PutObjectRequest to the S3 operation
@@ -370,7 +392,7 @@ public class AwsS3IntTests {
       assertThat(objects.get(0).key()).isEqualTo(objectKey);
 
       // use the s3Get method and check that it works
-      try (var response = s3Get(s3Client, S3_INTERNAL, objectKey)){
+      try (var response = s3Get(s3Client, S3_INTERNAL, objectKey)) {
         String payload = new String(response.readAllBytes());
         assertThat(payload).isEqualTo(getDefaultPayload());
       }
