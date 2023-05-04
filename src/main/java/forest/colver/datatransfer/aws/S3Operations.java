@@ -213,7 +213,6 @@ public class S3Operations {
     return s3List(s3Client, bucket, keyPrefix, 10);
   }
 
-  // todo: I think this needs a unit test
   /**
    * S3List with S3Client. List objects at a certain directory (keyPrefix).
    *

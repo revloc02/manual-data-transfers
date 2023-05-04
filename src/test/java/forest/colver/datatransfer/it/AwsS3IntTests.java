@@ -246,7 +246,23 @@ public class AwsS3IntTests {
   }
 
   /**
-   * Tests the s3List that requires creds and returns a ListObjectResponse.
+   * Tests s3List that requires S3 Client and maxKeys, and returns a List of objects.
+   */
+  @Test
+  public void testS3ListWithMaxkeys() {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      var objectKey = "revloc02/target/test/mdtTest1.txt";
+      s3Put(creds, S3_INTERNAL, objectKey, getDefaultPayload());
+      var objects = s3List(s3Client, S3_INTERNAL, "revloc02/target/test", 10);
+      assertThat(objects.get(1).key()).isEqualTo(objectKey);
+      assertThat(objects.get(1).size()).isEqualTo(40L);
+      s3Delete(creds, S3_INTERNAL, objectKey);
+    }
+  }
+
+  /**
+   * Tests s3List that requires creds and returns a ListObjectResponse.
    */
   @Test
   public void testS3ListResponse() {
@@ -260,7 +276,7 @@ public class AwsS3IntTests {
   }
 
   /**
-   * Tests the s3List that requires S3 Client and maxKeys, and returns a ListObjectsResponse.
+   * Tests s3List that requires S3 Client and maxKeys, and returns a ListObjectsResponse.
    */
   @Test
   public void testS3ListResponseWithMaxKeys() {
