@@ -19,6 +19,7 @@ import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsResponse;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
@@ -221,8 +222,8 @@ public class S3Operations {
    */
   public static List<S3Object> s3List(S3Client s3Client, String bucket, String keyPrefix, int maxKeys) {
     var listObjectsRequest =
-        ListObjectsRequest.builder().bucket(bucket).prefix(keyPrefix).maxKeys(maxKeys).build();
-    var listObjectsResponse = s3Client.listObjects(listObjectsRequest);
+        ListObjectsV2Request.builder().bucket(bucket).prefix(keyPrefix).maxKeys(maxKeys).build();
+    var listObjectsResponse = s3Client.listObjectsV2(listObjectsRequest);
     awsResponseValidation(listObjectsResponse);
     var objects = listObjectsResponse.contents();
     for (var object : objects) {
