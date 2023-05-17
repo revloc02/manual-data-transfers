@@ -1,8 +1,10 @@
 package forest.colver.datatransfer;
 
 import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
+import static forest.colver.datatransfer.aws.S3Operations.s3Get;
 import static forest.colver.datatransfer.aws.S3Operations.s3List;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessagesWithPayloadLike;
+import static forest.colver.datatransfer.aws.Utils.awsResponseValidation;
 import static forest.colver.datatransfer.aws.Utils.getEmxNpCreds;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.aws.Utils.getS3Client;
@@ -12,11 +14,16 @@ import static forest.colver.datatransfer.messaging.JmsBrowse.browseAndCountSpeci
 import static forest.colver.datatransfer.messaging.JmsBrowse.browseForSpecificMessage;
 import static forest.colver.datatransfer.messaging.Utils.getJmsMsgPayload;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.s3.model.GetObjectTaggingRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 
 /**
  * This defines methods that perform tasks I commonly use in my work or during watchman. They are
@@ -123,6 +130,65 @@ public class CommonTasks {
         }
       }
       LOG.info("deleted={}; skipped={}", deleted, skipped);
+    }
+  }
+
+  public static void examineS3Objects(String bucket, String keyPrefix) {
+    var creds = getEmxSbCreds();
+    var maxKeys = 1000;
+    var oneYearAgo = Instant.now().minus(365, ChronoUnit.DAYS);
+
+    try (var s3Client = getS3Client(creds)) {
+      // get the first set so that we have a continuationToken
+      var listObjectsRequest =
+          ListObjectsV2Request.builder().bucket(bucket).prefix(keyPrefix).maxKeys(maxKeys).build();
+      var listObjectsResponse = s3Client.listObjectsV2(listObjectsRequest);
+      awsResponseValidation(listObjectsResponse);
+      var count = 0;
+      var lifeflight = 0;
+      var divvy = 0;
+      var trusted = 0;
+      var deleted = 0;
+      while (listObjectsResponse.isTruncated()) {
+        count = count + listObjectsResponse.contents().size();
+        for (var object : listObjectsResponse.contents()) {
+
+//          var response = s3Get(s3Client, bucket, object.key());
+//          var contents = new String(response.readAllBytes(),
+//              StandardCharsets.UTF_8);
+//          if (contents.contains("emx-health-check")) {
+//            // delete lifeflight logs to make it easier to peruse other logs
+//            lifeflight++;
+//            s3Delete(s3Client, bucket, object.key());
+//          }
+//          if (contents.contains("DivvyCloud")) {
+//            // delete lifeflight logs to make it easier to peruse other logs
+//            divvy++;
+//            s3Delete(s3Client, bucket, object.key());
+//          }
+//          if (contents.contains("TrustedAdvisor")) {
+//            // delete lifeflight logs to make it easier to peruse other logs
+//            trusted++;
+//            s3Delete(s3Client, bucket, object.key());
+//          }
+
+          if (object.lastModified().isBefore(oneYearAgo)) {
+            deleted++;
+            s3Delete(s3Client, bucket, object.key());
+          }
+        }
+        var now = DateTimeFormatter.ofPattern("HH:mm:ss").withZone(ZoneId.systemDefault())
+            .format(Instant.now());
+        LOG.info("Timestamp={} count={} deleted={} key={}", now, count,
+            deleted, listObjectsResponse.contents().get(0).key());
+        // get the next set
+        listObjectsRequest =
+            ListObjectsV2Request.builder().bucket(bucket).prefix(keyPrefix)
+                .continuationToken(listObjectsResponse.nextContinuationToken()).maxKeys(maxKeys)
+                .build();
+        listObjectsResponse = s3Client.listObjectsV2(listObjectsRequest);
+        awsResponseValidation(listObjectsResponse);
+      }
     }
   }
 }

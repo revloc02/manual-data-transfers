@@ -1,7 +1,7 @@
 package forest.colver.datatransfer;
 
 import static forest.colver.datatransfer.CommonTasks.cleanS3Directory;
-import static forest.colver.datatransfer.aws.Utils.*;
+import static forest.colver.datatransfer.CommonTasks.examineS3Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +14,11 @@ public class Main {
   public static void main(String[] args) {
     LOG.info("main start");
 
-    cleanS3Directory(S3_TARGET_CUSTOMER, "emx-health-check1/inbound");
+    var bucket = "cp-aws-gayedtiak3nflbiftucz-s3-logging";
+    var keyPrefix = "emx-sandbox-sftp/";
+    examineS3Objects(bucket, keyPrefix);
+
+
 
 //    cleanupSftpErrorSqsStage();
 
