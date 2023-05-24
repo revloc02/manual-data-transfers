@@ -17,6 +17,7 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadMessages;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
+import static forest.colver.datatransfer.aws.SqsOperations.testVirtualQueues;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS2;
 import static forest.colver.datatransfer.aws.Utils.createSqsMessageAttributes;
@@ -646,5 +647,19 @@ public class AwsSqsIntTests {
     var creds = getEmxSbCreds();
     var message = sqsConsumeOneMessage(creds, SQS1);
     assertThat(message).isNull();
+  }
+
+  @Test
+  public void testVirtualSqs() {
+    LOG.info("Interacting with: sqs={}", SQS1);
+    var payload = "Message Payload.";
+    var message = Message.builder()
+        .body(payload)
+        .messageId(getUuid())
+        .build();
+    // send a message
+    var creds = getEmxSbCreds();
+    // todo: this doesn't work, but I got tired of looking at it
+    testVirtualQueues(creds, SQS1, message);
   }
 }

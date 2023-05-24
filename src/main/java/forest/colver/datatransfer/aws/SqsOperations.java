@@ -5,8 +5,11 @@ import static forest.colver.datatransfer.aws.Utils.createSqsMessageAttributes;
 import static forest.colver.datatransfer.aws.Utils.getSqsClient;
 import static forest.colver.datatransfer.aws.Utils.sqsCalcVisTimeout;
 
+import com.amazonaws.services.sqs.AmazonSQSRequesterClientBuilder;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
@@ -645,5 +648,32 @@ public class SqsOperations {
     }
     return counter;
   }
+
   // todo: learn, write, and test code that exercises virtual queues. https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-temporary-queues.html
+  public static void testVirtualQueues(AwsCredentialsProvider awsCp, String queueName,
+      Message message) {
+//    https://aws.amazon.com/about-aws/whats-new/2019/07/temporary-queue-client-now-available-for-amazon-sqs/
+//    https://aws.amazon.com/blogs/compute/simple-two-way-messaging-using-the-amazon-sqs-temporary-queue-client/
+    try (var sqsClient = getSqsClient(awsCp)) {
+      var queueUrl = qUrl(sqsClient, queueName);
+      var virtualQueueUrl = queueUrl + "#virtual-queue";
+      LOG.info("virtualQueueUrl={}", virtualQueueUrl);
+      var sendMessageRequest =
+          SendMessageRequest.builder()
+              .messageBody(message.body())
+              .queueUrl(virtualQueueUrl)
+              .build();
+//      var sqsRequester = AmazonSQSRequesterClientBuilder.defaultClient();
+      var sqsRequester2 = AmazonSQSRequesterClientBuilder.standard().withAmazonSQS(sqsClient)
+          .build();
+      var response = sqsRequester2.sendMessageAndGetResponse(sendMessageRequest, 20,
+          TimeUnit.SECONDS);
+      LOG.info("sqsRequester: messageId={} was put on the SQS: {}. Reply={}", message.messageId(),
+          queueName, response.body());
+//      var response = sqsClient.sendMessage(sendMessageRequest);
+//      awsResponseValidation(response);
+    } catch (TimeoutException e) {
+      LOG.error("sqsRequester timed out.");
+    }
+  }
 }
