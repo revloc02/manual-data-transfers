@@ -133,6 +133,12 @@ public class CommonTasks {
     }
   }
 
+  /**
+   * Really just a method to explore S3 objects.
+   *
+   * @param bucket The S3 bucket to work on. E.g. "cp-aws-gayedtiak3nflbiftucz-s3-logging"
+   * @param keyPrefix The directory on the S3 to work on. E.g. "emx-sandbox-sftp/"
+   */
   public static void examineS3Objects(String bucket, String keyPrefix) {
     var creds = getEmxSbCreds();
     var maxKeys = 1000;
