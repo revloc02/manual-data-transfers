@@ -61,13 +61,13 @@ public class CommonTasks {
   }
 
   /**
-   * Clears Lifeflight health checks from the sftp-error queue. Occasionally a Lifeflight health
-   * check will fail for some random reason and leave an error in the sftp error queue. These errors
-   * are typically anomalies and not valuable since the health check clears the next run.
+   * Clears Lifeflight health checks from the Stage sftp-error queue. Occasionally a Lifeflight
+   * health check will fail for some random reason and leave an error in the sftp error queue. These
+   * errors are typically anomalies and not valuable since the health check clears the next run.
    */
   public static void cleanupSftpErrorSqsStage() {
     // Sandbox. Obviously refresh sandbox ~/.aws/credentials before running this.
-    sqsDeleteMessagesWithPayloadLike(getEmxSbCreds(), "sftp-error", "lifeflightTestFile");
+    // sqsDeleteMessagesWithPayloadLike(getEmxSbCreds(), "sftp-error", "lifeflightTestFile");
 
     // Stage. Obviously refresh stage ~/.aws/credentials before running this.
     sqsDeleteMessagesWithPayloadLike(getEmxNpCreds(), "sftp-error", "lifeflightTestFile");
