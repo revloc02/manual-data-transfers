@@ -4,9 +4,9 @@ import static forest.colver.datatransfer.aws.Utils.awsResponseValidation;
 import static forest.colver.datatransfer.aws.Utils.createSqsMessageAttributes;
 import static forest.colver.datatransfer.aws.Utils.getSqsClient;
 import static forest.colver.datatransfer.aws.Utils.sqsCalcVisTimeout;
+import static forest.colver.datatransfer.config.Utils.writeFile;
 
 import com.amazonaws.services.sqs.AmazonSQSRequesterClientBuilder;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -152,6 +152,32 @@ public class SqsOperations {
       LOG.info("SQSREAD: {} has messages: {}. Read {} messages.", queueName, response.hasMessages(),
           response.messages().size());
       return response;
+    }
+  }
+
+  // todo: this needs a unit test
+  /**
+   * Download a message from an SQS and save the body to disk.
+   *
+   * @param awsCP Credentials.
+   * @param queueName The SQS to interact with.
+   * @param fullyQualifiedFilename The full path and filename you would like the file to have (it
+   * will contain the SQS message body).
+   */
+  public static void sqsDownloadMessage(AwsCredentialsProvider awsCP, String queueName,
+      String fullyQualifiedFilename) {
+    try (var sqsClient = getSqsClient(awsCP)) {
+      var receiveMessageRequest =
+          ReceiveMessageRequest.builder()
+              .waitTimeSeconds(2)
+              .queueUrl(qUrl(sqsClient, queueName))
+              .maxNumberOfMessages(1)
+              .visibilityTimeout(0) // default 30 sec
+              .build();
+      var response = sqsClient.receiveMessage(receiveMessageRequest);
+      awsResponseValidation(response);
+      LOG.info("SQSDOWNLOAD: Read message from {}.", queueName);
+      writeFile(fullyQualifiedFilename, response.messages().get(0).body().getBytes());
     }
   }
 
