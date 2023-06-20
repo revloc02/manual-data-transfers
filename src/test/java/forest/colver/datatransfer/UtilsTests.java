@@ -20,5 +20,6 @@ public class UtilsTests {
     writeFile(path, payload);
     var contents = readFile(path, StandardCharsets.UTF_8);
     assertThat(contents).contains(getDefaultPayload());
+    // todo: cleanup?
   }
 }
