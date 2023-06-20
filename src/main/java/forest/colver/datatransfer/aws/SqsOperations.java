@@ -58,7 +58,7 @@ public class SqsOperations {
               .build();
       var response = sqsClient.sendMessage(sendMessageRequest);
       awsResponseValidation(response);
-      LOG.info("SQSSEND: messageId={} was put on the SQS: {}.", message.messageId(), queueName);
+      LOG.info("SQSSEND: messageId={} was put on the SQS: {}.", response.messageId(), queueName);
     }
   }
 
