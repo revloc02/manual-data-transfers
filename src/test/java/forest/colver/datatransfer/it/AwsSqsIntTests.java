@@ -8,6 +8,7 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessages;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessagesWithPayloadLike;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsDownloadMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMove;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveAll;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsMoveAllVerbose;
@@ -22,6 +23,7 @@ import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS2;
 import static forest.colver.datatransfer.aws.Utils.createSqsMessageAttributes;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
+import static forest.colver.datatransfer.config.Utils.deleteFile;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
 import static forest.colver.datatransfer.config.Utils.getUuid;
@@ -647,6 +649,37 @@ public class AwsSqsIntTests {
     var creds = getEmxSbCreds();
     var message = sqsConsumeOneMessage(creds, SQS1);
     assertThat(message).isNull();
+  }
+
+  @Test
+  public void testSqsDownloadMessage() {
+    LOG.info("Interacting with: sqs={}", SQS1);
+    var payload = "Message Payload.";
+    var message = Message.builder()
+        .body(payload)
+        .build();
+    // send a message
+    var creds = getEmxSbCreds();
+    sqsSend(creds, SQS1, message);
+
+    // check that it arrived
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .until(() -> sqsDepth(creds, SQS1) >= 1);
+
+    // download the message
+    var path = "/Users/revloc02/Downloads/sqs-download-" + getUuid() + ".txt";
+    sqsDownloadMessage(creds, SQS1, path);
+
+    // check the payload
+    var contents = readFile(path, StandardCharsets.UTF_8);
+    assertThat(contents).isEqualTo(payload);
+
+    // cleanup
+    var msg = sqsReadMessages(creds, SQS1);
+    sqsDeleteMessages(creds, SQS1, msg);
+    deleteFile(path);
   }
 
   @Test

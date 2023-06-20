@@ -72,7 +72,15 @@ public class Utils {
     var path = Paths.get(fullyQualifiedFilePath);
     try {
       Files.write(path, contents);
-      LOG.info("File written to: {}", path);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  public static void deleteFile(String fullyQualifiedFilePath) {
+    try {
+      Files.delete(Paths.get(fullyQualifiedFilePath));
+      LOG.info("Deleted file: {}", fullyQualifiedFilePath);
     } catch (IOException e) {
       e.printStackTrace();
     }
