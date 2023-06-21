@@ -72,6 +72,7 @@ public class Utils {
     var path = Paths.get(fullyQualifiedFilePath);
     try {
       Files.write(path, contents);
+      LOG.info("File written to: {}", path);
     } catch (IOException e) {
       e.printStackTrace();
     }

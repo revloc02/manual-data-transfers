@@ -1,5 +1,6 @@
 package forest.colver.datatransfer;
 
+import static forest.colver.datatransfer.config.Utils.deleteFile;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.readFile;
 import static forest.colver.datatransfer.config.Utils.writeFile;
@@ -20,6 +21,7 @@ public class UtilsTests {
     writeFile(path, payload);
     var contents = readFile(path, StandardCharsets.UTF_8);
     assertThat(contents).contains(getDefaultPayload());
-    // todo: cleanup?
+    // clean up
+    deleteFile(path);
   }
 }
