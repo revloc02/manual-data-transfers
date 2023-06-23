@@ -120,10 +120,8 @@ public class JmsConsume {
     LOG.info("Purged {} messages from {}:{} queue.", counter, env.name(), queueName);
   }
 
-  // todo: Figure out how to test this
-
   /**
-   * This registers a listener to pick up messages as they arrive on the queue.
+   * This registers a listener to pick up messages as they arrive in the queue.
    *
    * @param env Environment of the broker.
    * @param queueName The queue name.

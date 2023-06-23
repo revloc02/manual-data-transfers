@@ -155,7 +155,6 @@ public class SqsOperations {
     }
   }
 
-  // todo: this needs a unit test
   /**
    * Download a message from an SQS and save the body to disk.
    *
