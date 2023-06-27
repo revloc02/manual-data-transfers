@@ -10,7 +10,8 @@ import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for Azure Blob Storage, aka Azure Storage Containers
+ * Tests for Azure Blob Storage, aka Azure Storage Containers. Use 'az login' to login, these tests
+ * are connecting to the EMX Enterprise Sandbox account.
  */
 public class AzureBlobStorageTests {
 
