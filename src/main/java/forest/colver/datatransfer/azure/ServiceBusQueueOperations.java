@@ -21,7 +21,7 @@ public class ServiceBusQueueOperations {
   /**
    * Azure Service Bus Send message.
    *
-   * @param connectionStringBuilder Credentails.
+   * @param connectionStringBuilder Credentials.
    * @param message The message to send.
    */
   public static void asbSend(ConnectionStringBuilder connectionStringBuilder, IMessage message) {
@@ -88,7 +88,7 @@ public class ServiceBusQueueOperations {
       IMessageReceiver iMessageReceiver = ClientFactory.createMessageReceiverFromConnectionStringBuilder(
           connectionStringBuilder, ReceiveMode.RECEIVEANDDELETE);
       while (iMessageReceiver.peek() != null) {
-        var messages = iMessageReceiver.receiveBatch(300);
+        var messages = iMessageReceiver.receiveBatch(1);
         LOG.info("asbPurge received {} messages, purging...", messages.size());
         counter += messages.size();
       }

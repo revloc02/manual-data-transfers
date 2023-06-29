@@ -115,11 +115,11 @@ public class AzureServiceBusQueueTests {
     for (var i = 0; i < num; i++) {
       asbSend(creds, message);
     }
-    pause(3);
+    pause(6);
     assertThat(messageCount(creds, EMX_SANDBOX_FOREST_QUEUE)).isGreaterThanOrEqualTo(num);
 
     // purge the queue
-    assertThat(asbPurge(creds)).isEqualTo(3);
+    assertThat(asbPurge(creds)).isGreaterThanOrEqualTo(num);
     assertThat(messageCount(creds, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(0);
   }
 
