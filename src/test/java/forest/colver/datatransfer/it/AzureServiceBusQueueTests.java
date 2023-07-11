@@ -1,5 +1,6 @@
 package forest.colver.datatransfer.it;
 
+import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsume;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbDlq;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbMove;
@@ -21,9 +22,11 @@ import static forest.colver.datatransfer.config.Utils.defaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
 import static forest.colver.datatransfer.config.Utils.pause;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import com.microsoft.azure.servicebus.primitives.ConnectionStringBuilder;
 import com.microsoft.azure.servicebus.primitives.ServiceBusException;
+import java.time.Duration;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -187,13 +190,18 @@ public class AzureServiceBusQueueTests {
     Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
         "specificValue");
     asbSend(credsQwTtl, createIMessage(defaultPayload, properties));
-    pause(3); // message expires in 10 seconds so don't wait too long
-    assertThat(messageCount(credsQwTtl, EMX_SANDBOX_FOREST_QUEUE_W_TTL)).isEqualTo(1);
+    // todo: document why it expires in 10 seconds, because I can't remember. Is that a config I set up on the queue when I created it?
+    // message expires in 10 seconds so don't wait too long
+    await()
+        .pollInterval(Duration.ofSeconds(1))
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(() -> assertThat(messageCount(credsQwTtl, EMX_SANDBOX_FOREST_QUEUE_W_TTL)).isEqualTo(1));
 
-    // not sure what the poll cycle is when checking for expired messages, but my guess is >60 sec
-    pause(100); // todo: this needs to use awaitility
     // check queue to see if main queue is empty
-    assertThat(messageCount(credsQwTtl, EMX_SANDBOX_FOREST_QUEUE_W_TTL)).isEqualTo(0);
+    await()
+        .pollInterval(Duration.ofSeconds(5))
+        .atMost(Duration.ofSeconds(120))
+        .untilAsserted(() -> assertThat(messageCount(credsQwTtl, EMX_SANDBOX_FOREST_QUEUE_W_TTL)).isEqualTo(0));
 
     // check the DLQ message
     var message = asbConsume(credsQwTtl_Dlq);
