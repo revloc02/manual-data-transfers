@@ -1,6 +1,5 @@
 package forest.colver.datatransfer.it;
 
-import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsume;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbDlq;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbMove;
@@ -164,11 +163,9 @@ public class AzureServiceBusQueueTests {
   }
 
   /**
-   * This should send a message to the queue and check that it arrived. Then it should wait until
-   * the message expires and goes to the Dead-letter sub-queue and then check that it arrived there.
-   * **WARNING:** This test is extremely unreliable, my theory for this is that we are demanding
-   * these actions in seconds (within the time of a unit test running), and Azure Service Bus Queues
-   * just was not built for that.
+   * This should send a message to the queue and check that it arrived. The queue is configured with
+   * a 10 second time-to-live, then the message expires and goes to the Dead-letter sub-queue and
+   * the test checks that it arrived there.
    */
   @Test
   public void testExpireToDeadLetterQueue() {
@@ -181,33 +178,35 @@ public class AzureServiceBusQueueTests {
     var credsQwTtl_Dlq = connect(EMX_SANDBOX_NAMESPACE, dlqName,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
 
-    // ensure the queue and the DLQ are clean
-    asbPurge(credsQwTtl);
-    asbPurge(credsQwTtl_Dlq);
-    pause(3);
-
     // send a message to the queue
     Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
         "specificValue");
     asbSend(credsQwTtl, createIMessage(defaultPayload, properties));
-    // todo: document why it expires in 10 seconds, because I can't remember. Is that a config I set up on the queue when I created it?
-    // message expires in 10 seconds so don't wait too long
+    // queue configured to expire messages after a 10 sec TTL
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
-        .untilAsserted(() -> assertThat(messageCount(credsQwTtl, EMX_SANDBOX_FOREST_QUEUE_W_TTL)).isEqualTo(1));
+        .untilAsserted(
+            () -> assertThat(messageCount(credsQwTtl, EMX_SANDBOX_FOREST_QUEUE_W_TTL)).isEqualTo(
+                1));
 
-    // check queue to see if main queue is empty
+    // check queue to see if main queue is empty, indicating that the message has expired
     await()
         .pollInterval(Duration.ofSeconds(5))
         .atMost(Duration.ofSeconds(120))
-        .untilAsserted(() -> assertThat(messageCount(credsQwTtl, EMX_SANDBOX_FOREST_QUEUE_W_TTL)).isEqualTo(0));
+        .untilAsserted(
+            () -> assertThat(messageCount(credsQwTtl, EMX_SANDBOX_FOREST_QUEUE_W_TTL)).isEqualTo(
+                0));
 
     // check the DLQ message
     var message = asbConsume(credsQwTtl_Dlq);
     var body = new String(message.getMessageBody().getBinaryData().get(0));
     assertThat(body).isEqualTo(defaultPayload);
     assertThat(message.getProperties().get("specificKey")).isEqualTo("specificValue");
+
+    // cleanup the queue and the DLQ
+    asbPurge(credsQwTtl);
+    asbPurge(credsQwTtl_Dlq);
   }
 
   @Test
