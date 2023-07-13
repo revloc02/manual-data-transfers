@@ -136,30 +136,35 @@ public class AzureServiceBusQueueTests {
     var credsQwDlq_Dlq = connect(EMX_SANDBOX_NAMESPACE, dlqName,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
 
-    // ensure the queue and the DLQ are clean
-    asbPurge(credsQwDlq);
-    asbPurge(credsQwDlq_Dlq);
-    pause(3);
-
     // send a message to the queue
     Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
         "specificValue");
     asbSend(credsQwDlq, createIMessage(defaultPayload, properties));
-    pause(3);
-    assertThat(messageCount(credsQwDlq, EMX_SANDBOX_FOREST_QUEUE_W_DLQ)).isEqualTo(1);
+    await()
+        .pollInterval(Duration.ofSeconds(1))
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () -> assertThat(messageCount(credsQwDlq, EMX_SANDBOX_FOREST_QUEUE_W_DLQ)).isEqualTo(1));
 
     // have the message on the queue move to the DLQ
     asbDlq(credsQwDlq);
 
     // check queue to see if main queue is empty
-    pause(6);
-    assertThat(messageCount(credsQwDlq, EMX_SANDBOX_FOREST_QUEUE_W_DLQ)).isEqualTo(0);
+    await()
+        .pollInterval(Duration.ofSeconds(1))
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () -> assertThat(messageCount(credsQwDlq, EMX_SANDBOX_FOREST_QUEUE_W_DLQ)).isEqualTo(0));
 
     // check the DLQ message
     var message = asbConsume(credsQwDlq_Dlq);
     var body = new String(message.getMessageBody().getBinaryData().get(0));
     assertThat(body).isEqualTo(defaultPayload);
     assertThat(message.getProperties().get("specificKey")).isEqualTo("specificValue");
+
+    // cleanup the queue and the DLQ
+    asbPurge(credsQwDlq);
+    asbPurge(credsQwDlq_Dlq);
   }
 
   /**
