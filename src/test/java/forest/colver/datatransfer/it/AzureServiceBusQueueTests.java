@@ -95,7 +95,11 @@ public class AzureServiceBusQueueTests {
     Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
         "specificValue");
     asbSend(creds, createIMessage(defaultPayload, properties));
-    pause(2);
+    await()
+        .pollInterval(Duration.ofSeconds(1))
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () -> assertThat(messageCount(creds, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(1));
 
     // retrieve that message
     var message = asbConsume(creds);
