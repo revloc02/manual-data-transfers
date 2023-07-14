@@ -67,16 +67,22 @@ public class AzureServiceBusQueueTests {
     Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
         "specificValue");
     asbSend(creds, createIMessage(defaultPayload, properties));
-    pause(2);
-    assertThat(messageCount(creds, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(1);
+    await()
+        .pollInterval(Duration.ofSeconds(1))
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () -> assertThat(messageCount(creds, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(1));
 
     // move that message
     var toCreds = connect(EMX_SANDBOX_NAMESPACE, EMX_SANDBOX_FOREST_QUEUE2,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
     asbMove(creds, toCreds);
-    pause(2);
-    assertThat(messageCount(toCreds, EMX_SANDBOX_FOREST_QUEUE2)).isEqualTo(1);
+    await()
+        .pollInterval(Duration.ofSeconds(1))
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () -> assertThat(messageCount(creds, EMX_SANDBOX_FOREST_QUEUE2)).isEqualTo(1));
 
     // check it
     var message = asbRead(toCreds);
