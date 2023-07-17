@@ -46,8 +46,11 @@ public class AzureServiceBusQueueTests {
     Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
         "specificValue");
     asbSend(creds, createIMessage(defaultPayload, properties));
-    pause(2);
-    assertThat(messageCount(creds, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(1);
+    await()
+        .pollInterval(Duration.ofSeconds(1))
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () -> assertThat(messageCount(creds, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(1));
 
     // read that message
     var message = asbRead(creds);
@@ -154,7 +157,8 @@ public class AzureServiceBusQueueTests {
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
         .untilAsserted(
-            () -> assertThat(messageCount(credsQwDlq, EMX_SANDBOX_FOREST_QUEUE_W_DLQ)).isEqualTo(1));
+            () -> assertThat(messageCount(credsQwDlq, EMX_SANDBOX_FOREST_QUEUE_W_DLQ)).isEqualTo(
+                1));
 
     // have the message on the queue move to the DLQ
     asbDlq(credsQwDlq);
@@ -164,7 +168,8 @@ public class AzureServiceBusQueueTests {
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
         .untilAsserted(
-            () -> assertThat(messageCount(credsQwDlq, EMX_SANDBOX_FOREST_QUEUE_W_DLQ)).isEqualTo(0));
+            () -> assertThat(messageCount(credsQwDlq, EMX_SANDBOX_FOREST_QUEUE_W_DLQ)).isEqualTo(
+                0));
 
     // check the DLQ message
     var message = asbConsume(credsQwDlq_Dlq);
