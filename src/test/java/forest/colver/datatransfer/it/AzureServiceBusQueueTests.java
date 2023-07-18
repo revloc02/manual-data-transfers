@@ -125,13 +125,15 @@ public class AzureServiceBusQueueTests {
     var message = createIMessage(defaultPayload);
 
     // send a bunch of messages
-    var num = 3;
-    // todo: there's gotta be a faster, better way to do this
+    var num = 4;
     for (var i = 0; i < num; i++) {
       asbSend(creds, message);
     }
-    pause(6);
-    assertThat(messageCount(creds, EMX_SANDBOX_FOREST_QUEUE)).isGreaterThanOrEqualTo(num);
+    await()
+        .pollInterval(Duration.ofSeconds(1))
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () -> assertThat(messageCount(creds, EMX_SANDBOX_FOREST_QUEUE)).isGreaterThanOrEqualTo(num));
 
     // purge the queue
     assertThat(asbPurge(creds)).isGreaterThanOrEqualTo(num);
