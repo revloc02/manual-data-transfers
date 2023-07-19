@@ -19,7 +19,6 @@ import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE_SHARE
 import static forest.colver.datatransfer.azure.Utils.createIMessage;
 import static forest.colver.datatransfer.config.Utils.defaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
-import static forest.colver.datatransfer.config.Utils.pause;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
@@ -247,8 +246,11 @@ public class AzureServiceBusQueueTests {
     asbSend(credsQwForward, createIMessage(defaultPayload, properties));
 
     // check message is not on original queue as it was forwarded
-    pause(6);
-    assertThat(messageCount(credsQwForward, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(0);
+    await()
+        .pollInterval(Duration.ofSeconds(1))
+        .atMost(Duration.ofSeconds(12))
+        .untilAsserted(
+            () -> assertThat(messageCount(credsQwForward, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(0));
 
     // read the message on the other queue
     var message = asbRead(toCreds);
