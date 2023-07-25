@@ -170,7 +170,7 @@ public class JmsBrowse {
       } catch (JMSException e) {
         e.printStackTrace();
       }
-      LOG.info("Copied {} messages.", count);
+      LOG.info("Copied {} messages from {} to {}.", count, fromQName, toQName);
     }
   }
 
