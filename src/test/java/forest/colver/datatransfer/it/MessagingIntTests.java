@@ -502,11 +502,12 @@ public class MessagingIntTests {
     purgeQueue(STAGE, queueName);
 
     var numMsgs = 500;
+    // create a bunch of message payloads
     var uuids = generateUniqueStrings(numMsgs);
     sendMultipleUniqueMessages(STAGE, queueName, uuids);
     LOG.info("Sent {} messages.", numMsgs);
 
-    var threads = 50;
+    var threads = 16;
     var es = Executors.newFixedThreadPool(threads);
     List<Future<TextMessage>> futuresList = new ArrayList<>();
     for (var task = 0; task < numMsgs; task++) {
@@ -520,5 +521,6 @@ public class MessagingIntTests {
       LOG.info("removed {}", future.get().getText());
     }
     assertThat(uuids.size()).isEqualTo(0);
+    es.shutdown();
   }
 }
