@@ -56,6 +56,7 @@ public class JmsAndSqs {
     }
   }
 
+  // todo: look into move all from jms to sqs
   public static void moveAllSpecificMessagesFromJmsToSqs(Environment env, String queue,
       String selector, AwsCredentialsProvider awsCreds, String sqs) {
     var cf = new JmsConnectionFactory(env.url());
