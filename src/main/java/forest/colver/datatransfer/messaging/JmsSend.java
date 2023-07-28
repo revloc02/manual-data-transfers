@@ -10,6 +10,8 @@ import static javax.jms.JMSContext.AUTO_ACKNOWLEDGE;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import javax.jms.Message;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.slf4j.Logger;
@@ -70,8 +72,8 @@ public class JmsSend {
    *
    * @param env Which environment the queue is in.
    * @param queueName Queue to send to.
-   * @param payloads An ArrayList of payloads. If the payloads are not unique just use {@link
-   * #sendMultipleSameMessage(Environment, String, Message, int)}
+   * @param payloads An ArrayList of payloads. If the payloads are not unique just use
+   * {@link #sendMultipleSameMessage(Environment, String, Message, int)}
    */
   public static void sendMultipleUniqueMessages(
       Environment env, String queueName, ArrayList<String> payloads) {
@@ -83,6 +85,40 @@ public class JmsSend {
             .setProperty("sentTimestamp", TIME_STAMP_FORMATTED)
             .setProperty("datatype", "moreTesting")
             .send(queue, ctx.createTextMessage(payload));
+      }
+    }
+  }
+
+  /**
+   * Pass in an ArrayList of payloads and send a message for each one using multi-threading. Yeah
+   * so, this doesn't really help at all--it literally is no faster. Don't use it. But I am leaving
+   * it in here for academic purposes.
+   *
+   * @param env Which environment the queue is in.
+   * @param queueName Queue to send to.
+   * @param payloads An ArrayList of payloads. If the payloads are not unique just use
+   * {@link #sendMultipleSameMessage(Environment, String, Message, int)}
+   */
+  public static void sendMultipleUniqueMessagesMultithreaded(
+      Environment env, String queueName, ArrayList<String> payloads) {
+    var cf = new JmsConnectionFactory(env.url());
+    var es = Executors.newFixedThreadPool(8);
+    try (var ctx = cf.createContext(getUsername(), getPassword())) {
+      var queue = ctx.createQueue(queueName);
+      var producer = ctx.createProducer().setProperty("datatype", "multithreaded-sending");
+      for (String payload : payloads) {
+        es.execute(() -> producer.setProperty("sentTimestamp", TIME_STAMP_FORMATTED)
+            .send(queue, ctx.createTextMessage(payload)));
+      }
+      // stop accepting new tasks and shut down after all running threads finish
+      es.shutdown();
+      // wait 30 sec for tasks to complete then just stop execution
+      try {
+        if (!es.awaitTermination(30, TimeUnit.SECONDS)) {
+          es.shutdownNow();
+        }
+      } catch (InterruptedException e) {
+        es.shutdownNow();
       }
     }
   }

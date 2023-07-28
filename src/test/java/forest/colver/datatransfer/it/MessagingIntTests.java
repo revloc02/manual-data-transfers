@@ -28,6 +28,7 @@ import static forest.colver.datatransfer.messaging.JmsSend.sendDefaultMessage;
 import static forest.colver.datatransfer.messaging.JmsSend.sendMessageAutoAck;
 import static forest.colver.datatransfer.messaging.JmsSend.sendMultipleSameMessage;
 import static forest.colver.datatransfer.messaging.JmsSend.sendMultipleUniqueMessages;
+import static forest.colver.datatransfer.messaging.JmsSend.sendMultipleUniqueMessagesMultithreaded;
 import static forest.colver.datatransfer.messaging.Utils.createDefaultMessage;
 import static forest.colver.datatransfer.messaging.Utils.createTextMessage;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -522,5 +523,21 @@ public class MessagingIntTests {
     }
     assertThat(uuids.size()).isEqualTo(0);
     es.shutdown();
+  }
+
+  /**
+   * The multithreaded sending doesn't really work, but keeping if for academic purposes.
+   */
+  @Test
+  public void testSendMultithreading() {
+    var queueName = "forest-test";
+    purgeQueue(STAGE, queueName);
+
+    var numMsgs = 1_000; // 1000 messages runs in about 20 sec
+    // create a bunch of message payloads
+    var uuids = generateUniqueStrings(numMsgs);
+    LOG.info("Created {} messages.", numMsgs);
+    sendMultipleUniqueMessagesMultithreaded(STAGE, queueName, uuids);
+    LOG.info("Sent {} messages.", numMsgs);
   }
 }
