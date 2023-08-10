@@ -13,6 +13,7 @@ import static forest.colver.datatransfer.messaging.Utils.getJmsMsgPayload;
 import static javax.jms.JMSContext.CLIENT_ACKNOWLEDGE;
 
 import forest.colver.datatransfer.messaging.Environment;
+import javax.jms.JMSConsumer;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.TextMessage;
@@ -56,7 +57,6 @@ public class JmsAndSqs {
     }
   }
 
-  // todo: look into move all from jms to sqs
   public static void moveAllSpecificMessagesFromJmsToSqs(Environment env, String queue,
       String selector, AwsCredentialsProvider awsCreds, String sqs) {
     var cf = new JmsConnectionFactory(env.url());
@@ -86,6 +86,41 @@ public class JmsAndSqs {
       }
       LOG.info("Moved {} messages for selector={}.", counter, selector);
     }
+  }
+
+  public static void moveAllMessagesFromJmsToSqs(Environment env, String queue, AwsCredentialsProvider awsCreds, String sqs) {
+    var cf = new JmsConnectionFactory(env.url());
+    try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {
+      var fromQ = ctx.createQueue(queue);
+      try (var consumer = ctx.createConsumer(fromQ)) {
+        jmsToSqsMessageMover(consumer, awsCreds, env, sqs, queue);
+      } catch (JMSException e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+  private static void jmsToSqsMessageMover(JMSConsumer consumer, AwsCredentialsProvider awsCreds,Environment env, String sqs, String queue)
+      throws JMSException {
+    var counter = 0;
+    var moreMessages = true;
+    while (moreMessages) {
+      var message = consumer.receive(2_000L);
+      if (message != null) {
+        counter++;
+        sqsSend(awsCreds, sqs, getJmsMsgPayload(message), extractMsgProperties(message));
+        message.acknowledge();
+        LOG.info(
+            "Moved from Queue={}:{} to SQS={}, counter={}",
+            env.name(),
+            queue,
+            sqs,
+            counter);
+      } else {
+        moreMessages = false;
+      }
+    }
+    LOG.info("Moved {} messages.", counter);
   }
 
   public static void moveAllMessagesFromSqsToJms(AwsCredentialsProvider awsCreds, String sqs,

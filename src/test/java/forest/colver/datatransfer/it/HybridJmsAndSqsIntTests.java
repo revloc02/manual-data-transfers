@@ -11,6 +11,7 @@ import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
+import static forest.colver.datatransfer.hybrid.JmsAndSqs.moveAllMessagesFromJmsToSqs;
 import static forest.colver.datatransfer.hybrid.JmsAndSqs.moveAllMessagesFromSqsToJms;
 import static forest.colver.datatransfer.hybrid.JmsAndSqs.moveAllSpecificMessagesFromJmsToSqs;
 import static forest.colver.datatransfer.hybrid.JmsAndSqs.moveOneJmsToSqs;
@@ -176,5 +177,32 @@ public class HybridJmsAndSqsIntTests {
     // cleanup and check that the Qpid queue had zero messages
     var deletedFrom = deleteAllMessagesFromQueue(STAGE, queue);
     assertThat(deletedFrom).isEqualTo(0);
+  }
+
+  @Test
+  public void testMoveAllMessagesJmsToSqs() {
+    var env = STAGE;
+    var queue = "forest-test";
+    var creds = getEmxSbCreds();
+
+    // send some messages to Qpid
+    var numMessagesFrom = 20;
+    sendMultipleSameMessage(env, queue, createDefaultMessage(), numMessagesFrom);
+
+    // move all the different kind of messages to SQS
+    moveAllMessagesFromJmsToSqs(env, queue, creds, SQS1);
+
+    // check that each arrived on the SQS
+    for (var i = 0; i < numMessagesFrom; i++) {
+      var response = sqsConsumeOneMessage(creds, SQS1);
+      assertThat(response.body()).contains("Default Payload:");
+    }
+
+    // cleanup and check that the Qpid queue had zero message left on it
+    var deletedFrom = deleteAllMessagesFromQueue(env, queue);
+    assertThat(deletedFrom).isZero();
+
+    // cleanup SQS (should be empty already, but just being thorough)
+    sqsPurge(creds, SQS1);
   }
 }
