@@ -37,8 +37,6 @@ public class AzureServiceBusQueueTests {
       EMX_SANDBOX_FOREST_QUEUE,
       EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
 
-  // todo: at some point down the road, I need to review and run all of the Azure unit test in all of the unit test files.
-
   @Test
   public void testSend() {
     // send a message
