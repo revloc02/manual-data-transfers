@@ -64,6 +64,7 @@ public class JmsAndSqs {
       var fromQ = ctx.createQueue(queue);
       var counter = 0;
       try (var consumer = ctx.createConsumer(fromQ, selector)) {
+        // todo: maybe use the private helper method below and get rid of this code dup
         var moreMessages = true;
         while (moreMessages) {
           var message = consumer.receive(2_000L);
@@ -88,19 +89,31 @@ public class JmsAndSqs {
     }
   }
 
-  public static void moveAllMessagesFromJmsToSqs(Environment env, String queue, AwsCredentialsProvider awsCreds, String sqs) {
+  public static void moveAllMessagesFromJmsToSqs(Environment env, String queue,
+      AwsCredentialsProvider awsCreds, String sqs) {
     var cf = new JmsConnectionFactory(env.url());
     try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {
       var fromQ = ctx.createQueue(queue);
       try (var consumer = ctx.createConsumer(fromQ)) {
-        jmsToSqsMessageMover(consumer, awsCreds, env, sqs, queue);
+        jmsToSqsMessageMover(consumer, awsCreds, sqs, env, queue);
       } catch (JMSException e) {
         e.printStackTrace();
       }
     }
   }
 
-  private static void jmsToSqsMessageMover(JMSConsumer consumer, AwsCredentialsProvider awsCreds,Environment env, String sqs, String queue)
+  /**
+   * A private helper method that moves messages from a JMS queue (Qpid) to an SQS queue. It counts
+   * the messages moved and logs the operation.
+   *
+   * @param consumer The JMS consumer for retrieving the messages.
+   * @param awsCreds AWS credentials.
+   * @param sqs The SQS destination.
+   * @param env The environment for the Qpid queue. This var is only used for the log statement.
+   * @param queue The Qpid queue name. This var is only used for the log statement.
+   */
+  private static void jmsToSqsMessageMover(JMSConsumer consumer, AwsCredentialsProvider awsCreds,
+      String sqs, Environment env, String queue)
       throws JMSException {
     var counter = 0;
     var moreMessages = true;
