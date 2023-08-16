@@ -186,14 +186,14 @@ public class HybridJmsAndSqsIntTests {
     var creds = getEmxSbCreds();
 
     // send some messages to Qpid
-    var numMessagesFrom = 20;
-    sendMultipleSameMessage(env, queue, createDefaultMessage(), numMessagesFrom);
+    var numMsg = 20;
+    sendMultipleSameMessage(env, queue, createDefaultMessage(), numMsg);
 
     // move all the different kind of messages to SQS
     moveAllMessagesFromJmsToSqs(env, queue, creds, SQS1);
 
     // check that each arrived on the SQS
-    for (var i = 0; i < numMessagesFrom; i++) {
+    for (var i = 0; i < numMsg; i++) {
       var response = sqsConsumeOneMessage(creds, SQS1);
       assertThat(response.body()).contains("Default Payload:");
     }

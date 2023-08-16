@@ -62,30 +62,11 @@ public class JmsAndSqs {
     var cf = new JmsConnectionFactory(env.url());
     try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {
       var fromQ = ctx.createQueue(queue);
-      var counter = 0;
       try (var consumer = ctx.createConsumer(fromQ, selector)) {
-        // todo: maybe use the private helper method below and get rid of this code dup
-        var moreMessages = true;
-        while (moreMessages) {
-          var message = consumer.receive(2_000L);
-          if (message != null) {
-            counter++;
-            sqsSend(awsCreds, sqs, getJmsMsgPayload(message), extractMsgProperties(message));
-            message.acknowledge();
-            LOG.info(
-                "Moved from Queue={}:{} to SQS={}, counter={}",
-                env.name(),
-                queue,
-                sqs,
-                counter);
-          } else {
-            moreMessages = false;
-          }
-        }
+        jmsToSqsMessageMover(consumer, awsCreds, sqs, env, queue);
       } catch (JMSException e) {
         e.printStackTrace();
       }
-      LOG.info("Moved {} messages for selector={}.", counter, selector);
     }
   }
 
