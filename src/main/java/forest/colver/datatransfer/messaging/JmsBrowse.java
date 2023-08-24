@@ -4,10 +4,12 @@ import static forest.colver.datatransfer.config.Utils.getPassword;
 import static forest.colver.datatransfer.config.Utils.getUsername;
 import static forest.colver.datatransfer.messaging.DisplayUtils.createStringFromMessage;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.TextMessage;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +35,7 @@ public class JmsBrowse {
             env.name(),
             queueName,
             createStringFromMessage(message));
-        var msgCount = Collections.list(msgs).size() + 1; // this empties msgs Enumeration series
+        var msgCount = Collections.list(msgs).size() + 1; // note that this statement empties msgs Enumeration series
         LOG.info("Queue={}:{}; MessageCountFromSelector={}\n", env.name(), queueName, msgCount);
       } catch (JMSException e) {
         e.printStackTrace();
@@ -94,6 +96,33 @@ public class JmsBrowse {
       }
     }
     return msgCount;
+  }
+
+  // todo: this needs a unit test
+  /**
+   * For all messages in the queue, this displays a truncation of each payload. (I used this once,
+   * but honestly I'm not sure how useful this will be. Keeping it anyway.)
+   *
+   * @param env The Environment
+   * @param queueName The queue name.
+   */
+  public static void browseMessagesPayload(Environment env, String queueName) {
+    var truncation = 200; // truncate the payload to this many characters
+    var cf = new JmsConnectionFactory(env.url());
+    try (var ctx = cf.createContext(getUsername(), getPassword())) {
+      var q = ctx.createQueue(queueName);
+      Enumeration msgs;
+      try (var browser = ctx.createBrowser(q)) {
+        msgs = browser.getEnumeration();
+        var messages = Collections.list(msgs);
+        for (var msg : messages) {
+          var payload = ((TextMessage) msg).getText();
+          LOG.info(payload.substring(0, truncation));
+        }
+      } catch (JMSException e) {
+        e.printStackTrace();
+      }
+    }
   }
 
   public static int queueDepth(Environment env, String queueName) {
