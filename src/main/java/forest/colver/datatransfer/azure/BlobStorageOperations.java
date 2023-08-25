@@ -25,11 +25,53 @@ public class BlobStorageOperations {
     }
   }
 
+  public static void blobPutSas(String sasToken, String endpoint, String containerName,
+      String filename, String contents) {
+    BlobServiceClient blobServiceClient = new BlobServiceClientBuilder()
+        .sasToken(sasToken)
+        .endpoint(endpoint)
+        .buildClient();
+
+    try (var dataStream = new ByteArrayInputStream(contents.getBytes(StandardCharsets.UTF_8))) {
+      var blobContainerClient = blobServiceClient.getBlobContainerClient(containerName);
+      blobContainerClient.getBlobClient(filename).getBlockBlobClient()
+          .upload(dataStream, contents.length());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
   public static ByteArrayOutputStream blobGet(String connectStr, String endpoint,
       String containerName,
       String filename) {
     BlobServiceClient blobServiceClient = new BlobServiceClientBuilder()
         .connectionString(connectStr)
+        .endpoint(endpoint)
+        .buildClient();
+
+    ByteArrayOutputStream dataStream = new ByteArrayOutputStream();
+    try (dataStream) {
+      var blobContainerClient = blobServiceClient.getBlobContainerClient(containerName);
+      blobContainerClient.getBlobClient(filename).getBlockBlobClient().downloadStream(dataStream);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return dataStream;
+  }
+
+  /**
+   * Authenticates with a Sas Token, and reads an object from the Storage Container.
+   * @param sasToken Shared Access Signature Token for auth.
+   * @param endpoint Azure storage endpoint.
+   * @param containerName Blob storage name.
+   * @param filename Filename.
+   * @return An output stream of the file.
+   */
+  public static ByteArrayOutputStream blobGetSas(String sasToken, String endpoint,
+      String containerName,
+      String filename) {
+    BlobServiceClient blobServiceClient = new BlobServiceClientBuilder()
+        .sasToken(sasToken)
         .endpoint(endpoint)
         .buildClient();
 
