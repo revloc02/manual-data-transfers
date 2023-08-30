@@ -26,7 +26,7 @@ public class AzureBlobStorageTests {
     blobPut(CONNECT_STR, endpoint, containerName, filename, body);
 
     var outputStream = blobGet(CONNECT_STR, endpoint, containerName, filename);
-    String str = new String(outputStream.toByteArray(), StandardCharsets.UTF_8);
+    String str = outputStream.toString(StandardCharsets.UTF_8);
     assertThat(str).isEqualTo(body);
 
     // cleanup
