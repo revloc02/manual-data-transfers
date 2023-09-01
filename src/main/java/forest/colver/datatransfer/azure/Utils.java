@@ -37,6 +37,8 @@ public class Utils {
   public static final String EMX_SANDBOX_EVENTGRID_HOST = userCreds.getProperty("azure-emx-sandbox-eventgrid-host");
   public static final String EMX_SANDBOX_EVENTGRID_TOPIC_KEY = userCreds.getProperty("azure-emx-sandbox-eventgrid-topic-key");
   public static final String EMX_SANDBOX_STORAGE_ACCOUNT_CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=foresttestsa;AccountKey=" + userCreds.getProperty("azure-emx-sandbox-forest-sa-account-key") + ";EndpointSuffix=core.windows.net";
+  public static final String EMX_PROD_EMXPROD_STORAGE_ACCOUNT_CONNECTION_STRING = userCreds.getProperty("azure-emx-prod-emxprod-sa-account-key");
+  public static final String EMX_PROD_EMXPROD_EXT_EMCOR_SAS_TOKEN = userCreds.getProperty("azure-emxprod-sa-ext-emcor-prod-source-sas-token");
 
   public static IMessage createIMessage(String payload, String label, String id,
       Map<String, Object> properties) {
