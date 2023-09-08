@@ -25,7 +25,6 @@ public class BlobStorageOperations {
     }
   }
 
-  // todo: this needs a unit test (remember to add comments on how ot get a SAS token) and a JavaDoc.
   public static void blobPutSas(String sasToken, String endpoint, String containerName,
       String filename, String contents) {
     BlobServiceClient blobServiceClient = new BlobServiceClientBuilder()
@@ -60,7 +59,6 @@ public class BlobStorageOperations {
     return dataStream;
   }
 
-  // todo: this needs a unit test, remember to add comments on how ot get a SAS token
   /**
    * Authenticates with a Sas Token, and reads an object from the Storage Container.
    * @param sasToken Shared Access Signature Token for auth.
@@ -91,6 +89,17 @@ public class BlobStorageOperations {
       String filename) {
     BlobServiceClient blobServiceClient = new BlobServiceClientBuilder()
         .connectionString(connectStr)
+        .endpoint(endpoint)
+        .buildClient();
+
+    var blobContainerClient = blobServiceClient.getBlobContainerClient(containerName);
+    blobContainerClient.getBlobClient(filename).delete();
+  }
+
+  public static void blobDeleteSas(String sasToken, String endpoint, String containerName,
+      String filename) {
+    BlobServiceClient blobServiceClient = new BlobServiceClientBuilder()
+        .sasToken(sasToken)
         .endpoint(endpoint)
         .buildClient();
 

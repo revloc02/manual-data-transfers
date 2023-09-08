@@ -39,11 +39,12 @@ public class AzureBlobStorageTests {
   }
 
   /**
-   * Tests the Blob Put using an SAS Token to auth. How to get an Azure Blob SAS Token. 1) Azure
-   * Portal > Storage Accounts > Container > Shared access tokens, under Setting on the left menu;
-   * 2) Signing key = Key 1 (is fine); 3) Set Permissions; 4) Set an Expiry date some 10 years into
-   * the future; 5) all other defaults are fine; 6) Click the button Generate SAS token and URL; 7)
-   * You only get to see this SAS Token data once, so copy it where you need it to go.
+   * Tests the Blob Put, Get, and Delete methods using an SAS Token to auth. How to get an Azure
+   * Blob SAS Token: 1) Azure Portal > Storage Accounts > Container > Shared access tokens, under
+   * Setting on the left menu; 2) Signing key = Key 1 (is fine); 3) Select Permissions you would
+   * like; 4) Set an Expiry date some years into the future; 5) all other defaults are fine; 6)
+   * Click the button Generate SAS token and URL; 7) You only get to see this SAS Token data once,
+   * so copy it where you need it to go.
    */
   @Test
   public void testPutSas() {
