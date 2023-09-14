@@ -17,13 +17,13 @@ public class SqsAndAsbQueue {
   private static final Logger LOG = LoggerFactory.getLogger(SqsAndAsbQueue.class);
 
   public static void moveOneSqsToAsbQueue(AwsCredentialsProvider awsCreds, String sqs,
-      ConnectionStringBuilder connectionStringBuilder) {
+      ConnectionStringBuilder azureConnStr) {
     var sqsMsg = sqsConsumeOneMessage(awsCreds, sqs);
     if (sqsMsg != null) {
       // send body and properties to ASB queue
       Map<String, Object> properties = new HashMap<>(
           convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
-      asbSend(connectionStringBuilder, createIMessage(sqsMsg.body(), properties));
+      asbSend(azureConnStr, createIMessage(sqsMsg.body(), properties));
     } else {
       LOG.error("ERROR: SQS message was null.");
     }
