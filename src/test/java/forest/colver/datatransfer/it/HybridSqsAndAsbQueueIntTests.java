@@ -1,18 +1,25 @@
 package forest.colver.datatransfer.it;
 
+import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsume;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbRead;
+import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbSend;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.connect;
+import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.messageCount;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY;
+import static forest.colver.datatransfer.azure.Utils.createIMessage;
+import static forest.colver.datatransfer.config.Utils.defaultPayload;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
+import static forest.colver.datatransfer.hybrid.SqsAndAsbQueue.moveOneAsbQueueToSqs;
 import static forest.colver.datatransfer.hybrid.SqsAndAsbQueue.moveOneSqsToAsbQueue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -23,11 +30,13 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 
 public class HybridSqsAndAsbQueueIntTests {
 
   private static final Logger LOG = LoggerFactory.getLogger(HybridSqsAndAsbQueueIntTests.class);
   private static final String SQS1 = EMX_SANDBOX_TEST_SQS1;
+  private static final AwsCredentialsProvider awsCreds = getEmxSbCreds();
   private final ConnectionStringBuilder asbCreds = connect(EMX_SANDBOX_NAMESPACE,
       EMX_SANDBOX_FOREST_QUEUE,
       EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
@@ -36,7 +45,6 @@ public class HybridSqsAndAsbQueueIntTests {
   public void testMoveSqsToAsbQueue() {
     // place a message on SQS
     LOG.info("Interacting with: sqs={}", SQS1);
-    var awsCreds = getEmxSbCreds();
     var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3",
         "value3");
     var payload = getDefaultPayload();
@@ -64,4 +72,28 @@ public class HybridSqsAndAsbQueueIntTests {
     asbConsume(asbCreds);
   }
 
+  @Test
+  public void testMoveAsbQueueToSqs() {
+    // send a message
+    Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
+        "specificValue");
+    asbSend(asbCreds, createIMessage(defaultPayload, properties));
+    await()
+        .pollInterval(Duration.ofSeconds(1))
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () -> assertThat(messageCount(asbCreds, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(1));
+
+    moveOneAsbQueueToSqs(asbCreds, awsCreds, SQS1);
+
+    // check that it arrived
+    var msg = sqsReadOneMessage(awsCreds, SQS1);
+    assert msg != null;
+    assertThat(msg.body()).isEqualTo(defaultPayload);
+    assertThat(msg.hasMessageAttributes()).isEqualTo(true);
+    assertThat(msg.messageAttributes().get("specificKey").stringValue()).isEqualTo("specificValue");
+
+    // cleanup
+    sqsDeleteMessage(awsCreds, SQS1, msg);
+  }
 }

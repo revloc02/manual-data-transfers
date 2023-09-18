@@ -1,13 +1,17 @@
 package forest.colver.datatransfer.hybrid;
 
 import static forest.colver.datatransfer.aws.SqsOperations.sqsConsumeOneMessage;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.convertSqsMessageAttributesToStrings;
+import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsume;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbSend;
 import static forest.colver.datatransfer.azure.Utils.createIMessage;
 
+import com.microsoft.azure.servicebus.IMessage;
 import com.microsoft.azure.servicebus.primitives.ConnectionStringBuilder;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
@@ -27,5 +31,16 @@ public class SqsAndAsbQueue {
     } else {
       LOG.error("ERROR: SQS message was null.");
     }
+  }
+
+  public static void moveOneAsbQueueToSqs(ConnectionStringBuilder azureConnStr,
+      AwsCredentialsProvider awsCreds, String sqs) {
+    IMessage message = asbConsume(azureConnStr);
+    var asbQueProps = message.getProperties();
+    var body = new String(message.getMessageBody().getBinaryData().get(0));
+    Map<String, String> properties = asbQueProps.entrySet().stream()
+        .filter(entry -> entry.getValue() instanceof String).collect(
+            Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue()));
+    sqsSend(awsCreds, sqs, body, properties);
   }
 }
