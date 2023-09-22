@@ -43,4 +43,29 @@ public class SqsAndAsbQueue {
             Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue()));
     sqsSend(awsCreds, sqs, body, properties);
   }
+
+  public static void moveAllSqsToAsbQueue(AwsCredentialsProvider awsCreds, String sqs,
+      ConnectionStringBuilder azureConnStr) {
+    var moreMessages = true;
+    var counter = 0;
+    while (moreMessages) {
+      var sqsMsg = sqsConsumeOneMessage(awsCreds, sqs);
+      if (sqsMsg != null) {
+        counter++;
+        // send body and properties to ASB queue
+        Map<String, Object> properties = new HashMap<>(
+            convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
+        asbSend(azureConnStr, createIMessage(sqsMsg.body(), properties));
+        LOG.info(
+            "Moved from SQS={} to, ASB-Queue={} counter={}",
+            sqs,
+            azureConnStr.getEntityPath(),
+            counter);
+      } else {
+        moreMessages = false;
+      }
+    }
+    LOG.info("Moved {} messages from SQS={} to, ASB-Queue={}.", counter, sqs,
+        azureConnStr.getEntityPath());
+  }
 }

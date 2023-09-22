@@ -130,7 +130,8 @@ public class AzureServiceBusQueueTests {
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
         .untilAsserted(
-            () -> assertThat(messageCount(creds, EMX_SANDBOX_FOREST_QUEUE)).isGreaterThanOrEqualTo(num));
+            () -> assertThat(messageCount(creds, EMX_SANDBOX_FOREST_QUEUE)).isGreaterThanOrEqualTo(
+                num));
 
     // purge the queue
     assertThat(asbPurge(creds)).isGreaterThanOrEqualTo(num);
@@ -261,4 +262,6 @@ public class AzureServiceBusQueueTests {
     // clean up
     asbConsume(toCreds);
   }
+
+  // todo: test move all messages
 }

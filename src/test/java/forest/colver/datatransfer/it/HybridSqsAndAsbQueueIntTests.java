@@ -7,6 +7,7 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsume;
+import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbPurge;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbRead;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbSend;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.connect;
@@ -19,6 +20,7 @@ import static forest.colver.datatransfer.azure.Utils.createIMessage;
 import static forest.colver.datatransfer.config.Utils.defaultPayload;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
+import static forest.colver.datatransfer.hybrid.SqsAndAsbQueue.moveAllSqsToAsbQueue;
 import static forest.colver.datatransfer.hybrid.SqsAndAsbQueue.moveOneAsbQueueToSqs;
 import static forest.colver.datatransfer.hybrid.SqsAndAsbQueue.moveOneSqsToAsbQueue;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -95,5 +97,34 @@ public class HybridSqsAndAsbQueueIntTests {
 
     // cleanup
     sqsDeleteMessage(awsCreds, SQS1, msg);
+  }
+
+  @Test
+  public void testMoveAllSqsToAsbQueue() {
+    LOG.info("Interacting with: sqs={} and ASB-queue={}", SQS1, EMX_SANDBOX_FOREST_QUEUE);
+    // put messages on sqs
+    var payload = getDefaultPayload();
+    var numMsgs = 4;
+    for (var i = 0; i < numMsgs; i++) {
+      sqsSend(awsCreds, SQS1, payload);
+    }
+
+    // verify messages are on the sqs
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(awsCreds, SQS1)).isEqualTo(numMsgs));
+
+    moveAllSqsToAsbQueue(awsCreds, SQS1, asbCreds);
+
+    // verify messages are on the ASB queue
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(
+            () -> assertThat(messageCount(asbCreds, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(numMsgs));
+
+    // cleanup
+    asbPurge(asbCreds);
   }
 }
