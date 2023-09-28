@@ -82,6 +82,12 @@ public class ServiceBusQueueOperations {
     asbSend(toCsb, asbConsume(fromCsb));
   }
 
+  public static void asbMoveAll(ConnectionStringBuilder fromCsb, ConnectionStringBuilder toCsb) {
+    while (messageCount(fromCsb) > 0) {
+      asbSend(toCsb, asbConsume(fromCsb));
+    }
+  }
+
   public static int asbPurge(ConnectionStringBuilder connectionStringBuilder) {
     var counter = 0;
     try {
@@ -103,15 +109,14 @@ public class ServiceBusQueueOperations {
    * Returns the ActiveMessageCount for the queue.
    *
    * @param connectionStringBuilder Credentials.
-   * @param queueName The Service Bus Queue to count.
    * @return The number of Active messages on the queue.
    */
-  public static long messageCount(ConnectionStringBuilder connectionStringBuilder,
-      String queueName) {
+  public static long messageCount(ConnectionStringBuilder connectionStringBuilder) {
     ManagementClient client = new ManagementClient(connectionStringBuilder);
     long messageCount = -1;
     try {
-      var mcd = client.getQueueRuntimeInfo(queueName).getMessageCountDetails();
+      var mcd = client.getQueueRuntimeInfo(connectionStringBuilder.getEntityPath())
+          .getMessageCountDetails();
       messageCount = mcd.getActiveMessageCount();
       LOG.info(
           "Message Count Details:\n  ActiveMessageCount={}\n  DeadLetterMessageCount={}\n  ScheduledMessageCount={}\n  TransferMessageCount={}\n  TransferDeadLetterMessageCount={}\n",

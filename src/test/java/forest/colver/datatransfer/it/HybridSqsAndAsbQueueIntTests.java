@@ -84,7 +84,7 @@ public class HybridSqsAndAsbQueueIntTests {
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
         .untilAsserted(
-            () -> assertThat(messageCount(asbCreds, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(1));
+            () -> assertThat(messageCount(asbCreds)).isEqualTo(1));
 
     moveOneAsbQueueToSqs(asbCreds, awsCreds, SQS1);
 
@@ -122,7 +122,7 @@ public class HybridSqsAndAsbQueueIntTests {
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(
-            () -> assertThat(messageCount(asbCreds, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(numMsgs));
+            () -> assertThat(messageCount(asbCreds)).isEqualTo(numMsgs));
 
     // cleanup
     asbPurge(asbCreds);

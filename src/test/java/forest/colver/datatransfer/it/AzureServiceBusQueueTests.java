@@ -3,6 +3,7 @@ package forest.colver.datatransfer.it;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsume;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbDlq;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbMove;
+import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbMoveAll;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbPurge;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbRead;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbSend;
@@ -47,7 +48,7 @@ public class AzureServiceBusQueueTests {
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
         .untilAsserted(
-            () -> assertThat(messageCount(creds, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(1));
+            () -> assertThat(messageCount(creds)).isEqualTo(1));
 
     // read that message
     var message = asbRead(creds);
@@ -71,7 +72,7 @@ public class AzureServiceBusQueueTests {
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
         .untilAsserted(
-            () -> assertThat(messageCount(creds, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(1));
+            () -> assertThat(messageCount(creds)).isEqualTo(1));
 
     // move that message
     var toCreds = connect(EMX_SANDBOX_NAMESPACE, EMX_SANDBOX_FOREST_QUEUE2,
@@ -82,7 +83,7 @@ public class AzureServiceBusQueueTests {
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
         .untilAsserted(
-            () -> assertThat(messageCount(creds, EMX_SANDBOX_FOREST_QUEUE2)).isEqualTo(1));
+            () -> assertThat(messageCount(toCreds)).isEqualTo(1));
 
     // check it
     var message = asbRead(toCreds);
@@ -105,11 +106,11 @@ public class AzureServiceBusQueueTests {
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
         .untilAsserted(
-            () -> assertThat(messageCount(creds, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(1));
+            () -> assertThat(messageCount(creds)).isEqualTo(1));
 
     // retrieve that message
     var message = asbConsume(creds);
-    assertThat(messageCount(creds, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(0);
+    assertThat(messageCount(creds)).isEqualTo(0);
 
     // check it
     var body = new String(message.getMessageBody().getBinaryData().get(0));
@@ -130,12 +131,12 @@ public class AzureServiceBusQueueTests {
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
         .untilAsserted(
-            () -> assertThat(messageCount(creds, EMX_SANDBOX_FOREST_QUEUE)).isGreaterThanOrEqualTo(
+            () -> assertThat(messageCount(creds)).isGreaterThanOrEqualTo(
                 num));
 
     // purge the queue
     assertThat(asbPurge(creds)).isGreaterThanOrEqualTo(num);
-    assertThat(messageCount(creds, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(0);
+    assertThat(messageCount(creds)).isEqualTo(0);
   }
 
   @Test
@@ -157,7 +158,7 @@ public class AzureServiceBusQueueTests {
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
         .untilAsserted(
-            () -> assertThat(messageCount(credsQwDlq, EMX_SANDBOX_FOREST_QUEUE_W_DLQ)).isEqualTo(
+            () -> assertThat(messageCount(credsQwDlq)).isEqualTo(
                 1));
 
     // have the message on the queue move to the DLQ
@@ -168,7 +169,7 @@ public class AzureServiceBusQueueTests {
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
         .untilAsserted(
-            () -> assertThat(messageCount(credsQwDlq, EMX_SANDBOX_FOREST_QUEUE_W_DLQ)).isEqualTo(
+            () -> assertThat(messageCount(credsQwDlq)).isEqualTo(
                 0));
 
     // check the DLQ message
@@ -207,7 +208,7 @@ public class AzureServiceBusQueueTests {
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
         .untilAsserted(
-            () -> assertThat(messageCount(credsQwTtl, EMX_SANDBOX_FOREST_QUEUE_W_TTL)).isEqualTo(
+            () -> assertThat(messageCount(credsQwTtl)).isEqualTo(
                 1));
 
     // check queue to see if main queue is empty, indicating that the message has expired
@@ -215,7 +216,7 @@ public class AzureServiceBusQueueTests {
         .pollInterval(Duration.ofSeconds(5))
         .atMost(Duration.ofSeconds(120))
         .untilAsserted(
-            () -> assertThat(messageCount(credsQwTtl, EMX_SANDBOX_FOREST_QUEUE_W_TTL)).isEqualTo(
+            () -> assertThat(messageCount(credsQwTtl)).isEqualTo(
                 0));
 
     // check the DLQ message
@@ -249,7 +250,7 @@ public class AzureServiceBusQueueTests {
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(12))
         .untilAsserted(
-            () -> assertThat(messageCount(credsQwForward, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(0));
+            () -> assertThat(messageCount(credsQwForward)).isEqualTo(0));
 
     // read the message on the other queue
     var message = asbRead(toCreds);
@@ -263,5 +264,33 @@ public class AzureServiceBusQueueTests {
     asbConsume(toCreds);
   }
 
-  // todo: test move all messages
+  @Test
+  public void testMoveAll() {
+    // send messages
+    var numMsgs = 7;
+    for (var i = 0; i < numMsgs; i++) {
+      asbSend(creds, createIMessage(defaultPayload));
+    }
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(
+            () -> assertThat(messageCount(creds)).isEqualTo(numMsgs));
+
+    // move messages
+    var toCreds = connect(EMX_SANDBOX_NAMESPACE, EMX_SANDBOX_FOREST_QUEUE2,
+        EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
+        EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
+    asbMoveAll(creds, toCreds);
+
+    // verify messages are on the target queue
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(
+            () -> assertThat(messageCount(toCreds)).isEqualTo(numMsgs));
+
+    // clean up
+    asbPurge(toCreds);
+  }
 }
