@@ -360,7 +360,7 @@ public class AwsSqsIntTests {
       sqsSend(creds, SQS1, payload);
     }
 
-    // verify messages are on the sqs
+    // verify messages are on the source sqs
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
@@ -369,7 +369,7 @@ public class AwsSqsIntTests {
     // move the message
     sqsMoveAll(creds, SQS1, SQS2);
 
-    // verify message is on the sqs
+    // verify messages are on the target sqs
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
