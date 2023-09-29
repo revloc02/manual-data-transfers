@@ -57,7 +57,7 @@ public class SqsAndAsbQueue {
             convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
         asbSend(azureConnStr, createIMessage(sqsMsg.body(), properties));
         LOG.info(
-            "Moved from SQS={} to, ASB-Queue={} counter={}",
+            "Moved from SQS={} to ASB-Queue={}; counter={}",
             sqs,
             azureConnStr.getEntityPath(),
             counter);
@@ -65,7 +65,37 @@ public class SqsAndAsbQueue {
         moreMessages = false;
       }
     }
-    LOG.info("Moved {} messages from SQS={} to, ASB-Queue={}.", counter, sqs,
+    LOG.info("Moved {} messages from SQS={} to ASB-Queue={}.", counter, sqs,
         azureConnStr.getEntityPath());
   }
+
+  // todo: this needs a unit test
+  public static void moveAllAsbQueueToSqs(String sqs,
+      ConnectionStringBuilder azureConnStr, AwsCredentialsProvider awsCreds) {
+    var moreMessages = true;
+    var counter = 0;
+    while (moreMessages) {
+      var asbQMsg = asbConsume(azureConnStr);
+      if (asbQMsg != null) { // not 100% sure if this strategy will work
+        counter++;
+        // send body and properties to SQS
+        var asbQueProps = asbQMsg.getProperties();
+        var body = new String(asbQMsg.getMessageBody().getBinaryData().get(0));
+        Map<String, String> properties = asbQueProps.entrySet().stream()
+            .filter(entry -> entry.getValue() instanceof String).collect(
+                Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue()));
+        sqsSend(awsCreds, sqs, body, properties);
+        LOG.info(
+            "Moved from ASB-Queue={} to SQS={}; counter={}",
+            azureConnStr.getEntityPath(),
+            sqs,
+            counter);
+      } else {
+        moreMessages = false;
+      }
+    }
+    LOG.info("Moved {} messages from ASB-Queue={} to SQS={}.", counter,
+        azureConnStr.getEntityPath(), sqs);
+  }
+
 }
