@@ -54,7 +54,9 @@ public class ServiceBusQueueOperations {
       IMessageReceiver iMessageReceiver = ClientFactory.createMessageReceiverFromConnectionStringBuilder(
           connectionStringBuilder, ReceiveMode.PEEKLOCK);
       message = iMessageReceiver.receive(Duration.ofSeconds(1));
-      iMessageReceiver.completeAsync(message.getLockToken());
+      if (message != null) {
+        iMessageReceiver.completeAsync(message.getLockToken());
+      }
     } catch (InterruptedException | ServiceBusException e) {
       e.printStackTrace();
     }
