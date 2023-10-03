@@ -2,6 +2,7 @@ package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
@@ -20,6 +21,7 @@ import static forest.colver.datatransfer.azure.Utils.createIMessage;
 import static forest.colver.datatransfer.config.Utils.defaultPayload;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
+import static forest.colver.datatransfer.hybrid.SqsAndAsbQueue.moveAllAsbQueueToSqs;
 import static forest.colver.datatransfer.hybrid.SqsAndAsbQueue.moveAllSqsToAsbQueue;
 import static forest.colver.datatransfer.hybrid.SqsAndAsbQueue.moveOneAsbQueueToSqs;
 import static forest.colver.datatransfer.hybrid.SqsAndAsbQueue.moveOneSqsToAsbQueue;
@@ -126,5 +128,36 @@ public class HybridSqsAndAsbQueueIntTests {
 
     // cleanup
     asbPurge(asbCreds);
+  }
+
+  /**
+   * Tests the method that moves all messages from an ASB queue to an SQS. Note: the assertThat() in
+   * both of the await() items uses .isGreaterThanOrEqualTo instead of .isEqualTo because if there
+   * happens to be a network glitch, a subsequent run will still run successfully and in that
+   * process clean the queues up.
+   */
+  @Test
+  public void testMoveAllAsbQueueToSqs() {
+    // send messages
+    var numMsgs = 7;
+    for (var i = 0; i < numMsgs; i++) {
+      asbSend(asbCreds, createIMessage(defaultPayload));
+    }
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(
+            () -> assertThat(messageCount(asbCreds)).isGreaterThanOrEqualTo(numMsgs));
+
+    moveAllAsbQueueToSqs(asbCreds, SQS1, awsCreds);
+
+    // verify messages are on the target sqs
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(awsCreds, SQS1)).isGreaterThanOrEqualTo(numMsgs));
+
+    // cleanup
+    sqsPurge(awsCreds, SQS1);
   }
 }

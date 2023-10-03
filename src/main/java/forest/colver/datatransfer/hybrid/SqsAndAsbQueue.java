@@ -69,14 +69,13 @@ public class SqsAndAsbQueue {
         azureConnStr.getEntityPath());
   }
 
-  // todo: this needs a unit test
-  public static void moveAllAsbQueueToSqs(String sqs,
-      ConnectionStringBuilder azureConnStr, AwsCredentialsProvider awsCreds) {
+  public static void moveAllAsbQueueToSqs(ConnectionStringBuilder azureConnStr, String sqs,
+      AwsCredentialsProvider awsCreds) {
     var moreMessages = true;
     var counter = 0;
     while (moreMessages) {
       var asbQMsg = asbConsume(azureConnStr);
-      if (asbQMsg != null) { // not 100% sure if this strategy will work
+      if (asbQMsg != null) {
         counter++;
         // send body and properties to SQS
         var asbQueProps = asbQMsg.getProperties();
