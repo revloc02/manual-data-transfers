@@ -98,9 +98,9 @@ public class SqsOperations {
   /**
    * Reads one message from the SQS, and then displays the data and properties of it. My current
    * opinion is that this method should not be generally used, rather the
-   * {@link #sqsReadMessages(AwsCredentialsProvider, String)} which returns the Response object
-   * should be used. This method has been used in a lot of unit tests, but that does not mean it is
-   * better.
+   * {@link #sqsReadMessages(AwsCredentialsProvider, String)} which returns the Response object,
+   * should be used if possible. This method has been used in a lot of unit tests, but that does not
+   * mean it is better.
    */
   public static Message sqsReadOneMessage(
       AwsCredentialsProvider awsCP, String queueName) {

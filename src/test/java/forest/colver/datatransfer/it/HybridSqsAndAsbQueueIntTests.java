@@ -21,6 +21,7 @@ import static forest.colver.datatransfer.azure.Utils.createIMessage;
 import static forest.colver.datatransfer.config.Utils.defaultPayload;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
+import static forest.colver.datatransfer.hybrid.SqsAndAsbQueue.copyOneSqsToAsbQueue;
 import static forest.colver.datatransfer.hybrid.SqsAndAsbQueue.moveAllAsbQueueToSqs;
 import static forest.colver.datatransfer.hybrid.SqsAndAsbQueue.moveAllSqsToAsbQueue;
 import static forest.colver.datatransfer.hybrid.SqsAndAsbQueue.moveOneAsbQueueToSqs;
@@ -132,7 +133,7 @@ public class HybridSqsAndAsbQueueIntTests {
 
   /**
    * Tests the method that moves all messages from an ASB queue to an SQS. Note: the assertThat() in
-   * both of the await() items uses .isGreaterThanOrEqualTo instead of .isEqualTo because if there
+   * both of the await() items  uses .isGreaterThanOrEqualTo instead of .isEqualTo because if there
    * happens to be a network glitch, a subsequent run will still run successfully and in that
    * process clean the queues up.
    */
@@ -159,5 +160,38 @@ public class HybridSqsAndAsbQueueIntTests {
 
     // cleanup
     sqsPurge(awsCreds, SQS1);
+  }
+
+  @Test
+  public void testCopyOneSqsToAsbQueue() {
+    // place a message on SQS
+    LOG.info("Interacting with: sqs={}", SQS1);
+    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3",
+        "value3");
+    var payload = getDefaultPayload();
+    sqsSend(awsCreds, SQS1, payload, messageProps);
+
+    // check that it arrived
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(awsCreds, SQS1)).isEqualTo(1));
+
+    // move it to ASB queue
+    copyOneSqsToAsbQueue(awsCreds, SQS1, asbCreds);
+
+    // read that message
+    var message = asbRead(asbCreds);
+
+    // check it
+    var body = new String(message.getMessageBody().getBinaryData().get(0));
+    assertThat(body).isEqualTo(payload);
+    assertThat(message.getProperties().get("key2")).isEqualTo("value2");
+    assertThat(message.getProperties().get("key3")).isEqualTo("value3");
+
+    // clean up
+    asbConsume(asbCreds);
+    var msg = sqsReadOneMessage(awsCreds, SQS1);
+    sqsDeleteMessage(awsCreds, SQS1, msg);
   }
 }

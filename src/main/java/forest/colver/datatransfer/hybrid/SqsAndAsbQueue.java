@@ -1,6 +1,7 @@
 package forest.colver.datatransfer.hybrid;
 
 import static forest.colver.datatransfer.aws.SqsOperations.sqsConsumeOneMessage;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.convertSqsMessageAttributesToStrings;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsume;
@@ -96,5 +97,18 @@ public class SqsAndAsbQueue {
     LOG.info("Moved {} messages from ASB-Queue={} to SQS={}.", counter,
         azureConnStr.getEntityPath(), sqs);
   }
+// todo: write copy methods
 
+  public static void copyOneSqsToAsbQueue(AwsCredentialsProvider awsCreds, String sqs,
+      ConnectionStringBuilder azureConnStr) {
+    var sqsMsg = sqsReadOneMessage(awsCreds, sqs);
+    if (sqsMsg != null) {
+      // send body and properties to ASB queue
+      Map<String, Object> properties = new HashMap<>(
+          convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
+      asbSend(azureConnStr, createIMessage(sqsMsg.body(), properties));
+    } else {
+      LOG.error("ERROR: SQS message was null.");
+    }
+  }
 }
