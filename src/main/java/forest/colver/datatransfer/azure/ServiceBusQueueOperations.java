@@ -89,6 +89,7 @@ public class ServiceBusQueueOperations {
       asbSend(toCsb, asbConsume(fromCsb));
     }
   }
+  // todo: I think I need copy method in here
 
   public static int asbPurge(ConnectionStringBuilder connectionStringBuilder) {
     var counter = 0;
