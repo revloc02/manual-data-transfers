@@ -5,6 +5,7 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.convertSqsMessageAttributesToStrings;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsume;
+import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbRead;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbSend;
 import static forest.colver.datatransfer.azure.Utils.createIMessage;
 
@@ -36,13 +37,8 @@ public class SqsAndAsbQueue {
 
   public static void moveOneAsbQueueToSqs(ConnectionStringBuilder azureConnStr,
       AwsCredentialsProvider awsCreds, String sqs) {
-    IMessage message = asbConsume(azureConnStr);
-    var asbQueProps = message.getProperties();
-    var body = new String(message.getMessageBody().getBinaryData().get(0));
-    Map<String, String> properties = asbQueProps.entrySet().stream()
-        .filter(entry -> entry.getValue() instanceof String).collect(
-            Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue()));
-    sqsSend(awsCreds, sqs, body, properties);
+    IMessage iMessage = asbConsume(azureConnStr);
+    sendIMessageToSqs(iMessage, awsCreds, sqs);
   }
 
   public static void moveAllSqsToAsbQueue(AwsCredentialsProvider awsCreds, String sqs,
@@ -75,16 +71,11 @@ public class SqsAndAsbQueue {
     var moreMessages = true;
     var counter = 0;
     while (moreMessages) {
-      var asbQMsg = asbConsume(azureConnStr);
-      if (asbQMsg != null) {
+      var iMessage = asbConsume(azureConnStr);
+      if (iMessage != null) {
         counter++;
         // send body and properties to SQS
-        var asbQueProps = asbQMsg.getProperties();
-        var body = new String(asbQMsg.getMessageBody().getBinaryData().get(0));
-        Map<String, String> properties = asbQueProps.entrySet().stream()
-            .filter(entry -> entry.getValue() instanceof String).collect(
-                Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue()));
-        sqsSend(awsCreds, sqs, body, properties);
+        sendIMessageToSqs(iMessage, awsCreds, sqs);
         LOG.info(
             "Moved from ASB-Queue={} to SQS={}; counter={}",
             azureConnStr.getEntityPath(),
@@ -110,5 +101,32 @@ public class SqsAndAsbQueue {
     } else {
       LOG.error("ERROR: SQS message was null.");
     }
+  }
+
+  // todo: this needs a unit test
+  public static void copyOneAsbQueueToSqs(ConnectionStringBuilder azureConnStr, AwsCredentialsProvider awsCreds, String sqs) {
+    var iMessage = asbRead(azureConnStr);
+    if (iMessage != null) {
+      sendIMessageToSqs(iMessage, awsCreds, sqs);
+    } else {
+      LOG.error("ERROR: ASB queue IMessage was null.");
+    }
+  }
+
+  /**
+   * Extracts the payload and properties from an IMessage and sends that data to an SQS.
+   *
+   * @param iMessage An Azure IMessage.
+   * @param awsCreds Credentials for AWS.
+   * @param sqs The SQS queue.
+   */
+  private static void sendIMessageToSqs(IMessage iMessage, AwsCredentialsProvider awsCreds,
+      String sqs) {
+    var asbQueProps = iMessage.getProperties();
+    var body = new String(iMessage.getMessageBody().getBinaryData().get(0));
+    Map<String, String> properties = asbQueProps.entrySet().stream()
+        .filter(entry -> entry.getValue() instanceof String).collect(
+            Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue()));
+    sqsSend(awsCreds, sqs, body, properties);
   }
 }
