@@ -21,6 +21,7 @@ import static forest.colver.datatransfer.azure.Utils.createIMessage;
 import static forest.colver.datatransfer.config.Utils.defaultPayload;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
+import static forest.colver.datatransfer.hybrid.SqsAndAsbQueue.copyOneAsbQueueToSqs;
 import static forest.colver.datatransfer.hybrid.SqsAndAsbQueue.copyOneSqsToAsbQueue;
 import static forest.colver.datatransfer.hybrid.SqsAndAsbQueue.moveAllAsbQueueToSqs;
 import static forest.colver.datatransfer.hybrid.SqsAndAsbQueue.moveAllSqsToAsbQueue;
@@ -79,7 +80,7 @@ public class HybridSqsAndAsbQueueIntTests {
 
   @Test
   public void testMoveAsbQueueToSqs() {
-    // send a message
+    // send a message to ASB queue
     Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
         "specificValue");
     asbSend(asbCreds, createIMessage(defaultPayload, properties));
@@ -139,7 +140,7 @@ public class HybridSqsAndAsbQueueIntTests {
    */
   @Test
   public void testMoveAllAsbQueueToSqs() {
-    // send messages
+    // send messages to ASB queue
     var numMsgs = 7;
     for (var i = 0; i < numMsgs; i++) {
       asbSend(asbCreds, createIMessage(defaultPayload));
@@ -171,13 +172,13 @@ public class HybridSqsAndAsbQueueIntTests {
     var payload = getDefaultPayload();
     sqsSend(awsCreds, SQS1, payload, messageProps);
 
-    // check that it arrived
+    // check that it is on SQS
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(() -> assertThat(sqsDepth(awsCreds, SQS1)).isEqualTo(1));
 
-    // move it to ASB queue
+    // copy it to ASB queue
     copyOneSqsToAsbQueue(awsCreds, SQS1, asbCreds);
 
     // read that message
@@ -193,5 +194,32 @@ public class HybridSqsAndAsbQueueIntTests {
     asbConsume(asbCreds);
     var msg = sqsReadOneMessage(awsCreds, SQS1);
     sqsDeleteMessage(awsCreds, SQS1, msg);
+  }
+
+  @Test
+  public void testCopyOneAsbQueueToSqs() {
+    // send a message to ASB queue
+    Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
+        "specificValue");
+    asbSend(asbCreds, createIMessage(defaultPayload, properties));
+    await()
+        .pollInterval(Duration.ofSeconds(1))
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () -> assertThat(messageCount(asbCreds)).isEqualTo(1));
+
+    // copy the message to SQS
+    copyOneAsbQueueToSqs(asbCreds, awsCreds, SQS1);
+
+    // check that it arrived on SQS
+    var msg = sqsReadOneMessage(awsCreds, SQS1);
+    assert msg != null;
+    assertThat(msg.body()).isEqualTo(defaultPayload);
+    assertThat(msg.hasMessageAttributes()).isEqualTo(true);
+    assertThat(msg.messageAttributes().get("specificKey").stringValue()).isEqualTo("specificValue");
+
+    // cleanup
+    sqsDeleteMessage(awsCreds, SQS1, msg);
+    asbConsume(asbCreds);
   }
 }
