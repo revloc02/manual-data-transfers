@@ -102,7 +102,8 @@ public class SqsAndAsbQueue {
     }
   }
 
-  public static void copyOneAsbQueueToSqs(ConnectionStringBuilder azureConnStr, AwsCredentialsProvider awsCreds, String sqs) {
+  public static void copyOneAsbQueueToSqs(ConnectionStringBuilder azureConnStr,
+      AwsCredentialsProvider awsCreds, String sqs) {
     var iMessage = asbRead(azureConnStr);
     if (iMessage != null) {
       sendIMessageToSqs(iMessage, awsCreds, sqs);
@@ -110,8 +111,6 @@ public class SqsAndAsbQueue {
       LOG.error("ERROR: ASB queue IMessage was null.");
     }
   }
-
-// todo: write copy all methods
 
   /**
    * Extracts the payload and properties from an IMessage and sends that data to an SQS.
