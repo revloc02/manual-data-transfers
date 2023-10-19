@@ -26,6 +26,15 @@ public class StorageQueueOperations {
     }
   }
 
+  /**
+   * Peeks at the first message in the queue. Peeked messages don't contain the necessary
+   * information needed to interact with the message nor will it hide messages from other operations
+   * on the queue. I've been using it ot ensure a message arrived on the queue.
+   *
+   * @param connectStr The connection string to connect to the service.
+   * @param queueName The name of the queue that the client will interact with.
+   * @return The content of the Message.
+   */
   public static String asqPeek(String connectStr, String queueName) {
     String body = "";
     try {
@@ -103,4 +112,5 @@ public class StorageQueueOperations {
       e.printStackTrace();
     }
   }
+  //todo: can I make move and copy methods?
 }
