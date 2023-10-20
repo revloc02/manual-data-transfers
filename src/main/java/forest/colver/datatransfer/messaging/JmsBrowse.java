@@ -4,7 +4,6 @@ import static forest.colver.datatransfer.config.Utils.getPassword;
 import static forest.colver.datatransfer.config.Utils.getUsername;
 import static forest.colver.datatransfer.messaging.DisplayUtils.createStringFromMessage;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import javax.jms.JMSException;
@@ -98,7 +97,6 @@ public class JmsBrowse {
     return msgCount;
   }
 
-  // todo: this needs a unit test
   /**
    * For all messages in the queue, this displays a truncation of each payload. (I used this once,
    * but honestly I'm not sure how useful this will be. Keeping it anyway.)
@@ -106,8 +104,8 @@ public class JmsBrowse {
    * @param env The Environment
    * @param queueName The queue name.
    */
-  public static void browseMessagesPayload(Environment env, String queueName) {
-    var truncation = 200; // truncate the payload to this many characters
+  public static void displayMessagesPayloads(Environment env, String queueName) {
+    var truncation = 180; // truncate the payload to this many characters
     var cf = new JmsConnectionFactory(env.url());
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
       var q = ctx.createQueue(queueName);
