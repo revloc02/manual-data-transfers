@@ -104,7 +104,7 @@ public class JmsBrowse {
    * @param env The Environment
    * @param queueName The queue name.
    */
-  public static void displayMessagesPayloads(Environment env, String queueName) {
+  public static void displayMessagesPayload(Environment env, String queueName) {
     var truncation = 180; // truncate the payload to this many characters
     var cf = new JmsConnectionFactory(env.url());
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
