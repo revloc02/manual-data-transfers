@@ -353,10 +353,15 @@ public class SqsOperations {
   }
 
   /**
-   * Copy all messages from one SQS to another. 1) Check the queue depth, if it is deeper than 1000
-   * messages, abort. 2) Calculate a visibility timeout, one second per message currently on the
-   * SQS. 3) Retrieve each message from the SQS setting the visibility timeout. 4) Copy the message
-   * to the other SQS.
+   * Copy all messages from one SQS to another. The challenge here is if the queue is too deep,
+   * messages that were copied early will become available on the queue before the copyAll process
+   * is complete, and then those messages will get copied again. So this code employs this strategy:
+   * 1) Check the queue depth, if it is deeper than 1000 messages, abort. 2) Calculate a visibility
+   * timeout, one second per message currently on the SQS. 3) Retrieve each message from the SQS
+   * setting the visibility timeout. 4) Copy the message to the other SQS. IMPORTANT: if this method
+   * is going to be used on actual prod data, under certain circumstances, the data could be
+   * "timed-out" and unavailable for some time--just make sure you know what you are doing and have
+   * thought through the implications.
    *
    * @param awsCP Credentials.
    * @param fromSqs Source SQS.
@@ -369,7 +374,7 @@ public class SqsOperations {
     var counter = 0;
     if (depth < maxDepth) {
       // calculate a visibility timeout, probably 1 sec per message in the sqs
-      var visibilityTimeout = 10 + (depth);
+      var visibilityTimeout = 10 + (depth); // max is 12 hours or 43,200 seconds
       var moreMessages = true;
       try (var sqsClient = getSqsClient(awsCP)) {
         do {
