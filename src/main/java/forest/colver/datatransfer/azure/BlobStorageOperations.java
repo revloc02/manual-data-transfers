@@ -107,4 +107,6 @@ public class BlobStorageOperations {
     blobContainerClient.getBlobClient(filename).delete();
   }
 
+  // todo: can I make move and copy methods between 2 blob containers?
+  // todo: can I research copying from one blob container to another without using Java?
 }
