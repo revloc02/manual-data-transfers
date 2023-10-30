@@ -112,5 +112,10 @@ public class StorageQueueOperations {
       e.printStackTrace();
     }
   }
+
+  public static void asqMove(String connectStr, String queue1, String queue2) {
+    var message = asqConsume(connectStr, queue1);
+    asqSend(connectStr, queue2, String.valueOf(message.getBody()));
+  }
   //todo: can I make move and copy methods?
 }

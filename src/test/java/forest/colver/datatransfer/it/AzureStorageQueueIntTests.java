@@ -1,6 +1,7 @@
 package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqConsume;
+import static forest.colver.datatransfer.azure.StorageQueueOperations.asqMove;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqPeek;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqPurge;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqQueueDepth;
@@ -27,6 +28,7 @@ public class AzureStorageQueueIntTests {
 
   public static final String CONNECT_STR = EMX_SANDBOX_STORAGE_ACCOUNT_CONNECTION_STRING;
   public static final String QUEUE_NAME = "forest-test-storage-queue";
+  public static final String QUEUE2_NAME = "forest-test-storage-queue2";
   public static final String PAYLOAD = "this is the body";
   private static final Logger LOG = LoggerFactory.getLogger(AzureStorageQueueIntTests.class);
 
@@ -104,5 +106,19 @@ public class AzureStorageQueueIntTests {
       LOG.info("removed {}", future.get().getBody().toString());
     }
     assertThat(uuids.size()).isEqualTo(0);
+  }
+
+  @Test
+  public void testAsqMove() {
+    // place a message
+    asqSend(CONNECT_STR, QUEUE_NAME, PAYLOAD);
+    // ensure it arrived
+    assertThat(asqPeek(CONNECT_STR, QUEUE_NAME)).isEqualTo(PAYLOAD);
+    // move the message
+    asqMove(CONNECT_STR, QUEUE_NAME, QUEUE2_NAME);
+    // ensure it moved
+    assertThat(asqPeek(CONNECT_STR, QUEUE2_NAME)).isEqualTo(PAYLOAD);
+    //cleanup
+    asqConsume(CONNECT_STR, QUEUE2_NAME);
   }
 }
