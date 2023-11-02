@@ -118,4 +118,18 @@ public class StorageQueueOperations {
     asqSend(connectStr, queue2, String.valueOf(message.getBody()));
   }
   //todo: can I make move and copy methods?
+
+  public static void asqCopy(String connectStr, String queue1, String queue2) {
+    QueueMessageItem message = null;
+    try {
+      QueueClient queueClient = new QueueClientBuilder()
+          .connectionString(connectStr)
+          .queueName(queue1)
+          .buildClient();
+      message = queueClient.receiveMessage(); // default visibilityTimeout=30 seconds
+      asqSend(connectStr, queue2, String.valueOf(message.getBody()));
+    } catch (QueueStorageException e) {
+      e.printStackTrace();
+    }
+  }
 }

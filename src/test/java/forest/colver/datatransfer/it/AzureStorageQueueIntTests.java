@@ -1,6 +1,7 @@
 package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqConsume;
+import static forest.colver.datatransfer.azure.StorageQueueOperations.asqCopy;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqMove;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqPeek;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqPurge;
@@ -119,6 +120,21 @@ public class AzureStorageQueueIntTests {
     // ensure it moved
     assertThat(asqPeek(CONNECT_STR, QUEUE2_NAME)).isEqualTo(PAYLOAD);
     //cleanup
+    asqConsume(CONNECT_STR, QUEUE2_NAME);
+  }
+
+  @Test
+  public void testAsqCopy() {
+    // place a message
+    asqSend(CONNECT_STR, QUEUE_NAME, PAYLOAD);
+    // ensure it arrived
+    assertThat(asqPeek(CONNECT_STR, QUEUE_NAME)).isEqualTo(PAYLOAD);
+    // move the message
+    asqCopy(CONNECT_STR, QUEUE_NAME, QUEUE2_NAME);
+    // ensure it moved
+    assertThat(asqPeek(CONNECT_STR, QUEUE2_NAME)).isEqualTo(PAYLOAD);
+    //cleanup
+    asqConsume(CONNECT_STR, QUEUE_NAME);
     asqConsume(CONNECT_STR, QUEUE2_NAME);
   }
 }
