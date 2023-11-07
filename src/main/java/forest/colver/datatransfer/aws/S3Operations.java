@@ -29,6 +29,12 @@ import software.amazon.awssdk.services.s3.model.S3Object;
 public class S3Operations {
 
   private static final Logger LOG = LoggerFactory.getLogger(S3Operations.class);
+  private static final String PUT_SUCCESS = "S3PUT: The object {} was put on the {} bucket.";
+
+  private S3Operations() {
+    // https://rules.sonarsource.com/java/RSPEC-1118/
+    throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
+  }
 
   /**
    * s3Put with AwsCreds. Put an object on a desired S3 bucket. Creates an S3Client--good to use
@@ -51,7 +57,7 @@ public class S3Operations {
     var requestBody = RequestBody.fromString(payload);
     var putObjectResponse = s3Client.putObject(putObjectRequest, requestBody);
     awsResponseValidation(putObjectResponse);
-    LOG.info("S3PUT: The object {} was put on the {} bucket.\n", objectKey, bucket);
+    LOG.info(PUT_SUCCESS, objectKey, bucket);
   }
 
   /**
@@ -82,7 +88,7 @@ public class S3Operations {
     var requestBody = RequestBody.fromString(payload);
     var putObjectResponse = s3Client.putObject(putObjectRequest, requestBody);
     awsResponseValidation(putObjectResponse);
-    LOG.info("S3PUT: The object {} was put on the {} bucket.\n", objectKey, bucket);
+    LOG.info(PUT_SUCCESS, objectKey, bucket);
   }
 
   /**
@@ -105,7 +111,7 @@ public class S3Operations {
     var requestBody = RequestBody.fromString(payload);
     var putObjectResponse = s3Client.putObject(putObjectRequest, requestBody);
     awsResponseValidation(putObjectResponse);
-    LOG.info("S3PUT: The object {} was put on the {} bucket.\n", putObjectRequest.key(),
+    LOG.info(PUT_SUCCESS, putObjectRequest.key(),
         putObjectRequest.bucket());
   }
 

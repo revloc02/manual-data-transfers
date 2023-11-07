@@ -26,7 +26,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 /**
  * Integration Tests for AWS S3
  */
-public class AwsS3IntTests {
+class AwsS3IntTests {
 
   private static final Logger LOG = LoggerFactory.getLogger(AwsS3IntTests.class);
 
@@ -36,7 +36,7 @@ public class AwsS3IntTests {
    * Each S3 operation uses the creds to create its own S3Client.
    */
   @Test
-  public void testS3Put_PassCredsAndParams() {
+  void testS3Put_PassCredsAndParams() {
     // put a file
     var objectKey = "revloc02/source/test/test.txt";
     var creds = getEmxSbCreds();
@@ -57,7 +57,7 @@ public class AwsS3IntTests {
   }
 
   @Test
-  public void testS3Put_PassS3ClientAndParams() {
+  void testS3Put_PassS3ClientAndParams() {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
       // put a file
@@ -75,12 +75,12 @@ public class AwsS3IntTests {
 
       // verify the file is gone
       objects = s3List(s3Client, S3_INTERNAL, objectKey);
-      assertThat(objects.size()).isZero();
+      assertThat(objects).isEmpty();
     }
   }
 
   @Test
-  public void testS3Put_PassCredsAndParamsWithMetadata() {
+  void testS3Put_PassCredsAndParamsWithMetadata() {
     // put a file
     var objectKey = "revloc02/source/test/test.txt";
     var creds = getEmxSbCreds();
@@ -103,11 +103,11 @@ public class AwsS3IntTests {
 
     // verify the file is gone
     objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isZero();
+    assertThat(objects).isEmpty();
   }
 
   @Test
-  public void testS3Put_PassS3ClientAndParamsWithMetadata() {
+  void testS3Put_PassS3ClientAndParamsWithMetadata() {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
       // put a file
@@ -131,12 +131,12 @@ public class AwsS3IntTests {
 
       // verify the file is gone
       objects = s3List(s3Client, S3_INTERNAL, objectKey);
-      assertThat(objects.size()).isZero();
+      assertThat(objects).isEmpty();
     }
   }
 
   @Test
-  public void testS3Copy_PassClient() throws IOException {
+  void testS3Copy_PassClient() throws IOException {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
       // place a file
@@ -174,7 +174,7 @@ public class AwsS3IntTests {
   }
 
   @Test
-  public void testS3Copy_PassCreds() throws IOException {
+  void testS3Copy_PassCreds() throws IOException {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
       // place a file
@@ -212,7 +212,7 @@ public class AwsS3IntTests {
   }
 
   @Test
-  public void testS3Delete() {
+  void testS3Delete() {
     // put a file
     var objectKey = "revloc02/source/test/test.txt";
     var creds = getEmxSbCreds();
@@ -228,14 +228,14 @@ public class AwsS3IntTests {
 
     // verify the file is gone
     objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isZero();
+    assertThat(objects).isEmpty();
   }
 
   /**
    * Tests s3List that requires creds and returns a List of objects.
    */
   @Test
-  public void testS3List() {
+  void testS3List() {
     var creds = getEmxSbCreds();
     var objectKey = "revloc02/target/test/mdtTest1.txt";
     s3Put(creds, S3_INTERNAL, objectKey, getDefaultPayload());
@@ -249,7 +249,7 @@ public class AwsS3IntTests {
    * Tests s3List that requires S3 Client and maxKeys, and returns a List of objects.
    */
   @Test
-  public void testS3ListWithMaxkeys() {
+  void testS3ListWithMaxkeys() {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
       var objectKey = "revloc02/target/test/mdtTest1.txt";
@@ -265,7 +265,7 @@ public class AwsS3IntTests {
    * Tests s3List that requires creds and returns a ListObjectResponse.
    */
   @Test
-  public void testS3ListResponse() {
+  void testS3ListResponse() {
     var creds = getEmxSbCreds();
     var objectKey = "revloc02/target/test/mdtTest1.txt";
     s3Put(creds, S3_INTERNAL, objectKey, getDefaultPayload());
@@ -279,7 +279,7 @@ public class AwsS3IntTests {
    * Tests s3List that requires S3 Client and maxKeys, and returns a ListObjectsResponse.
    */
   @Test
-  public void testS3ListResponseWithMaxKeys() {
+  void testS3ListResponseWithMaxKeys() {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
       var objectKey = "revloc02/target/test/mdtTest1.txt";
@@ -297,7 +297,7 @@ public class AwsS3IntTests {
    * Each S3 operation uses the creds to create its own S3Client.
    */
   @Test
-  public void testS3Put_PassCredsPassPutObjReq() {
+  void testS3Put_PassCredsPassPutObjReq() {
     // put a file
     var objectKey = "revloc02/source/test/test.txt";
     var creds = getEmxSbCreds();
@@ -318,14 +318,14 @@ public class AwsS3IntTests {
 
     // verify the file is gone
     objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isZero();
+    assertThat(objects).isEmpty();
   }
 
   /**
    * One S3Client is created and then passed to each of the S3 operations.
    */
   @Test
-  public void testS3Put_PassClientPassPutObjReq() {
+  void testS3Put_PassClientPassPutObjReq() {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
       // put a file
@@ -347,12 +347,12 @@ public class AwsS3IntTests {
 
       // verify the file is gone
       objects = s3List(s3Client, S3_INTERNAL, objectKey);
-      assertThat(objects.size()).isZero();
+      assertThat(objects).isEmpty();
     }
   }
 
   @Test
-  public void testS3Put_PassClientPassObjReqWithTagging() throws IOException {
+  void testS3Put_PassClientPassObjReqWithTagging() throws IOException {
     try (var s3Client = getS3Client(getEmxSbCreds())) {
       // put a file
       var objectKey = "revloc02/source/test/test.txt";
@@ -387,12 +387,12 @@ public class AwsS3IntTests {
 
       // verify the file is gone
       objects = s3List(s3Client, S3_INTERNAL, objectKey);
-      assertThat(objects.size()).isZero();
+      assertThat(objects).isEmpty();
     }
   }
 
   @Test
-  public void testS3Get() throws IOException {
+  void testS3Get() throws IOException {
     try (var s3Client = getS3Client(getEmxSbCreds())) {
       // put a file
       var objectKey = "revloc02/source/test/test.txt";
@@ -418,12 +418,12 @@ public class AwsS3IntTests {
 
       // verify the file is gone
       objects = s3List(s3Client, S3_INTERNAL, objectKey);
-      assertThat(objects.size()).isZero();
+      assertThat(objects).isEmpty();
     }
   }
 
   @Test
-  public void testS3Head_PassCredsPassPutObjReqWithMetadata() {
+  void testS3Head_PassCredsPassPutObjReqWithMetadata() {
     // put a file
     var objectKey = "revloc02/source/test/test.txt";
     var creds = getEmxSbCreds();
@@ -449,11 +449,11 @@ public class AwsS3IntTests {
 
     // verify the file is gone
     objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isZero();
+    assertThat(objects).isEmpty();
   }
 
   @Test
-  public void testS3Head_PassS3Client() throws IOException {
+  void testS3Head_PassS3Client() throws IOException {
     try (var s3Client = getS3Client(getEmxSbCreds())) {
       // put a file
       var objectKey = "revloc02/source/test/test.txt";
@@ -486,7 +486,7 @@ public class AwsS3IntTests {
 
       // verify the file is gone
       objects = s3List(s3Client, S3_INTERNAL, objectKey);
-      assertThat(objects.size()).isZero();
+      assertThat(objects).isEmpty();
     }
   }
 }
