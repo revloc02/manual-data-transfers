@@ -53,7 +53,7 @@ class AwsS3IntTests {
 
     // verify the file is gone
     objects = s3List(creds, S3_INTERNAL, objectKey);
-    assertThat(objects.size()).isZero();
+    assertThat(objects).isEmpty();
   }
 
   @Test
@@ -95,8 +95,8 @@ class AwsS3IntTests {
 
     // use head to verify metadata
     var headObjectResponse = s3Head(creds, S3_INTERNAL, objectKey);
-    assertThat(headObjectResponse.metadata().get("key")).isEqualTo("value");
-    assertThat(headObjectResponse.metadata().get("key2")).isEqualTo("value2");
+    assertThat(headObjectResponse.metadata()).containsEntry("key", "value");
+    assertThat(headObjectResponse.metadata()).containsEntry("key2", "value2");
 
     // delete the file
     s3Delete(creds, S3_INTERNAL, objectKey);
@@ -123,8 +123,8 @@ class AwsS3IntTests {
 
       // use head to verify metadata
       var headObjectResponse = s3Head(s3Client, S3_INTERNAL, objectKey);
-      assertThat(headObjectResponse.metadata().get("key")).isEqualTo("value");
-      assertThat(headObjectResponse.metadata().get("key2")).isEqualTo("value2");
+      assertThat(headObjectResponse.metadata()).containsEntry("key", "value");
+      assertThat(headObjectResponse.metadata()).containsEntry("key2", "value2");
 
       // delete the file
       s3Delete(s3Client, S3_INTERNAL, objectKey);
@@ -442,7 +442,7 @@ class AwsS3IntTests {
 
     // use head to verify metadata
     var headObjectResponse = s3Head(creds, S3_INTERNAL, objectKey);
-    assertThat(headObjectResponse.metadata().get("key")).isEqualTo("value");
+    assertThat(headObjectResponse.metadata()).containsEntry("key", "value");
 
     // delete the file
     s3Delete(creds, S3_INTERNAL, objectKey);
@@ -478,8 +478,8 @@ class AwsS3IntTests {
 
       // use head to verify metadata
       var headObjectResponse = s3Head(s3Client, S3_INTERNAL, objectKey);
-      assertThat(headObjectResponse.metadata().get("key")).isEqualTo("value");
-      assertThat(headObjectResponse.metadata().get("key2")).isEqualTo("value2");
+      assertThat(headObjectResponse.metadata()).containsEntry("key", "value");
+      assertThat(headObjectResponse.metadata()).containsEntry("key2", "value2");
 
       // delete the file
       s3Delete(s3Client, S3_INTERNAL, objectKey);
