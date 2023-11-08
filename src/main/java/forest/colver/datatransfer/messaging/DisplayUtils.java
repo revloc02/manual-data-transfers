@@ -1,11 +1,11 @@
 package forest.colver.datatransfer.messaging;
 
 import java.util.Enumeration;
-import javax.jms.BytesMessage;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.StreamMessage;
-import javax.jms.TextMessage;
+import jakarta.jms.BytesMessage;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.StreamMessage;
+import jakarta.jms.TextMessage;
 
 public class DisplayUtils {
 

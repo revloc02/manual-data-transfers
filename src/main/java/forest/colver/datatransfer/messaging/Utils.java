@@ -7,13 +7,13 @@ import static forest.colver.datatransfer.messaging.Environment.STAGE;
 
 import java.util.Enumeration;
 import java.util.Map;
-import javax.jms.BytesMessage;
-import javax.jms.JMSException;
-import javax.jms.MapMessage;
-import javax.jms.Message;
-import javax.jms.ObjectMessage;
-import javax.jms.StreamMessage;
-import javax.jms.TextMessage;
+import jakarta.jms.BytesMessage;
+import jakarta.jms.JMSException;
+import jakarta.jms.MapMessage;
+import jakarta.jms.Message;
+import jakarta.jms.ObjectMessage;
+import jakarta.jms.StreamMessage;
+import jakarta.jms.TextMessage;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +29,7 @@ public class Utils {
    * Retrieves the payload of the message as a String. The message type is checked, and then the
    * payload is extracted accordingly.
    *
-   * @param message A javax.jms.Message.
+   * @param message A jakarta.jms.Message.
    * @return The payload of the message as a String.
    */
   public static String getJmsMsgPayload(Message message) {
@@ -92,7 +92,7 @@ public class Utils {
   /**
    * Retrieves the user added properties (not JMS properties) from a message.
    *
-   * @param message A javax.jms.Message.
+   * @param message A jakarta.jms.Message.
    * @return A HashMap of the custom properties.
    */
   public static Map<String, String> extractMsgProperties(Message message) {
@@ -112,7 +112,7 @@ public class Utils {
   /**
    * Retrieves the JMS properties from a message.
    *
-   * @param message A javax.jms.Message.
+   * @param message A jakarta.jms.Message.
    * @return A HashMap of the JMS properties.
    */
   public static Map<String, String> extractJmsHeaders(Message message) {

@@ -3,10 +3,10 @@ package forest.colver.datatransfer.messaging;
 import static forest.colver.datatransfer.config.Utils.getPassword;
 import static forest.colver.datatransfer.config.Utils.getUsername;
 import static forest.colver.datatransfer.messaging.DisplayUtils.createStringFromMessage;
-import static javax.jms.JMSContext.CLIENT_ACKNOWLEDGE;
+import static jakarta.jms.JMSContext.CLIENT_ACKNOWLEDGE;
 
-import javax.jms.JMSException;
-import javax.jms.Message;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -6,9 +6,9 @@ import static forest.colver.datatransfer.messaging.DisplayUtils.createStringFrom
 
 import java.util.Collections;
 import java.util.Enumeration;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.TextMessage;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.TextMessage;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -28,8 +28,8 @@ import static org.awaitility.Awaitility.await;
 
 import java.time.Duration;
 import java.util.Map;
-import javax.jms.JMSException;
-import javax.jms.TextMessage;
+import jakarta.jms.JMSException;
+import jakarta.jms.TextMessage;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

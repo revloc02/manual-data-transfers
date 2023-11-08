@@ -10,13 +10,13 @@ import static forest.colver.datatransfer.messaging.JmsSend.sendMessageAutoAck;
 import static forest.colver.datatransfer.messaging.Utils.createTextMessage;
 import static forest.colver.datatransfer.messaging.Utils.extractMsgProperties;
 import static forest.colver.datatransfer.messaging.Utils.getJmsMsgPayload;
-import static javax.jms.JMSContext.CLIENT_ACKNOWLEDGE;
+import static jakarta.jms.JMSContext.CLIENT_ACKNOWLEDGE;
 
 import forest.colver.datatransfer.messaging.Environment;
-import javax.jms.JMSConsumer;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.TextMessage;
+import jakarta.jms.JMSConsumer;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.TextMessage;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

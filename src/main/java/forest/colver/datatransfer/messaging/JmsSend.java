@@ -6,13 +6,13 @@ import static forest.colver.datatransfer.config.Utils.getPassword;
 import static forest.colver.datatransfer.config.Utils.getUsername;
 import static forest.colver.datatransfer.messaging.Environment.STAGE;
 import static forest.colver.datatransfer.messaging.Utils.createTextMessage;
-import static javax.jms.JMSContext.AUTO_ACKNOWLEDGE;
+import static jakarta.jms.JMSContext.AUTO_ACKNOWLEDGE;
 
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import javax.jms.Message;
+import jakarta.jms.Message;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
