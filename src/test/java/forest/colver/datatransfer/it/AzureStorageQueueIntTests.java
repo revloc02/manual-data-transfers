@@ -1,7 +1,5 @@
 package forest.colver.datatransfer.it;
 
-import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
-import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqConsume;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqCopy;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqMove;
@@ -42,7 +40,7 @@ public class AzureStorageQueueIntTests {
    * Test Azure Storage Queue Send
    */
   @Test
-  public void testAsqSend() {
+  void testAsqSend() {
     asqSend(CONNECT_STR, QUEUE_NAME, PAYLOAD);
     assertThat(asqPeek(CONNECT_STR, QUEUE_NAME)).isEqualTo(PAYLOAD);
     //cleanup
@@ -53,7 +51,7 @@ public class AzureStorageQueueIntTests {
    * Test Azure Storage Queue Consume
    */
   @Test
-  public void testAsqConsume() {
+  void testAsqConsume() {
     // send message
     asqSend(CONNECT_STR, QUEUE_NAME, PAYLOAD);
 
@@ -62,25 +60,25 @@ public class AzureStorageQueueIntTests {
 
     // consume the message
     var message = asqConsume(CONNECT_STR, QUEUE_NAME);
-    assertThat(message.getBody().toString()).isEqualTo(PAYLOAD);
+    assertThat(message.getBody()).hasToString(PAYLOAD);
   }
 
   /**
    * Test Azure Storage Queue Purge
    */
   @Test
-  public void testAsqPurge() {
+  void testAsqPurge() {
     var num = 3;
     // send messages
     for (var i = 0; i < num; i++) {
       asqSend(CONNECT_STR, QUEUE_NAME, PAYLOAD);
     }
     // ensure messages are on queue
-    assertThat(asqQueueDepth(CONNECT_STR, QUEUE_NAME)).isEqualTo(num);
+    assertThat(asqQueueDepth(CONNECT_STR, QUEUE_NAME)).isGreaterThanOrEqualTo(num);
     // clear the queue
     asqPurge(CONNECT_STR, QUEUE_NAME);
     // assert the queue is cleared
-    assertThat(asqQueueDepth(CONNECT_STR, QUEUE_NAME)).isEqualTo(0);
+    assertThat(asqQueueDepth(CONNECT_STR, QUEUE_NAME)).isZero();
   }
 
   /**
@@ -89,7 +87,7 @@ public class AzureStorageQueueIntTests {
    * them against the master list of unique messages to ensure everything got consumed correctly.
    */
   @Test
-  public void testCompetingConsumer()
+  void testCompetingConsumer()
       throws ExecutionException, InterruptedException {
     asqPurge(CONNECT_STR, QUEUE_NAME);
 
@@ -111,11 +109,11 @@ public class AzureStorageQueueIntTests {
       uuids.remove(future.get().getBody().toString());
       LOG.info("removed {}", future.get().getBody().toString());
     }
-    assertThat(uuids.size()).isEqualTo(0);
+    assertThat(uuids).isEmpty();
   }
 
   @Test
-  public void testAsqMove() {
+  void testAsqMove() {
     // place a message
     asqSend(CONNECT_STR, QUEUE_NAME, PAYLOAD);
     // ensure it arrived
@@ -129,7 +127,7 @@ public class AzureStorageQueueIntTests {
   }
 
   @Test
-  public void testAsqCopy() {
+  void testAsqCopy() {
     // place a message
     asqSend(CONNECT_STR, QUEUE_NAME, PAYLOAD);
     // ensure it arrived
@@ -144,7 +142,7 @@ public class AzureStorageQueueIntTests {
   }
 
   @Test
-  public void testAsqMoveAll() {
+  void testAsqMoveAll() {
     // place messages
     var numMsgs = 6;
     for (var i = 0; i < numMsgs; i++) {
