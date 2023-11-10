@@ -1,8 +1,11 @@
 package forest.colver.datatransfer.it;
 
+import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqConsume;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqCopy;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqMove;
+import static forest.colver.datatransfer.azure.StorageQueueOperations.asqMoveAll;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqPeek;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqPurge;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqQueueDepth;
@@ -11,8 +14,10 @@ import static forest.colver.datatransfer.azure.StorageQueueOperations.asqSendMul
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_STORAGE_ACCOUNT_CONNECTION_STRING;
 import static forest.colver.datatransfer.config.Utils.generateUniqueStrings;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import com.azure.storage.queue.models.QueueMessageItem;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -136,5 +141,28 @@ public class AzureStorageQueueIntTests {
     //cleanup
     asqConsume(CONNECT_STR, QUEUE_NAME);
     asqConsume(CONNECT_STR, QUEUE2_NAME);
+  }
+
+  @Test
+  public void testAsqMoveAll() {
+    // place messages
+    var numMsgs = 6;
+    for (var i = 0; i < numMsgs; i++) {
+      asqSend(CONNECT_STR, QUEUE_NAME, PAYLOAD);
+    }
+    // verify messages are on the source queue
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(asqQueueDepth(CONNECT_STR, QUEUE_NAME)).isGreaterThanOrEqualTo(numMsgs));
+    // move the messages
+    asqMoveAll(CONNECT_STR, QUEUE_NAME, QUEUE2_NAME);
+    // verify messages are on the source queue
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(asqQueueDepth(CONNECT_STR, QUEUE2_NAME)).isGreaterThanOrEqualTo(numMsgs));
+    //cleanup
+    asqPurge(CONNECT_STR, QUEUE2_NAME);
   }
 }

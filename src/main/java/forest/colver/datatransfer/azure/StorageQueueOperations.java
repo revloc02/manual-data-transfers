@@ -117,8 +117,15 @@ public class StorageQueueOperations {
     var message = asqConsume(connectStr, queue1);
     asqSend(connectStr, queue2, String.valueOf(message.getBody()));
   }
-  //todo: can I make move and copy methods?
 
+  public static void asqMoveAll(String connectStr, String queue1, String queue2) {
+    while(asqQueueDepth(connectStr, queue1)>0){
+      var message = asqConsume(connectStr, queue1);
+      asqSend(connectStr, queue2, String.valueOf(message.getBody()));
+    }
+  }
+
+  //todo: can I make a copyAll method?
   public static void asqCopy(String connectStr, String queue1, String queue2) {
     QueueMessageItem message = null;
     try {
