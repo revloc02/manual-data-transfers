@@ -5,13 +5,18 @@ import com.azure.storage.queue.QueueClientBuilder;
 import com.azure.storage.queue.models.PeekedMessageItem;
 import com.azure.storage.queue.models.QueueMessageItem;
 import com.azure.storage.queue.models.QueueStorageException;
-import java.util.ArrayList;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class StorageQueueOperations {
 
   private static final Logger LOG = LoggerFactory.getLogger(StorageQueueOperations.class);
+
+  private StorageQueueOperations() {
+    // https://rules.sonarsource.com/java/RSPEC-1118/
+    throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
+  }
 
   public static void asqSend(String connectStr, String queueName, String messageText) {
     try {
@@ -99,7 +104,7 @@ public class StorageQueueOperations {
   }
 
   public static void asqSendMultipleUniqueMessages(String connectStr, String queueName,
-      ArrayList<String> payloads) {
+      List<String> payloads) {
     try {
       QueueClient queueClient = new QueueClientBuilder()
           .connectionString(connectStr)
@@ -115,19 +120,27 @@ public class StorageQueueOperations {
 
   public static void asqMove(String connectStr, String queue1, String queue2) {
     var message = asqConsume(connectStr, queue1);
-    asqSend(connectStr, queue2, String.valueOf(message.getBody()));
+    if (message != null) {
+      asqSend(connectStr, queue2, String.valueOf(message.getBody()));
+    } else {
+      LOG.error("ERROR: message is null.");
+    }
   }
 
   public static void asqMoveAll(String connectStr, String queue1, String queue2) {
-    while(asqQueueDepth(connectStr, queue1)>0){
+    while (asqQueueDepth(connectStr, queue1) > 0) {
       var message = asqConsume(connectStr, queue1);
-      asqSend(connectStr, queue2, String.valueOf(message.getBody()));
+      if (message != null) {
+        asqSend(connectStr, queue2, String.valueOf(message.getBody()));
+      } else {
+        LOG.error("ERROR: message is null.");
+      }
     }
   }
 
   //todo: can I make a copyAll method?
   public static void asqCopy(String connectStr, String queue1, String queue2) {
-    QueueMessageItem message = null;
+    QueueMessageItem message;
     try {
       QueueClient queueClient = new QueueClientBuilder()
           .connectionString(connectStr)
