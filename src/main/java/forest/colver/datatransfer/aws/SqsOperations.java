@@ -209,9 +209,13 @@ public class SqsOperations {
                   .maxNumberOfMessages(10)
                   .build();
           var response = sqsClient.receiveMessage(receiveMessageRequest);
-          if (response.hasMessages()) {
+          if (response.messages().isEmpty()) {
+            moreMessages = false;
+          } else {
             for (var message : response.messages()) {
               counter++;
+              LOG.info("Deleting message #{} from {}, receiptHandle:{}", counter, queueName,
+                  message.receiptHandle());
               var deleteMessageRequest =
                   DeleteMessageRequest.builder()
                       .queueUrl(qUrl(sqsClient, queueName))
@@ -219,8 +223,6 @@ public class SqsOperations {
                       .build();
               sqsClient.deleteMessage(deleteMessageRequest);
             }
-          } else {
-            moreMessages = false;
           }
         } while (moreMessages);
       }
@@ -273,6 +275,17 @@ public class SqsOperations {
     }
   }
 
+  /**
+   * An attempt to measure queue depth--the number of messages in the queue. AWS NOTE:
+   * "APPROXIMATE_NUMBER_OF_MESSAGES metrics may not achieve consistency until at least 1 minute
+   * after the producers stop sending messages. This period is required for the queue metadata to
+   * reach eventual consistency." The implications for this project is that when awaitility is used
+   * to test the queue depth, it should check for well over a minute.
+   *
+   * @param awsCP AWS creds.
+   * @param queueName SQS name.
+   * @return Number of messages in the SQS.
+   */
   public static int sqsDepth(AwsCredentialsProvider awsCP, String queueName) {
     var response = sqsGetQueueAttributes(awsCP, queueName);
     var numMsgs = 0;

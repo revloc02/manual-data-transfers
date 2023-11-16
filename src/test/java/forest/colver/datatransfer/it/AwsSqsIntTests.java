@@ -54,7 +54,7 @@ public class AwsSqsIntTests {
    * and SQS2 in case other unit tests didn't finish correctly and cleanup after themselves.
    */
   @Test
-  public void helperPurge() {
+  void helperPurge() {
     var creds = getEmxSbCreds();
 
     // log how many messages are on the SQS
@@ -73,7 +73,7 @@ public class AwsSqsIntTests {
   }
 
   @Test
-  public void testSqsPurge() {
+  void testSqsPurge() {
     LOG.info("Interacting with: sqs={}", SQS1);
     // place some messages
     var creds = getEmxSbCreds();
@@ -97,7 +97,7 @@ public class AwsSqsIntTests {
   }
 
   @Test
-  public void testSqsClear() {
+  void testSqsClear() {
     LOG.info("Interacting with: sqs={}", SQS1);
     // place some messages
     var creds = getEmxSbCreds();
@@ -106,19 +106,20 @@ public class AwsSqsIntTests {
       sqsSend(creds, SQS1, getDefaultPayload());
     }
     await()
-        .pollInterval(Duration.ofSeconds(3))
-        .atMost(Duration.ofSeconds(60))
+        .pollInterval(Duration.ofSeconds(10))
+        .atMost(Duration.ofSeconds(120))
         .until(() -> sqsDepth(creds, SQS1) >= numMsgs);
 
     sqsClear(creds, SQS1);
-
     // assert the sqs was cleared
-    var receiveMessageResponse = sqsReadMessages(creds, SQS1);
-    assertThat(receiveMessageResponse.hasMessages()).isFalse();
+    await()
+        .pollInterval(Duration.ofSeconds(10))
+        .atMost(Duration.ofSeconds(120))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isZero());
   }
 
   @Test
-  public void testSqsDeleteMessages() {
+  void testSqsDeleteMessages() {
     LOG.info("Interacting with: sqs={}", SQS1);
     // place some messages
     var creds = getEmxSbCreds();
@@ -127,8 +128,8 @@ public class AwsSqsIntTests {
       sqsSend(creds, SQS1, getDefaultPayload());
     }
     await()
-        .pollInterval(Duration.ofSeconds(3))
-        .atMost(Duration.ofSeconds(60))
+        .pollInterval(Duration.ofSeconds(10))
+        .atMost(Duration.ofSeconds(120))
         .until(() -> sqsDepth(creds, SQS1) >= numMsgs);
     // now delete them
     do {
@@ -137,13 +138,13 @@ public class AwsSqsIntTests {
     } while (sqsDepth(creds, SQS1) > 0);
     // check the SQS is empty
     await()
-        .pollInterval(Duration.ofSeconds(3))
-        .atMost(Duration.ofSeconds(60))
+        .pollInterval(Duration.ofSeconds(10))
+        .atMost(Duration.ofSeconds(120))
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isZero());
   }
 
   @Test
-  public void testSqsCopy() {
+  void testSqsCopy() {
     LOG.info("Interacting with: sqs={}; sqs={}", SQS1, SQS2);
     // put message on sqs
     var creds = getEmxSbCreds();
@@ -172,7 +173,7 @@ public class AwsSqsIntTests {
   }
 
   @Test
-  public void testSqsSend() {
+  void testSqsSend() {
     LOG.info("Interacting with: sqs={}", SQS1);
     // send a message
     var creds = getEmxSbCreds();
@@ -190,7 +191,7 @@ public class AwsSqsIntTests {
    * Sends a {@link software.amazon.awssdk.services.sqs.model.Message Message} to an SQS.
    */
   @Test
-  public void testSqsSendMessage() {
+  void testSqsSendMessage() {
     LOG.info("Interacting with: sqs={}", SQS1);
     var payload = "Message Payload. This message also includes message attributes.";
     var attributes = Map.of("key1", "value1", "key2", "value2");
