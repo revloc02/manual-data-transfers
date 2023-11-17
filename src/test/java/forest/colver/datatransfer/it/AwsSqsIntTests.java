@@ -148,6 +148,10 @@ public class AwsSqsIntTests {
   @Test
   void testSqsCopy() {
     LOG.info("Interacting with: sqs={}; sqs={}", SQS1, SQS2);
+    // prep
+    var creds = getEmxSbCreds();
+    sqsClear(creds, SQS1);
+    sqsClear(creds, SQS2);
     // put message on sqs
     var payload = getDefaultPayload();
     sqsSend(creds, SQS1, payload);
