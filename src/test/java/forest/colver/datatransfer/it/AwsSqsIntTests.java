@@ -92,8 +92,10 @@ public class AwsSqsIntTests {
     sqsPurge(creds, SQS1); // Note: AWS only allows 1 purge per minute for SQS queues
 
     // assert the sqs was cleared
-    var messages = sqsReadMessages(creds, SQS1);
-    assertThat(messages.hasMessages()).isFalse();
+    await()
+        .pollInterval(Duration.ofSeconds(10))
+        .atMost(Duration.ofSeconds(120))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isZero());
   }
 
   @Test
@@ -147,7 +149,6 @@ public class AwsSqsIntTests {
   void testSqsCopy() {
     LOG.info("Interacting with: sqs={}; sqs={}", SQS1, SQS2);
     // put message on sqs
-    var creds = getEmxSbCreds();
     var payload = getDefaultPayload();
     sqsSend(creds, SQS1, payload);
 
