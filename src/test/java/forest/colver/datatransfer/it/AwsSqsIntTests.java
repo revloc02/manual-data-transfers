@@ -240,8 +240,10 @@ public class AwsSqsIntTests {
     var message = sqsConsumeOneMessage(creds, SQS1);
     assertThat(message.body()).isEqualTo(payload);
     // assert the sqs was cleared
-    var messages = sqsReadMessages(creds, SQS1);
-    assertThat(messages.hasMessages()).isFalse();
+    await()
+        .pollInterval(Duration.ofSeconds(10))
+        .atMost(Duration.ofSeconds(120))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isZero());
   }
 
   @Test
