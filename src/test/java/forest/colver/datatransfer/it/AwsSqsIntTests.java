@@ -108,7 +108,7 @@ public class AwsSqsIntTests {
       sqsSend(creds, SQS1, getDefaultPayload());
     }
     await()
-        .pollInterval(Duration.ofSeconds(10))
+        .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(120))
         .until(() -> sqsDepth(creds, SQS1) >= numMsgs);
 
@@ -130,7 +130,7 @@ public class AwsSqsIntTests {
       sqsSend(creds, SQS1, getDefaultPayload());
     }
     await()
-        .pollInterval(Duration.ofSeconds(10))
+        .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(120))
         .until(() -> sqsDepth(creds, SQS1) >= numMsgs);
     // now delete them
@@ -225,7 +225,7 @@ public class AwsSqsIntTests {
   }
 
   @Test
-  public void testSqsConsume() {
+  void testSqsConsume() {
     LOG.info("Interacting with: sqs={}", SQS1);
     // send a message
     var creds = getEmxSbCreds();
@@ -247,7 +247,7 @@ public class AwsSqsIntTests {
   }
 
   @Test
-  public void testSqsSendWithProperties() {
+  void testSqsSendWithProperties() {
     LOG.info("Interacting with: sqs={}", SQS1);
     // send some stuff
     var creds = getEmxSbCreds();
@@ -266,7 +266,7 @@ public class AwsSqsIntTests {
     var msg = sqsReadOneMessage(creds, SQS1);
     assert msg != null;
     assertThat(msg.body()).isEqualTo(payload);
-    assertThat(msg.hasMessageAttributes()).isEqualTo(true);
+    assertThat(msg.hasMessageAttributes()).isTrue();
     assertThat(msg.messageAttributes().get("key2").stringValue()).isEqualTo("value2");
     assertThat(msg.messageAttributes().get("key3").stringValue()).isEqualTo("value3");
 
@@ -275,7 +275,7 @@ public class AwsSqsIntTests {
   }
 
   @Test
-  public void testSqsMove() {
+  void testSqsMove() {
     LOG.info("Interacting with: sqs={}; sqs={}", SQS1, SQS2);
     // put message on sqs
     var creds = getEmxSbCreds();
@@ -307,7 +307,7 @@ public class AwsSqsIntTests {
   }
 
   @Test
-  public void testSqsDepth() {
+  void testSqsDepth() {
     LOG.info("Interacting with: sqs={}", SQS1);
     // put messages on sqs
     var creds = getEmxSbCreds();
@@ -323,8 +323,12 @@ public class AwsSqsIntTests {
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMsgs));
 
-    // cleanup
-    sqsPurge(creds, SQS1);
+    sqsClear(creds, SQS1);
+    // assert the sqs was cleared
+    await()
+        .pollInterval(Duration.ofSeconds(10))
+        .atMost(Duration.ofSeconds(120))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isZero());
   }
 
   @Test
