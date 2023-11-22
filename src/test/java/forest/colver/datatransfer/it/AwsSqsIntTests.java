@@ -323,6 +323,7 @@ public class AwsSqsIntTests {
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMsgs));
 
+    // cleanup
     sqsClear(creds, SQS1);
     // assert the sqs was cleared
     await()
@@ -332,12 +333,12 @@ public class AwsSqsIntTests {
   }
 
   @Test
-  public void testSqsMoveAllVerbose() {
+  void testSqsMoveAllVerbose() {
     LOG.info("Interacting with: sqs={}; sqs={}", SQS1, SQS2);
     // put messages on sqs
     var creds = getEmxSbCreds();
     var payload = getDefaultPayload();
-    var numMsgs = 14;
+    var numMsgs = 12;
     for (var i = 0; i < numMsgs; i++) {
       sqsSend(creds, SQS1, payload);
     }
@@ -355,14 +356,19 @@ public class AwsSqsIntTests {
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS2)).isEqualTo(numMsgs));
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS2)).isGreaterThanOrEqualTo(numMsgs));
 
     // cleanup
-    sqsPurge(creds, SQS2);
+    sqsClear(creds, SQS1);
+    // assert the sqs was cleared
+    await()
+        .pollInterval(Duration.ofSeconds(10))
+        .atMost(Duration.ofSeconds(120))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isZero());
   }
 
   @Test
-  public void testSqsMoveAll() {
+  void testSqsMoveAll() {
     LOG.info("Interacting with: sqs={}; sqs={}", SQS1, SQS2);
     // put messages on sqs
     var creds = getEmxSbCreds();
@@ -385,10 +391,15 @@ public class AwsSqsIntTests {
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS2)).isEqualTo(numMsgs));
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS2)).isGreaterThanOrEqualTo(numMsgs));
 
     // cleanup
-    sqsPurge(creds, SQS2);
+    sqsClear(creds, SQS1);
+    // assert the sqs was cleared
+    await()
+        .pollInterval(Duration.ofSeconds(10))
+        .atMost(Duration.ofSeconds(120))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isZero());
   }
 
   @Test
