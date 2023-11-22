@@ -116,14 +116,14 @@ public class SqsOperations {
               .build();
       var response = sqsClient.receiveMessage(receiveMessageRequest);
       awsResponseValidation(response);
-      if (response.hasMessages()) {
-        LOG.info("SQS_READ_ONE_MESSAGE: {} has a message.", queueName);
-        displayMessageAttributes(response);
-        return response.messages().get(0);
-      } else {
+      if (response.messages().isEmpty()) {
         LOG.info("SQS_READ_ONE_MESSAGE: {} has NO messages.", queueName);
 //        throw new RuntimeException("SQS_READ_ONE_MESSAGE: " + queueName + " has NO messages.");
         return null; // I'm still not sure this choice was best
+      } else {
+        LOG.info("SQS_READ_ONE_MESSAGE: {} has a message.", queueName);
+        displayMessageAttributes(response);
+        return response.messages().get(0);
       }
     }
   }
@@ -402,7 +402,7 @@ public class SqsOperations {
                   .visibilityTimeout(visibilityTimeout) // default 30 sec
                   .build();
           var response = sqsClient.receiveMessage(receiveMessageRequest);
-          if (response.hasMessages()) {
+          if (!response.messages().isEmpty()) {
             for (var message : response.messages()) {
               // copy to other queue
               counter++;
@@ -477,7 +477,7 @@ public class SqsOperations {
                 .build();
         var response = sqsClient.receiveMessage(receiveMessageRequest);
         // send
-        if (response.hasMessages()) {
+        if (!response.messages().isEmpty()) {
           for (var message : response.messages()) {
             sqsMoveMessage(sqsClient, fromSqs, toSqs, message);
             counter++;
