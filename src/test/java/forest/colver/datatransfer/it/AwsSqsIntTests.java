@@ -43,11 +43,24 @@ import software.amazon.awssdk.services.sqs.model.Message;
 /**
  * Integration Tests for AWS SQS
  */
-public class AwsSqsIntTests {
+class AwsSqsIntTests {
 
   private static final Logger LOG = LoggerFactory.getLogger(AwsSqsIntTests.class);
   private static final String SQS1 = EMX_SANDBOX_TEST_SQS1;
   private static final String SQS2 = EMX_SANDBOX_TEST_SQS2;
+
+  /**
+   * A helper method to ensure an SQS queue has been emptied of all messages.
+   */
+  private void clearSqs(AwsCredentialsProvider creds, String sqs) {
+    sqsClear(creds, sqs);
+    // assert the sqs was cleared
+    await()
+        .pollInterval(Duration.ofSeconds(10))
+        .atMost(Duration.ofSeconds(120))
+        .untilAsserted(() -> assertThat(sqsDepth(creds, sqs)).isZero());
+    LOG.info("The queue {} has been cleared.", sqs);
+  }
 
   /**
    * This is actually not a unit test. This is a helper method that allows me to cleanup both SQS1
@@ -403,16 +416,20 @@ public class AwsSqsIntTests {
   }
 
   @Test
-  public void testSqsMoveMessagesWithSelectedAttribute() {
+  void testSqsMoveMessagesWithSelectedAttribute() {
     LOG.info("Interacting with: sqs={}; sqs={}", SQS1, SQS2);
     var creds = getEmxSbCreds();
+    // Prep: clean the queues
+    clearSqs(creds, SQS1);
+    clearSqs(creds, SQS2);
+
+    // send the first specific message
     var payload = getDefaultPayload();
-    // send a specific message
     var specificProps = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
         "specificValue");
     sqsSend(creds, SQS1, payload, specificProps);
     // send some generic messages
-    var numMsgs = 2;
+    var numMsgs = 4;
     for (var i = 0; i < numMsgs; i++) {
       var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key" + i, "value" + i);
       sqsSend(creds, SQS1, payload, messageProps);
@@ -425,7 +442,7 @@ public class AwsSqsIntTests {
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs + 3));
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMsgs + 3));
 
     // move the specific messages
     assertThat(
@@ -436,17 +453,17 @@ public class AwsSqsIntTests {
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS2)).isGreaterThanOrEqualTo(3));
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS2)).isEqualTo(3));
 
     // assert first sqs has correct number of messages left on it
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs));
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMsgs));
 
-    // cleanup
-    sqsPurge(creds, SQS2);
-    sqsPurge(creds, SQS1);
+    // Post: cleanup
+    clearSqs(creds, SQS1);
+    clearSqs(creds, SQS2);
   }
 
   @Test
