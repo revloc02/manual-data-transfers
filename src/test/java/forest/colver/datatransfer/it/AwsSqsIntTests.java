@@ -383,36 +383,33 @@ class AwsSqsIntTests {
   @Test
   void testSqsMoveAll() {
     LOG.info("Interacting with: sqs={}; sqs={}", SQS1, SQS2);
-    // put messages on sqs
     var creds = getEmxSbCreds();
+    // Prep: clean the queues
+    clearSqs(creds, SQS1);
+    clearSqs(creds, SQS2);
+
+    // put messages on sqs
     var payload = getDefaultPayload();
     var numMsgs = 14;
     for (var i = 0; i < numMsgs; i++) {
       sqsSend(creds, SQS1, payload);
     }
-
     // verify messages are on the source sqs
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMsgs));
-
     // move the message
     sqsMoveAll(creds, SQS1, SQS2);
-
     // verify messages are on the target sqs
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS2)).isGreaterThanOrEqualTo(numMsgs));
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS2)).isEqualTo(numMsgs));
 
-    // cleanup
-    sqsClear(creds, SQS1);
-    // assert the sqs was cleared
-    await()
-        .pollInterval(Duration.ofSeconds(10))
-        .atMost(Duration.ofSeconds(120))
-        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isZero());
+    // Post: cleanup
+    clearSqs(creds, SQS1);
+    clearSqs(creds, SQS2);
   }
 
   @Test
@@ -437,24 +434,20 @@ class AwsSqsIntTests {
     // send additional specific messages
     sqsSend(creds, SQS1, payload, specificProps);
     sqsSend(creds, SQS1, payload, specificProps);
-
     // verify messages are on the sqs
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMsgs + 3));
-
     // move the specific messages
     assertThat(
         sqsMoveMessagesWithSelectedAttribute(creds, SQS1, "specificKey", "specificValue",
             SQS2)).isEqualTo(3);
-
     // verify moved messages are on the other sqs
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS2)).isEqualTo(3));
-
     // assert first sqs has correct number of messages left on it
     await()
         .pollInterval(Duration.ofSeconds(3))
