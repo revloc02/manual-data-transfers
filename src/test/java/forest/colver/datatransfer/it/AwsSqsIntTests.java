@@ -451,41 +451,41 @@ class AwsSqsIntTests {
   }
 
   @Test
-  public void testSqsMoveMessagesWithPayloadLike() {
+  void testSqsMoveMessagesWithPayloadLike() {
     LOG.info("Interacting with: sqs={}; sqs={}", SQS1, SQS2);
     var creds = getEmxSbCreds();
-    var payload = getDefaultPayload();
+    // Prep: clean the queues
+    clearSqs(creds, SQS1);
+    clearSqs(creds, SQS2);
+
     // send some messages
+    var payload = getDefaultPayload();
     var numMsgs = 8;
     for (var i = 0; i < numMsgs; i++) {
       sqsSend(creds, SQS1, payload + i);
     }
-
     // verify messages are on the sqs
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs));
-
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMsgs));
     // moving only the specific message that has a "2" appended
     assertThat(
-        sqsMoveMessagesWithPayloadLike(creds, SQS1, payload + "2", SQS2)).isEqualTo(1);
-
+        sqsMoveMessagesWithPayloadLike(creds, SQS1, payload + "2", SQS2)).isOne();
     // verify moved messages are on the other sqs
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS2)).isGreaterThanOrEqualTo(1));
-
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS2)).isOne());
     // assert first sqs has correct number of messages left on it
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs - 1));
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMsgs - 1));
 
-    // cleanup
-    sqsPurge(creds, SQS2);
-    sqsPurge(creds, SQS1);
+    // Post: cleanup
+    clearSqs(creds, SQS1);
+    clearSqs(creds, SQS2);
   }
 
   @Test
