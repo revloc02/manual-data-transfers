@@ -489,8 +489,8 @@ class AwsSqsIntTests {
   }
 
   @Test
-  public void testSqsDeleteMessagesWithPayloadLike() {
-    LOG.info("Interacting with: sqs={}; sqs={}", SQS1, SQS2);
+  void testSqsDeleteMessagesWithPayloadLike() {
+    LOG.info("Interacting with: sqs={}", SQS1);
     var creds = getEmxSbCreds();
     // send some messages with default payload
     var payload = getDefaultPayload();
@@ -504,27 +504,23 @@ class AwsSqsIntTests {
     for (var i = 0; i < numMsgs2; i++) {
       sqsSend(creds, SQS1, specificPayload);
     }
-
     // verify messages are on the sqs
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(
-            () -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs1 + numMsgs2));
-
+            () -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMsgs1 + numMsgs2));
     // delete the messages with the specific payload
     assertThat(
         sqsDeleteMessagesWithPayloadLike(creds, SQS1, "specific payload")).isEqualTo(numMsgs2);
-
-    // assert first sqs has correct number of messages left on it
+    // assert the sqs has correct number of messages left on it
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMsgs1));
 
-    // cleanup
-    sqsClear(creds, SQS2);
-    sqsClear(creds, SQS1);
+    // Post: cleanup
+    clearSqs(creds, SQS1);
   }
 
   /**
