@@ -191,12 +191,13 @@ public class SqsOperations {
   }
 
   /**
-   * Clears an SQS, by consuming the messages. This exists because an SQS purge can only happen once
-   * every 60 sec, and this provides a way to do it more often than that.
+   * Clears an SQS if it has less than 500 messages, by consuming them. This exists because an SQS
+   * purge can only happen once every 60 sec, and this provides a way to do it more often than that.
+   * If the depth is greater than 500, using the sqsPurge() method is probably better.
    */
   public static void sqsClear(AwsCredentialsProvider awsCP, String queueName) {
     var depth = sqsDepth(awsCP, queueName);
-    var maxDepth = 100;
+    var maxDepth = 500; // 500 is arbitrary, I just picked it as the limit
     var counter = 0;
     if (depth < maxDepth) { // just to be cautious
       var moreMessages = true;
@@ -227,7 +228,7 @@ public class SqsOperations {
         } while (moreMessages);
       }
     } else {
-      LOG.info("Queue {} has {} messages, you should probably just use sqsPurge() instead.",
+      LOG.info("=======Queue {} has {} messages, you should probably just use sqsPurge() instead.=======",
           queueName,
           depth);
     }

@@ -531,34 +531,36 @@ class AwsSqsIntTests {
    * the queue is too deep.
    */
   @Test
-  public void testSqsMoveSelectedMessagesQueueTooDeep() {
+  void testSqsMoveSelectedMessagesQueueTooDeep() {
     LOG.info("Interacting with: sqs={}; sqs={}", SQS1, SQS2);
     var creds = getEmxSbCreds();
+    // Prep: clean the queues
+    clearSqs(creds, SQS1);
+    clearSqs(creds, SQS2);
+
     // send a specific message
     var specificProps = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
         "specificValue");
     sqsSend(creds, SQS1, getDefaultPayload(), specificProps);
     // send some generic messages
-    var numMsgs = 102; // sqsMoveMessagesWithSelectedAttribute() limit is currently hardcoded to 100
+    var numMsgs = 122; // sqsMoveMessagesWithSelectedAttribute() limit is currently hardcoded to 100
     for (var i = 0; i < numMsgs; i++) {
       var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key" + i, "value" + i);
       sqsSend(creds, SQS1, getDefaultPayload(), messageProps);
     }
-
     // verify messages are on the sqs
     await()
-        .pollInterval(Duration.ofSeconds(3))
+        .pollInterval(Duration.ofSeconds(6))
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs + 1));
-
     // move the specific messages and get a -1 result indicating the queue depth is too big
     assertThat(
         sqsMoveMessagesWithSelectedAttribute(creds, SQS1, "specificKey", "specificValue",
             SQS2)).isEqualTo(-1);
 
-    // cleanup
-    sqsPurge(creds, SQS1);
-    sqsPurge(creds, SQS2); // just in case, from a previous run
+    // Post: cleanup
+    clearSqs(creds, SQS1);
+    clearSqs(creds, SQS2); // just in case
   }
 
   @Test
