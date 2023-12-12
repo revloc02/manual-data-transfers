@@ -199,7 +199,7 @@ public class SqsOperations {
     var depth = sqsDepth(awsCP, queueName);
     var maxDepth = 500; // 500 is arbitrary, I just picked it as the limit
     var counter = 0;
-    if (depth < maxDepth) { // just to be cautious
+    if (depth < maxDepth) {
       var moreMessages = true;
       try (var sqsClient = getSqsClient(awsCP)) {
         do {
