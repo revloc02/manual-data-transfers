@@ -197,9 +197,9 @@ public class SqsOperations {
    */
   public static void sqsClear(AwsCredentialsProvider awsCP, String queueName) {
     var depth = sqsDepth(awsCP, queueName);
-    var maxDepth = 500; // 500 is arbitrary, I just picked it as the limit
+    var depthLimit = 200; // the amount is arbitrary, I just picked it as the limit
     var counter = 0;
-    if (depth < maxDepth) {
+    if (depth < depthLimit) {
       var moreMessages = true;
       try (var sqsClient = getSqsClient(awsCP)) {
         do {
@@ -227,10 +227,10 @@ public class SqsOperations {
           }
         } while (moreMessages);
       }
-    } else {
-      LOG.info("=======Queue {} has {} messages, you should probably just use sqsPurge() instead.=======",
-          queueName,
-          depth);
+    } else { // depthLimit has been reached, it will take too long to consume messages one by one
+      LOG.info(
+          "=======Queue {} has {} messages, which is greater than the set limit {}. You should probably just use sqsPurge() instead.=======",
+          queueName, depth, depthLimit);
     }
     LOG.info("SQSCLEAR: The SQS {} has been cleared of {} messages.", queueName, counter);
   }
