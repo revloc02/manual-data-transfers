@@ -607,7 +607,7 @@ class AwsSqsIntTests {
    * more than 1 message, but I don't know how to do that.
    */
   @Test
-  public void testSqsReadMessages() {
+  void testSqsReadMessages() {
     LOG.info("Interacting with: sqs={}", SQS1);
     var creds = getEmxSbCreds();
     var payload = getDefaultPayload();
@@ -622,17 +622,9 @@ class AwsSqsIntTests {
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs));
     // assert that 1 or more messages can be read
-    assertThat(sqsReadMessages(creds, SQS1).messages().size()).isGreaterThanOrEqualTo(1);
+    assertThat(sqsReadMessages(creds, SQS1).messages()).isNotEmpty();
     // now delete them
-    do {
-      var response = sqsReadMessages(creds, SQS1);
-      sqsDeleteMessages(creds, SQS1, response);
-    } while (sqsDepth(creds, SQS1) > 0);
-    // check the SQS is empty
-    await()
-        .pollInterval(Duration.ofSeconds(3))
-        .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isZero());
+    clearSqs(creds, SQS1);
   }
 
   @Test

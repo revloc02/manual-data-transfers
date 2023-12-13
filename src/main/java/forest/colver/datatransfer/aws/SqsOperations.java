@@ -129,8 +129,9 @@ public class SqsOperations {
   }
 
   /**
-   * Reads one or more message from the SQS. Note that the visibilityTimeout is zero so reading the
-   * message doesn't tie it up in any way. This also displays how many messages were read.
+   * Reads one or more message from the SQS (but does not consume them). Note that the
+   * visibilityTimeout is zero so reading the message doesn't tie it up in any way. This also
+   * displays how many messages were read.
    */
   public static ReceiveMessageResponse sqsReadMessages(
       AwsCredentialsProvider awsCP, String queueName) {
