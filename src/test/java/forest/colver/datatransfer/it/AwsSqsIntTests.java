@@ -628,7 +628,7 @@ class AwsSqsIntTests {
   }
 
   @Test
-  public void testSqsDeleteMessage() {
+  void testSqsDeleteMessage() {
     LOG.info("Interacting with: sqs={}", SQS1);
     // send a message
     var creds = getEmxSbCreds();
@@ -651,21 +651,21 @@ class AwsSqsIntTests {
   }
 
   @Test
-  public void testReadOneMessageWhenNoneExists() {
+  void testReadOneMessageWhenNoneExists() {
     var creds = getEmxSbCreds();
     var message = sqsReadOneMessage(creds, SQS1);
     assertThat(message).isNull();
   }
 
   @Test
-  public void testConsumeOneMessageWhenNoneExists() {
+  void testConsumeOneMessageWhenNoneExists() {
     var creds = getEmxSbCreds();
     var message = sqsConsumeOneMessage(creds, SQS1);
     assertThat(message).isNull();
   }
 
   @Test
-  public void testSqsDownloadMessage() {
+  void testSqsDownloadMessage() {
     LOG.info("Interacting with: sqs={}", SQS1);
     var payload = "Message Payload.";
     var message = Message.builder()
@@ -674,17 +674,14 @@ class AwsSqsIntTests {
     // send a message
     var creds = getEmxSbCreds();
     sqsSend(creds, SQS1, message);
-
     // check that it arrived
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
         .until(() -> sqsDepth(creds, SQS1) >= 1);
-
     // download the message
     var path = "/Users/revloc02/Downloads/sqs-download-" + getUuid() + ".txt";
     sqsDownloadMessage(creds, SQS1, path);
-
     // check the payload
     var contents = readFile(path, StandardCharsets.UTF_8);
     assertThat(contents).isEqualTo(payload);
