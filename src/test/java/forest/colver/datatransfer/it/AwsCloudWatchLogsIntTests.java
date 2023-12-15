@@ -29,7 +29,7 @@ public class AwsCloudWatchLogsIntTests {
    * Furthermore, each day run aws-azure-login for fresh credentials.
    */
   @Test
-  public void testCloudWatchLogEvents() {
+  void testCloudWatchLogEvents() {
     var message = "This is the log message.";
 
     var streamName = STREAM_PREFIX + "-" + getUuid();
@@ -38,7 +38,7 @@ public class AwsCloudWatchLogsIntTests {
   }
 
   @Test
-  public void testTwoCallsCloudWatchLogEvents() {
+  void testTwoCallsCloudWatchLogEvents() {
     var message = "testMultipleCloudWatchLogEvents: This is the log message.";
     var anotherMessage = "{ \"key1\": \"value1\", \"key2\": \"value2\" }";
 
@@ -52,7 +52,7 @@ public class AwsCloudWatchLogsIntTests {
   }
 
   @Test
-  public void testMultipleCallsCloudWatchLogEvents() {
+  void testMultipleCallsCloudWatchLogEvents() {
     var messagePrefix = "Multi-Calls message prefix: ";
 
     var streamName = STREAM_PREFIX + "-" + getUuid();
@@ -70,7 +70,7 @@ public class AwsCloudWatchLogsIntTests {
   }
 
   @Test
-  public void testMultipleCloudWatchLogEvents() {
+  void testMultipleCloudWatchLogEvents() {
     var messagePrefix = "Multiple-messages-one-call, message generated from manual-data-transfers";
 
     for (int i = 0; i < 2; i++) {
