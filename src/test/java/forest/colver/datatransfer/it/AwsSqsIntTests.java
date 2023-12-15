@@ -66,7 +66,7 @@ class AwsSqsIntTests {
    * This is actually not a unit test. This is a helper method that allows me to cleanup both SQS1
    * and SQS2 in case other unit tests didn't finish correctly and cleanup after themselves.
    */
-  @Test
+//  @Test // uncomment this line if you need to run this
   void helperPurge() {
     var creds = getEmxSbCreds();
 
@@ -103,6 +103,7 @@ class AwsSqsIntTests {
         .until(() -> sqsDepth(creds, SQS1) >= numMsgs);
 
     sqsPurge(creds, SQS1); // Note: AWS only allows 1 purge per minute for SQS queues
+    sqsPurge(creds, SQS2); // Note: AWS only allows 1 purge per minute for SQS queues
 
     // assert the sqs was cleared
     await()
