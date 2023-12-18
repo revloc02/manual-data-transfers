@@ -8,11 +8,11 @@ import static forest.colver.datatransfer.messaging.Environment.STAGE;
 import static forest.colver.datatransfer.messaging.Utils.createTextMessage;
 import static jakarta.jms.JMSContext.AUTO_ACKNOWLEDGE;
 
-import java.util.ArrayList;
+import jakarta.jms.Message;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import jakarta.jms.Message;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +31,8 @@ public class JmsSend {
   /**
    * Sends a message to a queue. The AUTO_ACKNOWLEDGE is the default, but set explicitly here as a
    * reminder. Acknowledgement on sending is not as critical as when receiving messages from the
-   * broker. https://jstobigdata.com/jms/guaranteed-delivery-using-jms-message-acknowledgement/
+   * broker. <a
+   * href="https://jstobigdata.com/jms/guaranteed-delivery-using-jms-message-acknowledgement/">MessageAcknowledgement</a>
    *
    * @param env The environment of the Qpid broker.
    * @param queueName The name of the queue.
@@ -76,7 +77,7 @@ public class JmsSend {
    * {@link #sendMultipleSameMessage(Environment, String, Message, int)}
    */
   public static void sendMultipleUniqueMessages(
-      Environment env, String queueName, ArrayList<String> payloads) {
+      Environment env, String queueName, List<String> payloads) {
     var cf = new JmsConnectionFactory(env.url());
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
       var queue = ctx.createQueue(queueName);
@@ -100,7 +101,7 @@ public class JmsSend {
    * {@link #sendMultipleSameMessage(Environment, String, Message, int)}
    */
   public static void sendMultipleUniqueMessagesMultithreaded(
-      Environment env, String queueName, ArrayList<String> payloads) {
+      Environment env, String queueName, List<String> payloads) {
     var cf = new JmsConnectionFactory(env.url());
     var es = Executors.newFixedThreadPool(8);
     try (var ctx = cf.createContext(getUsername(), getPassword())) {

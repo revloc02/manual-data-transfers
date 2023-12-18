@@ -60,7 +60,7 @@ public class MessagingIntTests {
   }
 
   @Test
-  public void testCreateTextMessage() throws JMSException {
+  void testCreateTextMessage() throws JMSException {
     var payload = "this is the payload, yo";
     var messageProps = Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
     var msg = createTextMessage(payload, messageProps);
@@ -71,7 +71,7 @@ public class MessagingIntTests {
   }
 
   @Test
-  public void testDefaultSend() throws JMSException {
+  void testDefaultSend() throws JMSException {
     var env = STAGE;
     var fromQueueName = "forest-test";
     sendDefaultMessage();
@@ -86,7 +86,7 @@ public class MessagingIntTests {
   }
 
   @Test
-  public void testSendCustomHeaders() throws JMSException {
+  void testSendCustomHeaders() throws JMSException {
     var env = STAGE;
     var queueName = "forest-test";
     sendMessageAutoAck(env, queueName, createMessage());
@@ -97,7 +97,7 @@ public class MessagingIntTests {
   }
 
   @Test
-  public void testDeleteAllMessagesFromQueue() {
+  void testDeleteAllMessagesFromQueue() {
     var env = STAGE;
     var queueName = "forest-test";
     var numMessages = 300;
@@ -106,11 +106,11 @@ public class MessagingIntTests {
 
     var deleted = deleteAllMessagesFromQueue(env, queueName);
     assertThat(deleted).isEqualTo(numMessages);
-    assertThat(queueDepth(env, queueName)).isEqualTo(0);
+    assertThat(queueDepth(env, queueName)).isZero();
   }
 
   @Test
-  public void testPurgeQueue() {
+  void testPurgeQueue() {
     var env = STAGE;
     var queueName = "forest-test";
     var numMessages = 200;
@@ -119,11 +119,11 @@ public class MessagingIntTests {
 
     var deleted = purgeQueue(env, queueName);
     assertThat(deleted).isEqualTo(numMessages);
-    assertThat(queueDepth(env, queueName)).isEqualTo(0);
+    assertThat(queueDepth(env, queueName)).isZero();
   }
 
   @Test
-  public void testMoveAll() {
+  void testMoveAll() {
     var env = STAGE;
     var fromQueueName = "forest-test";
     var toQueueName = "forest-test2";
@@ -137,7 +137,7 @@ public class MessagingIntTests {
   }
 
   @Test
-  public void testMoveOneMessage() {
+  void testMoveOneMessage() {
     var env = STAGE;
     var fromQueueName = "forest-test";
     var toQueueName = "forest-test2";
@@ -150,13 +150,13 @@ public class MessagingIntTests {
 
     // check both queues for correct number of messages
     var deleted = deleteAllMessagesFromQueue(env, fromQueueName);
-    assertThat(deleted).isEqualTo(0);
+    assertThat(deleted).isZero();
     deleted = deleteAllMessagesFromQueue(env, toQueueName);
     assertThat(deleted).isEqualTo(1);
   }
 
   @Test
-  public void testMoveOneSpecificMessage() throws JMSException {
+  void testMoveOneSpecificMessage() throws JMSException {
     var env = STAGE;
     var fromQueueName = "forest-test";
     var toQueueName = "forest-test2";
@@ -186,7 +186,7 @@ public class MessagingIntTests {
   }
 
   @Test
-  public void testBrowseNextMessage() throws JMSException {
+  void testBrowseNextMessage() throws JMSException {
     var env = STAGE;
     var queueName = "forest-test";
 
@@ -202,7 +202,7 @@ public class MessagingIntTests {
   }
 
   @Test
-  public void testBrowseForSpecificMessage() throws JMSException {
+  void testBrowseForSpecificMessage() throws JMSException {
     var env = STAGE;
     var queueName = "forest-test";
 
@@ -226,7 +226,7 @@ public class MessagingIntTests {
   }
 
   @Test
-  public void testBrowseAndCountSpecificMessages() {
+  void testBrowseAndCountSpecificMessages() {
     var env = STAGE;
     var queueName = "forest-test";
 
@@ -250,7 +250,7 @@ public class MessagingIntTests {
   }
 
   @Test
-  public void testMoveSomeSpecificMessages() {
+  void testMoveSomeSpecificMessages() {
     var env = STAGE;
     var fromQueueName = "forest-test";
     var toQueueName = "forest-test2";
@@ -287,7 +287,7 @@ public class MessagingIntTests {
   }
 
   @Test
-  public void testMoveAllSpecificMessages() {
+  void testMoveAllSpecificMessages() {
     var env = STAGE;
     var fromQueueName = "forest-test";
     var toQueueName = "forest-test2";
@@ -314,7 +314,7 @@ public class MessagingIntTests {
   }
 
   @Test
-  public void testMoveAllSpecificMessagesWhenNoneExist() {
+  void testMoveAllSpecificMessagesWhenNoneExist() {
     var env = STAGE;
     var fromQueueName = "forest-test";
     var toQueueName = "forest-test2";
@@ -328,13 +328,13 @@ public class MessagingIntTests {
 
     // cleanup and check that the queues have the correct number of messages after the move
     var deletedTo = deleteAllMessagesFromQueue(env, toQueueName);
-    assertThat(deletedTo).isEqualTo(0);
+    assertThat(deletedTo).isZero();
     var deletedFrom = deleteAllMessagesFromQueue(env, fromQueueName);
     assertThat(deletedFrom).isEqualTo(numMessagesFrom);
   }
 
   @Test
-  public void testConsumeSpecificMessage() throws JMSException {
+  void testConsumeSpecificMessage() throws JMSException {
     // send a message
     sendDefaultMessage();
     var env = STAGE;
@@ -353,7 +353,7 @@ public class MessagingIntTests {
   }
 
   @Test
-  public void testSendMultipleMessages() {
+  void testSendMultipleMessages() {
     var queueName = "forest-test";
     var num = 14;
     sendMultipleSameMessage(STAGE, queueName, createMessage(), num);
@@ -362,7 +362,7 @@ public class MessagingIntTests {
   }
 
   @Test
-  public void testQueueDepth() {
+  void testQueueDepth() {
     var env = STAGE;
     var queue = "forest-test2";
     var num = 14;
@@ -377,7 +377,7 @@ public class MessagingIntTests {
   }
 
   @Test
-  public void testDeleteAllSpecificMessages() {
+  void testDeleteAllSpecificMessages() {
     var env = STAGE;
     var queue = "forest-test2";
     // send some messages
@@ -401,7 +401,7 @@ public class MessagingIntTests {
   }
 
   @Test
-  public void testDeleteSomeMessages() {
+  void testDeleteSomeMessages() {
     var queueName = "forest-test";
     purgeQueue(STAGE, queueName); // start clean
 
@@ -423,7 +423,7 @@ public class MessagingIntTests {
   }
 
   @Test
-  public void testCopyAllMessages() {
+  void testCopyAllMessages() {
     // send some messages
     var env = STAGE;
     var fromQueue = "forest-test";
@@ -443,7 +443,7 @@ public class MessagingIntTests {
   }
 
   @Test
-  public void testCopySpecificMessages() {
+  void testCopySpecificMessages() {
     var env = STAGE;
     var fromQueue = "forest-test2";
     purgeQueue(env, fromQueue);
@@ -473,7 +473,7 @@ public class MessagingIntTests {
   }
 
   @Test
-  public void testCopyAllMessagesAcrossEnvironments() {
+  void testCopyAllMessagesAcrossEnvironments() {
     // send some messages
     var fromQueue = "forest-test";
     var num = 7;
@@ -497,7 +497,7 @@ public class MessagingIntTests {
    * them against the master list of unique messages to ensure everything got consumed correctly.
    */
   @Test
-  public void testCompetingConsumer()
+  void testCompetingConsumer()
       throws ExecutionException, InterruptedException, JMSException {
     var queueName = "forest-test";
     purgeQueue(STAGE, queueName);
@@ -521,7 +521,7 @@ public class MessagingIntTests {
       uuids.remove(future.get().getText());
       LOG.info("removed {}", future.get().getText());
     }
-    assertThat(uuids.size()).isEqualTo(0);
+    assertThat(uuids).isEmpty();
     es.shutdown();
   }
 
@@ -529,7 +529,7 @@ public class MessagingIntTests {
    * The multithreaded sending doesn't really work, but keeping if for academic purposes.
    */
   @Test
-  public void testSendMultithreading() {
+  void testSendMultithreading() {
     var queueName = "forest-test";
     purgeQueue(STAGE, queueName);
 
