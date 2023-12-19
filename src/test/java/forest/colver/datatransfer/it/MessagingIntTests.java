@@ -526,11 +526,13 @@ public class MessagingIntTests {
   }
 
   /**
-   * The multithreaded sending doesn't really work, but keeping if for academic purposes.
+   * The multithreaded sending doesn't really work--send messages faster, but keeping it for
+   * academic purposes.
    */
   @Test
   void testSendMultithreading() {
     var queueName = "forest-test";
+    // prep
     purgeQueue(STAGE, queueName);
 
     var numMsgs = 1_000; // 1000 messages runs in about 20 sec
@@ -539,5 +541,10 @@ public class MessagingIntTests {
     LOG.info("Created {} messages.", numMsgs);
     sendMultipleUniqueMessagesMultithreaded(STAGE, queueName, uuids);
     LOG.info("Sent {} messages.", numMsgs);
+    // check the queue depth on the new queue
+    assertThat(queueDepth(STAGE, queueName)).isEqualTo(numMsgs);
+
+    // cleanup
+    deleteAllMessagesFromQueue(STAGE, queueName);
   }
 }
