@@ -21,6 +21,11 @@ public class JmsSend {
 
   private static final Logger LOG = LoggerFactory.getLogger(JmsSend.class);
 
+  private JmsSend() {
+    // https://rules.sonarsource.com/java/RSPEC-1118/
+    throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
+  }
+
   // EMX
   public static void sendDefaultMessage() {
     sendMessageAutoAck(
