@@ -1,4 +1,6 @@
 // simple topic for testGetSnsTopicAttributes int test
+// When you set this up afresh on a new sandbox account, update the ~/.aws/config file with the new sandbox account ID
+data "aws_caller_identity" "current" {}
 module "basic_topic" {
   source            = "app.terraform.io/ICS/sns-topic/aws"
   version           = "~>1.0"
@@ -9,7 +11,7 @@ module "basic_topic" {
     jsonencode({
       Effect : "Allow"
       Principal : {
-        AWS : "arn:aws:iam::646129096172:root"
+        AWS : data.aws_caller_identity.current.arn
       }
       Action : "SNS:GetTopicAttributes"
       Resource : "*"
