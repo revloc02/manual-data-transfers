@@ -7,7 +7,6 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.Utils.PERSONAL_SANDBOX_SQS_SUB_SNS;
 import static forest.colver.datatransfer.aws.Utils.PERSONAL_SANDBOX_TEST_SNS_TOPIC_ARN;
-import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.aws.Utils.getPersonalSbCreds;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -21,10 +20,11 @@ import org.slf4j.LoggerFactory;
 /**
  * Integration Tests for AWS SNS
  */
-public class AwsSnsIntTests {
+class AwsSnsIntTests {
 
   private static final Logger LOG = LoggerFactory.getLogger(AwsSnsIntTests.class);
-  private static final String SNS_ARN = PERSONAL_SANDBOX_TEST_SNS_TOPIC_ARN;
+  // Watch out! This changes frequently, update the ~/.aws/config file to your latest sandbox account
+  private static final String SNS_ARN_TEMP = PERSONAL_SANDBOX_TEST_SNS_TOPIC_ARN;
   private static final String SQS = PERSONAL_SANDBOX_SQS_SUB_SNS;
 
   /**
@@ -33,25 +33,26 @@ public class AwsSnsIntTests {
    * used variable policy_other_statements to grant this specific attributes access.
    */
   @Test
-  public void testGetSnsTopicAttributes() {
+  void testGetSnsTopicAttributes() {
     // refresh personal sandbox creds
     // run TF in terraform/aws/main.tf to create personal sandbox SNS topic
     // copy the created SNS ARN to .aws/credentials.properties
 
     // need to refresh Enterprise Sandbox creds to run and test access from that external account
-    getSnsTopicAttributes(getEmxSbCreds(), SNS_ARN);
+    var attributes = getSnsTopicAttributes(getPersonalSbCreds(), SNS_ARN_TEMP);
+    assertThat(attributes).isNotEmpty();
   }
 
   /**
    * Tests publishTopic. Requires Terraform to be run in advance in a personal AWS sandbox.
    */
   @Test
-  public void testSnsPublishTopic() {
-    LOG.info("SNS ARN: {}", SNS_ARN);
+  void testSnsPublishTopic() {
+    LOG.info("SNS ARN: {}", SNS_ARN_TEMP);
     var creds = getPersonalSbCreds(); // runs in a personal sandbox
     // publish message
     var message = "testing SNS publish topic via SQS subscription";
-    publishTopic(getPersonalSbCreds(), SNS_ARN, message);
+    publishTopic(getPersonalSbCreds(), SNS_ARN_TEMP, message);
 
     // await its arrival in the queue
     await()
@@ -64,7 +65,7 @@ public class AwsSnsIntTests {
     LOG.info("msg.body():{}", msg.body());
     var jo = new JSONObject(msg.body());
     assertThat(jo.getString("Type")).isEqualTo("Notification");
-    assertThat(jo.getString("TopicArn")).isEqualTo(SNS_ARN);
+    assertThat(jo.getString("TopicArn")).isEqualTo(SNS_ARN_TEMP);
     assertThat(jo.getString("Message")).isEqualTo(message);
 
     // cleanup

@@ -2,6 +2,7 @@ package forest.colver.datatransfer.aws;
 
 import static forest.colver.datatransfer.aws.Utils.getSnsClient;
 
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
@@ -12,9 +13,15 @@ import software.amazon.awssdk.services.sns.model.PublishResponse;
 
 public class SnsOperations {
 
+  private SnsOperations() {
+    // https://rules.sonarsource.com/java/RSPEC-1118/
+    throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
+  }
+
   private static final Logger LOG = LoggerFactory.getLogger(SnsOperations.class);
 
-  public static void getSnsTopicAttributes(AwsCredentialsProvider awsCp, String topicArn) {
+  public static Map<String, String> getSnsTopicAttributes(AwsCredentialsProvider awsCp,
+      String topicArn) {
 
     try (var snsClient = getSnsClient(awsCp)) {
       GetTopicAttributesRequest request = GetTopicAttributesRequest.builder()
@@ -23,6 +30,7 @@ public class SnsOperations {
       GetTopicAttributesResponse result = snsClient.getTopicAttributes(request);
       LOG.info("Status is {}\nAttributes: {}\n", result.sdkHttpResponse().statusCode(),
           result.attributes());
+      return result.attributes();
     }
   }
 
