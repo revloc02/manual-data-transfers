@@ -28,6 +28,11 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
  */
 public class SqsOperations {
 
+  private SqsOperations() {
+    // https://rules.sonarsource.com/java/RSPEC-1118/
+    throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
+  }
+
   private static final Logger LOG = LoggerFactory.getLogger(SqsOperations.class);
 
   /**
