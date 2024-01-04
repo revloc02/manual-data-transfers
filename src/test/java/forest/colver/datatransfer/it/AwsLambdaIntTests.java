@@ -10,7 +10,6 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.S3_SOURCE_CACHE;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
-import static forest.colver.datatransfer.config.Utils.pause;
 import static forest.colver.datatransfer.config.Utils.readFile;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -24,17 +23,21 @@ import org.slf4j.LoggerFactory;
 /**
  * Integration Tests for AWS Lambda
  */
-public class AwsLambdaIntTests {
+class AwsLambdaIntTests {
 
   private static final Logger LOG = LoggerFactory.getLogger(AwsLambdaIntTests.class);
   private static final String SQS1 = EMX_SANDBOX_TEST_SQS1;
+  private static final String FUNCTION = "sftp-sandbox-source-bridge";
 
   /**
    * Currently creds to run this are obtained with: aws-azure-login --mode=gui --profile
-   * enterprise-sb
+   * enterprise-sb. This test of the Invoke Lambda method is running against the Bridge Lambda, but
+   * some setup is required. Essentially the setup invokes the Bridge Lambda, but then that gets
+   * cleaned up so the test can manually invoke the Bridge Lambda (again).
    */
   @Test
-  public void testInvokeLambda() {
+  void testInvokeLambda() {
+    LOG.info("Interacting with: sqs={}", SQS1);
     var creds = getEmxSbCreds();
 
     // Place object in the s3 cache.
@@ -57,10 +60,10 @@ public class AwsLambdaIntTests {
     // ...and then clean it up, so we can test invoking the Lambda directly using that object.
     sqsPurge(creds, SQS1);
 
+    // Did all of the above just to set up a situation to invoke a lambda
     // Now invoke the BridgeLambda on the object...
-    var function = "sftp-sandbox-source-bridge";
     var payload = readFile("src/test/resources/invokeLambdaReq.json", StandardCharsets.UTF_8);
-    var response = lambdaInvoke(creds, function, payload);
+    var response = lambdaInvoke(creds, FUNCTION, payload);
     assertThat(response.statusCode()).isEqualTo(200);
 
     // ...wait for the message to get to the sqs...
