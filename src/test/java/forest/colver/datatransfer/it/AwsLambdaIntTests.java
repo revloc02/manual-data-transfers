@@ -32,8 +32,8 @@ class AwsLambdaIntTests {
   /**
    * Currently creds to run this are obtained with: aws-azure-login --mode=gui --profile
    * enterprise-sb. This test of the Invoke Lambda method is running against the Bridge Lambda, but
-   * some setup is required. Essentially the setup invokes the Bridge Lambda, but then that gets
-   * cleaned up so the test can manually invoke the Bridge Lambda (again).
+   * some setup is required. Essentially the setup invokes the Bridge Lambda, but then the message
+   * that was sent gets cleaned up so the test can manually invoke the Bridge Lambda (again).
    */
   @Test
   void testInvokeLambda() {
@@ -51,16 +51,16 @@ class AwsLambdaIntTests {
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isOne());
 
-    // The initial placement triggered the bridge lambda, so verify that...
+    // The S3 object placement triggered the bridge lambda, which sent a message, so verify that...
     var messageResp = sqsReadOneMessage(creds, SQS1);
     assert messageResp != null;
     assertThat(messageResp.body()).contains(
         "\"key\": \"ext-aiko1/outbound/dev/flox/dd/1test.txt\"");
 
-    // ...and then clean it up, so we can test invoking the Lambda directly using that object.
+    // ...and then clean up the message, so we can test invoking the Lambda directly
     sqsPurge(creds, SQS1);
 
-    // Did all of the above just to set up a situation to invoke a lambda
+    // All of the above was completed to set up a situation to invoke a lambda
     // Now invoke the BridgeLambda on the object...
     var payload = readFile("src/test/resources/invokeLambdaReq.json", StandardCharsets.UTF_8);
     var response = lambdaInvoke(creds, FUNCTION, payload);
