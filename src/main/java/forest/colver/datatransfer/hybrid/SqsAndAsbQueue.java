@@ -20,6 +20,11 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 
 public class SqsAndAsbQueue {
 
+  private SqsAndAsbQueue() {
+    // https://rules.sonarsource.com/java/RSPEC-1118/
+    throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
+  }
+
   private static final Logger LOG = LoggerFactory.getLogger(SqsAndAsbQueue.class);
 
   public static void moveOneSqsToAsbQueue(AwsCredentialsProvider awsCreds, String sqs,
