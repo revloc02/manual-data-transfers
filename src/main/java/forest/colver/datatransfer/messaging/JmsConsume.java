@@ -99,6 +99,12 @@ public class JmsConsume {
     return counter;
   }
 
+  /**
+   * Deletes the amount of messages, requested in the argument, from the queue. This exists
+   * because...yeah, I don't remember. But I think it used to be that Qpid would get bogged down
+   * when there were too many messages on the broker, and this was an effort to remove them chunks
+   * at a time. Not sure if this has other practical uses.
+   */
   public static void deleteSomeMessages(Environment env, String queueName, int amount) {
     var cf = new JmsConnectionFactory(env.url());
     var counter = 0;
