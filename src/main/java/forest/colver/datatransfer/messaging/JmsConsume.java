@@ -45,7 +45,7 @@ public class JmsConsume {
         e.printStackTrace();
       }
     }
-    LOG.info("Purged {} messages from {}:{} queue.", counter, env.name(), queueName);
+    LOG.info("Deleted {} messages from {}:{} queue.", counter, env.name(), queueName);
     return counter;
   }
 
