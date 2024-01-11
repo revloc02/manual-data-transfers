@@ -143,9 +143,7 @@ public class JmsConsume {
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
       ctx.createConsumer(ctx.createQueue(queueName))
           .setMessageListener(
-              message -> {
-                createStringFromMessage(message);
-              });
+              DisplayUtils::createStringFromMessage);
     }
   }
 
