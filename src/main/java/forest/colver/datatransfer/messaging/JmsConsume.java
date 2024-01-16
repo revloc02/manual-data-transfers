@@ -5,8 +5,11 @@ import static forest.colver.datatransfer.config.Utils.getUsername;
 import static forest.colver.datatransfer.messaging.DisplayUtils.createStringFromMessage;
 import static jakarta.jms.JMSContext.CLIENT_ACKNOWLEDGE;
 
+import jakarta.jms.JMSConsumer;
 import jakarta.jms.JMSException;
+import jakarta.jms.JMSProducer;
 import jakarta.jms.Message;
+import jakarta.jms.Queue;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -236,30 +239,11 @@ public class JmsConsume {
       var fromQ = ctx.createQueue(fromQueueName);
       var counter = 0;
       try (var consumer = ctx.createConsumer(fromQ)) {
-        var moreMessages = true;
-        var toQ = ctx.createQueue(toQueueName);
-        Message message;
-        while (moreMessages) {
-          message = consumer.receive(2_000L);
-          if (message != null) {
-            counter++;
-            ctx.createProducer().send(toQ, message);
-            message.acknowledge();
-            LOG.info(
-                "Moved from Queue={}:{} to Queue={}:{}, counter={}",
-                env.name(),
-                fromQueueName,
-                env.name(),
-                toQueueName,
-                counter);
-          } else {
-            moreMessages = false;
-          }
-        }
+        jmsMove(ctx.createProducer(), consumer, ctx.createQueue(toQueueName));
       } catch (JMSException e) {
         e.printStackTrace();
       }
-      LOG.info("Moved {} messages.", counter);
+      LOG.info("Moved {} messages from {} to {} in {}.", counter, fromQueueName, toQueueName, env.name());
     }
   }
 
@@ -270,31 +254,39 @@ public class JmsConsume {
       var fromQ = ctx.createQueue(fromQueueName);
       var counter = 0;
       try (var consumer = ctx.createConsumer(fromQ, selector)) {
-        var moreMessages = true;
-        var toQ = ctx.createQueue(toQueueName);
-        Message message;
-        while (moreMessages) {
-          message = consumer.receive(2_000L);
-          if (message != null) {
-            counter++;
-            ctx.createProducer().send(toQ, message);
-            message.acknowledge();
-            LOG.info(
-                "Moved from Queue={}:{} to Queue={}:{}, counter={}",
-                env.name(),
-                fromQueueName,
-                env.name(),
-                toQueueName,
-                counter);
-          } else {
-            moreMessages = false;
-          }
-        }
+        jmsMove(ctx.createProducer(), consumer, ctx.createQueue(toQueueName));
       } catch (JMSException e) {
         e.printStackTrace();
       }
-      LOG.info("Moved {} messages to {} in {}, for selector={}.", counter, toQueueName, env.name(),
+      LOG.info("Moved {} messages from {} to {} in {}, for selector={}.", counter, toQueueName, fromQueueName, env.name(),
           selector);
+    }
+  }
+
+  /**
+   * A utility method that moves messages from one JMS queue to another.
+   * @param producer JMSProducer used for the target queue.
+   * @param consumer JMSConsumer configured as the source queue.
+   * @param toQueue The target queue.
+   */
+  private static void jmsMove(JMSProducer producer, JMSConsumer consumer, Queue toQueue)
+      throws JMSException {
+    var moreMessages = true;
+    var counter = 0;
+    Message message;
+    while (moreMessages) {
+      message = consumer.receive(2_000L);
+      if (message != null) {
+        counter++;
+        producer.send(toQueue, message);
+        message.acknowledge();
+        LOG.info(
+            "Moved to Queue={}, counter={}",
+            toQueue.getQueueName(),
+            counter);
+      } else {
+        moreMessages = false;
+      }
     }
   }
 
