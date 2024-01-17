@@ -36,10 +36,11 @@ public class Utils {
   public static final String EMX_SANDBOX_EVENTGRID_SUBSCRIPTION_QUEUE = "emx-core-test-eventgrid-subscription-queue";
   public static final String EMX_SANDBOX_EVENTGRID_HOST = userCreds.getProperty("azure-emx-sandbox-eventgrid-host");
   public static final String EMX_SANDBOX_EVENTGRID_TOPIC_KEY = userCreds.getProperty("azure-emx-sandbox-eventgrid-topic-key");
-  public static final String EMX_SANDBOX_STORAGE_ACCOUNT_CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=foresttestsa;AccountKey=" + userCreds.getProperty("azure-emx-sandbox-forest-sa-account-key") + ";EndpointSuffix=core.windows.net";
+  public static final String EMX_SANDBOX_SA_FOREST_CONN_STR = "DefaultEndpointsProtocol=https;AccountName=foresttestsa;AccountKey=" + userCreds.getProperty("azure-emx-sandbox-forest-sa-account-key") + ";EndpointSuffix=core.windows.net";
   public static final String EMX_PROD_EXT_EMCOR_PROD_SA_CONN_STR = userCreds.getProperty("azure-emx-prod-extemcorprod-sa-conn-str");
   public static final String EMX_EXTEMCORNP_SA_EXT_EMCOR_NP_SAS_TOKEN = userCreds.getProperty("azure-extemcornp-sa-ext-emcor-np-source-sas-token");
-  public static final String EMX_SANDBOX_FORESTTESTSA_FOREST_TEST_BLOB_SAS_TOKEN = userCreds.getProperty("azure-emx-sandbox-foresttestsa-forest-test-blob-sas-token");
+  public static final String EMX_SANDBOX_SA_FOREST_FOREST_TEST_BLOB_SAS = userCreds.getProperty("azure-emx-sandbox-foresttestsa-forest-test-blob-sas-token");
+  public static final String EMX_SANDBOX_SA_FOREST_FOREST_TEST_BLOB2_SAS = userCreds.getProperty("azure-emx-sandbox-foresttestsa-forest-test-blob2-sas-token");
 
   public static IMessage createIMessage(String payload, String label, String id,
       Map<String, Object> properties) {

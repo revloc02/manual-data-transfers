@@ -6,8 +6,9 @@ import static forest.colver.datatransfer.azure.BlobStorageOperations.blobGet;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobGetSas;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobPut;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobPutSas;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FORESTTESTSA_FOREST_TEST_BLOB_SAS_TOKEN;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_STORAGE_ACCOUNT_CONNECTION_STRING;
+import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_SA_FOREST_FOREST_TEST_BLOB2_SAS;
+import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_SA_FOREST_FOREST_TEST_BLOB_SAS;
+import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_SA_FOREST_CONN_STR;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
@@ -19,8 +20,9 @@ import org.junit.jupiter.api.Test;
  */
 public class AzureBlobStorageTests {
 
-  public static final String CONNECT_STR = EMX_SANDBOX_STORAGE_ACCOUNT_CONNECTION_STRING;
-  public static final String SAS_TOKEN = EMX_SANDBOX_FORESTTESTSA_FOREST_TEST_BLOB_SAS_TOKEN;
+  public static final String CONNECT_STR = EMX_SANDBOX_SA_FOREST_CONN_STR;
+  public static final String SAS_TOKEN = EMX_SANDBOX_SA_FOREST_FOREST_TEST_BLOB_SAS;
+  public static final String SAS_TOKEN2 = EMX_SANDBOX_SA_FOREST_FOREST_TEST_BLOB2_SAS;
 
   @Test
   public void testPut() {

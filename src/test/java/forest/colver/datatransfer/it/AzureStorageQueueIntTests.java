@@ -9,7 +9,7 @@ import static forest.colver.datatransfer.azure.StorageQueueOperations.asqPurge;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqQueueDepth;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqSend;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqSendMultipleUniqueMessages;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_STORAGE_ACCOUNT_CONNECTION_STRING;
+import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_SA_FOREST_CONN_STR;
 import static forest.colver.datatransfer.config.Utils.generateUniqueStrings;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
  */
 public class AzureStorageQueueIntTests {
 
-  public static final String CONNECT_STR = EMX_SANDBOX_STORAGE_ACCOUNT_CONNECTION_STRING;
+  public static final String CONNECT_STR = EMX_SANDBOX_SA_FOREST_CONN_STR;
   public static final String QUEUE_NAME = "forest-test-storage-queue";
   public static final String QUEUE2_NAME = "forest-test-storage-queue2";
   public static final String PAYLOAD = "this is the body";
