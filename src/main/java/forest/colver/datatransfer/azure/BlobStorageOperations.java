@@ -9,6 +9,11 @@ import java.nio.charset.StandardCharsets;
 
 public class BlobStorageOperations {
 
+  private BlobStorageOperations() {
+    // https://rules.sonarsource.com/java/RSPEC-1118/
+    throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
+  }
+
   public static void blobPut(String connectStr, String endpoint, String containerName,
       String filename, String contents) {
     BlobServiceClient blobServiceClient = new BlobServiceClientBuilder()
@@ -61,6 +66,7 @@ public class BlobStorageOperations {
 
   /**
    * Authenticates with a Sas Token, and reads an object from the Storage Container.
+   *
    * @param sasToken Shared Access Signature Token for auth.
    * @param endpoint Azure storage endpoint.
    * @param containerName Blob storage name.
