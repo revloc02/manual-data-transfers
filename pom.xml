@@ -59,6 +59,7 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- TODO: figure out how to make the version into a variable so I can just change that in one place -->
     <!-- AWS -->
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
@@ -93,6 +94,16 @@
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>cloudwatchlogs</artifactId>
+      <version>2.21.21</version>
+    </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>sso</artifactId>
+      <version>2.21.21</version>
+    </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>ssooidc</artifactId>
       <version>2.21.21</version>
     </dependency>
 

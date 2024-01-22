@@ -50,7 +50,8 @@ public class Utils {
   }
 
   public static AwsCredentialsProvider getEmxSbCreds() { // enterprise sandbox
-    return ProfileCredentialsProvider.create("enterprise-sb");
+//    return ProfileCredentialsProvider.create("enterprise-sb"); // old way
+    return ProfileCredentialsProvider.create("aws-cloud-admin-646129096172");
   }
 
   public static AwsCredentialsProvider getEmxProdCreds() {
