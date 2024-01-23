@@ -220,15 +220,8 @@ public class SqsOperations {
             moreMessages = false;
           } else {
             for (var message : response.messages()) {
+              sqsDeleteMessage(awsCP, queueName, message);
               counter++;
-              LOG.info("Deleting message #{} from {}, receiptHandle:{}", counter, queueName,
-                  message.receiptHandle());
-              var deleteMessageRequest =
-                  DeleteMessageRequest.builder()
-                      .queueUrl(qUrl(sqsClient, queueName))
-                      .receiptHandle(message.receiptHandle())
-                      .build();
-              sqsClient.deleteMessage(deleteMessageRequest);
             }
           }
         } while (moreMessages);
@@ -321,20 +314,11 @@ public class SqsOperations {
   public static void sqsDeleteMessages(
       AwsCredentialsProvider awsCP, String queueName, ReceiveMessageResponse response) {
     var count = 0;
-    try (var sqsClient = getSqsClient(awsCP)) {
-      for (Message message : response.messages()) {
-        var deleteMessageRequest =
-            DeleteMessageRequest.builder()
-                .queueUrl(qUrl(sqsClient, queueName))
-                .receiptHandle(message.receiptHandle())
-                .build();
-        var deleteResponse = sqsClient.deleteMessage(deleteMessageRequest);
-        awsResponseValidation(deleteResponse);
-        LOG.info("DELETE: message {}.", message);
-        count++;
-      }
-      LOG.info("DELETED {} message(s).", count);
+    for (Message message : response.messages()) {
+      sqsDeleteMessage(awsCP, queueName, message);
+      count++;
     }
+    LOG.info("DELETED {} message(s).", count);
   }
 
   /**
@@ -350,7 +334,7 @@ public class SqsOperations {
               .build();
       var deleteResponse = sqsClient.deleteMessage(deleteMessageRequest);
       awsResponseValidation(deleteResponse);
-      LOG.info("DELETE: message {}.", message);
+      LOG.info("DELETED: From {} message {}.", queueName, message);
     }
   }
 
