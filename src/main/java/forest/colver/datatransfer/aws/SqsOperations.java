@@ -133,6 +133,7 @@ public class SqsOperations {
     }
   }
 
+  // todo: can this be used in sqsClear()?
   /**
    * Reads one or more message from the SQS (but does not consume them). Note that the
    * visibilityTimeout is zero so reading the message doesn't tie it up in any way. This also
