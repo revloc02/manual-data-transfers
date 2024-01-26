@@ -157,6 +157,7 @@ public class S3Operations {
         .sourceKey(sourceKey).destinationBucket(destBucket).destinationKey(destKey).build();
     var copyObjectResponse = s3Client.copyObject(copyObjectRequest);
     awsResponseValidation(copyObjectResponse);
+    LOG.info("S3COPY: Copied object from {}/{} to {}/{}", sourceBucket, sourceKey, destBucket, destKey);
   }
 
   /**
@@ -283,4 +284,14 @@ public class S3Operations {
     awsResponseValidation(deleteObjectResponse);
     LOG.info("S3DELETE: The object {} was deleted from the {} bucket.\n", objectKey, bucket);
   }
+
+  public static void s3Move(S3Client s3Client, String sourceBucket, String sourceKey,
+      String destBucket, String destKey) {
+    s3Copy(s3Client, sourceBucket, sourceKey, destBucket, destKey);
+    s3Delete(s3Client, sourceBucket, sourceKey);
+    LOG.info("S3MOVE: Moved object from {}/{} to {}/{}", sourceBucket, sourceKey, destBucket, destKey);
+  }
+
+  // todo: how about a copyAll? Copy everything in a keyPrefix to another s3.
+  // todo: and if copyAll works how about a moveAll?
 }

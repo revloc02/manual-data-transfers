@@ -6,6 +6,7 @@ import static forest.colver.datatransfer.aws.S3Operations.s3Get;
 import static forest.colver.datatransfer.aws.S3Operations.s3Head;
 import static forest.colver.datatransfer.aws.S3Operations.s3List;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListResponse;
+import static forest.colver.datatransfer.aws.S3Operations.s3Move;
 import static forest.colver.datatransfer.aws.S3Operations.s3Put;
 import static forest.colver.datatransfer.aws.Utils.S3_INTERNAL;
 import static forest.colver.datatransfer.aws.Utils.S3_TARGET_CUSTOMER;
@@ -487,6 +488,47 @@ class AwsS3IntTests {
       // verify the file is gone
       objects = s3List(s3Client, S3_INTERNAL, objectKey);
       assertThat(objects).isEmpty();
+    }
+  }
+
+  @Test
+  void testS3Move_PassClient() throws IOException {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      // place a file
+      var objectKey = "revloc02/source/test/test.txt";
+      var payload = getDefaultPayload();
+      s3Put(s3Client, S3_INTERNAL, objectKey, payload);
+
+      // verify the file is in the source
+      var objects = s3List(s3Client, S3_INTERNAL, objectKey);
+      assertThat(objects.size()).isOne();
+      assertThat(objects.get(0).key()).isEqualTo(objectKey);
+
+      // move file
+      var destKey = "blake/inbound/dev/some-bank/ack/testCopied.txt";
+      s3Move(s3Client, S3_INTERNAL, objectKey, S3_TARGET_CUSTOMER, destKey);
+
+      // verify the file is in the new location
+      objects = s3List(s3Client, S3_TARGET_CUSTOMER, destKey);
+      assertThat(objects.size()).isOne();
+      assertThat(objects.get(0).key()).isEqualTo(destKey);
+
+      // check the contents
+      var response = s3Get(s3Client, S3_TARGET_CUSTOMER, destKey);
+      LOG.info("response={}", response.response());
+      LOG.info("statusCode={}", response.response().sdkHttpResponse().statusCode());
+      var respPayload = new String(response.readAllBytes(),
+          StandardCharsets.UTF_8);
+      assertThat(respPayload).isEqualTo(payload);
+
+      // verify the file is no longer on the source s3
+      objects = s3List(s3Client, S3_INTERNAL, objectKey);
+      assertThat(objects).isEmpty();
+
+      // cleanup and delete the files
+      response.close();
+      s3Delete(s3Client, S3_TARGET_CUSTOMER, destKey);
     }
   }
 }
