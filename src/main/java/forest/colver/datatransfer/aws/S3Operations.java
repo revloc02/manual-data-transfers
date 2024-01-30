@@ -160,6 +160,10 @@ public class S3Operations {
     LOG.info("S3COPY: Copied object from {}/{} to {}/{}", sourceBucket, sourceKey, destBucket, destKey);
   }
 
+  public static void s3CopyAll() {
+    // todo: s3List only returns up to 1000 files. Is there a way to count the number of objects in an s3 directory? If there is more than 1000 abort?
+  }
+
   /**
    * DOES NOT WORK! Use the s3Get where you pass in the s3Client.
    * <p>
@@ -217,15 +221,15 @@ public class S3Operations {
    * @param keyPrefix The "folder" on the S3 to list.
    */
   public static List<S3Object> s3List(S3Client s3Client, String bucket, String keyPrefix) {
-    // returns a list of only 10 items or fewer. If you need more, use the other method.
+    // returns a list of only 10 items or fewer. If you need more, use s3List with maxKeys.
     return s3List(s3Client, bucket, keyPrefix, 10);
   }
 
   /**
-   * S3List with S3Client. List objects at a certain directory (keyPrefix).
+   * S3List with S3Client. List objects (up to 1000) at a certain directory (keyPrefix).
    *
    * @param keyPrefix The "folder" on the S3 to list.
-   * @param maxKeys Sets the maximum number of keys returned in the response.
+   * @param maxKeys Sets the maximum number of keys returned in the response, max 1000.
    */
   public static List<S3Object> s3List(S3Client s3Client, String bucket, String keyPrefix, int maxKeys) {
     var listObjectsRequest =
