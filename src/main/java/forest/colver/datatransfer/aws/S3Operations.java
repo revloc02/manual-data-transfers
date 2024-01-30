@@ -296,6 +296,18 @@ public class S3Operations {
     LOG.info("S3MOVE: Moved object from {}/{} to {}/{}", sourceBucket, sourceKey, destBucket, destKey);
   }
 
+  // todo: this needs a unit test
+  public static void s3MoveAll(S3Client s3Client, String sourceBucket, String keyPrefix,
+      String destBucket) {
+    var objects = s3List(s3Client, sourceBucket, keyPrefix, 1000);
+    while (!objects.isEmpty()) {
+      for(var object : objects) {
+        s3Move(s3Client, sourceBucket, object.key(), destBucket, object.key());
+      }
+      objects = s3List(s3Client, sourceBucket, keyPrefix);
+    }
+  }
+
   // todo: how about a copyAll? Copy everything in a keyPrefix to another s3.
   // todo: and if copyAll works how about a moveAll?
 }
