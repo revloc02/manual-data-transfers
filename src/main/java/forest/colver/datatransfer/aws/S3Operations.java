@@ -286,7 +286,21 @@ public class S3Operations {
     var deleteObjectRequest = DeleteObjectRequest.builder().bucket(bucket).key(objectKey).build();
     var deleteObjectResponse = s3Client.deleteObject(deleteObjectRequest);
     awsResponseValidation(deleteObjectResponse);
-    LOG.info("S3DELETE: The object {} was deleted from the {} bucket.\n", objectKey, bucket);
+    LOG.info("S3DELETE: The object {} was deleted from the {} bucket.", objectKey, bucket);
+  }
+
+  // todo: this needs a unit test
+  /**
+   * S3Delete with S3Client. Delete all objects from an S3 key prefix.
+   */
+  public static void s3DeleteAll(S3Client s3Client, String bucket, String keyPrefix) {
+    var objects = s3List(s3Client, bucket, keyPrefix, 1000);
+    while (!objects.isEmpty()) {
+      for(var object : objects) {
+        s3Delete(s3Client, bucket, object.key());
+      }
+      objects = s3List(s3Client, bucket, keyPrefix);
+    }
   }
 
   public static void s3Move(S3Client s3Client, String sourceBucket, String sourceKey,
@@ -296,7 +310,7 @@ public class S3Operations {
     LOG.info("S3MOVE: Moved object from {}/{} to {}/{}", sourceBucket, sourceKey, destBucket, destKey);
   }
 
-  // todo: this needs a unit test
+  // todo: this needs a unit test. Can I test more than 1000 objects?
   public static void s3MoveAll(S3Client s3Client, String sourceBucket, String keyPrefix,
       String destBucket) {
     var objects = s3List(s3Client, sourceBucket, keyPrefix, 1000);

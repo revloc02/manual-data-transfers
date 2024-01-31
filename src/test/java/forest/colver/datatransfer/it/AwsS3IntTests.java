@@ -2,11 +2,13 @@ package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.aws.S3Operations.s3Copy;
 import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
+import static forest.colver.datatransfer.aws.S3Operations.s3DeleteAll;
 import static forest.colver.datatransfer.aws.S3Operations.s3Get;
 import static forest.colver.datatransfer.aws.S3Operations.s3Head;
 import static forest.colver.datatransfer.aws.S3Operations.s3List;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListResponse;
 import static forest.colver.datatransfer.aws.S3Operations.s3Move;
+import static forest.colver.datatransfer.aws.S3Operations.s3MoveAll;
 import static forest.colver.datatransfer.aws.S3Operations.s3Put;
 import static forest.colver.datatransfer.aws.Utils.S3_INTERNAL;
 import static forest.colver.datatransfer.aws.Utils.S3_TARGET_CUSTOMER;
@@ -529,6 +531,39 @@ class AwsS3IntTests {
       // cleanup and delete the files
       response.close();
       s3Delete(s3Client, S3_TARGET_CUSTOMER, destKey);
+    }
+  }
+
+  @Test
+  void testS3MoveAll_PassClient() throws IOException {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      LOG.info("...place several files...");
+      var numFiles = 10;
+      var keyPrefix = "revloc02/source/test/";
+      for(var i=0;i<numFiles;i++){
+        var objectKey = keyPrefix+"test-"+i+".txt";
+        var payload = getDefaultPayload()+" "+i;
+        s3Put(s3Client, S3_INTERNAL, objectKey, payload);
+      }
+
+      LOG.info("...verify the files are on the source...");
+      var objects = s3List(s3Client, S3_INTERNAL, keyPrefix);
+      assertThat(objects).hasSize(numFiles);
+
+      LOG.info("...move all files...");
+      s3MoveAll(s3Client, S3_INTERNAL, keyPrefix, S3_TARGET_CUSTOMER);
+
+      LOG.info("...verify the files are in the new location...");
+      objects = s3List(s3Client, S3_TARGET_CUSTOMER, keyPrefix);
+      assertThat(objects).hasSize(numFiles);
+
+      LOG.info("...verify the source is empty...");
+      objects = s3List(s3Client, S3_INTERNAL, keyPrefix);
+      assertThat(objects).isEmpty();
+
+      LOG.info("...cleanup and delete the files...");
+      s3DeleteAll(s3Client, S3_TARGET_CUSTOMER, keyPrefix);
     }
   }
 }
