@@ -225,6 +225,7 @@ public class S3Operations {
     return s3List(s3Client, bucket, keyPrefix, 10);
   }
 
+  // todo: what happens if `maxKeys` parameter passed in is > 1000?
   /**
    * S3List with S3Client. List objects (up to 1000) at a certain directory (keyPrefix).
    *
@@ -299,7 +300,7 @@ public class S3Operations {
       for(var object : objects) {
         s3Delete(s3Client, bucket, object.key());
       }
-      objects = s3List(s3Client, bucket, keyPrefix);
+      objects = s3List(s3Client, bucket, keyPrefix, 1000);
     }
   }
 
@@ -310,7 +311,6 @@ public class S3Operations {
     LOG.info("S3MOVE: Moved object from {}/{} to {}/{}", sourceBucket, sourceKey, destBucket, destKey);
   }
 
-  // todo: this needs a unit test. Can I test more than 1000 objects?
   public static void s3MoveAll(S3Client s3Client, String sourceBucket, String keyPrefix,
       String destBucket) {
     var objects = s3List(s3Client, sourceBucket, keyPrefix, 1000);
@@ -318,7 +318,7 @@ public class S3Operations {
       for(var object : objects) {
         s3Move(s3Client, sourceBucket, object.key(), destBucket, object.key());
       }
-      objects = s3List(s3Client, sourceBucket, keyPrefix);
+      objects = s3List(s3Client, sourceBucket, keyPrefix, 1000);
     }
   }
 

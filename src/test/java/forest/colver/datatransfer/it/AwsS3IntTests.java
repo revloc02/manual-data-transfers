@@ -16,9 +16,11 @@ import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.aws.Utils.getS3Client;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -539,7 +541,7 @@ class AwsS3IntTests {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
       LOG.info("...place several files...");
-      var numFiles = 10;
+      var numFiles = 14;
       var keyPrefix = "revloc02/source/test/";
       for(var i=0;i<numFiles;i++){
         var objectKey = keyPrefix+"test-"+i+".txt";
@@ -547,20 +549,28 @@ class AwsS3IntTests {
         s3Put(s3Client, S3_INTERNAL, objectKey, payload);
       }
 
+      // todo: if `numFiles` is > 1000 this await() won't work because `s3List` can only list 1000 files at a time. Either fix it or make a comment
       LOG.info("...verify the files are on the source...");
-      var objects = s3List(s3Client, S3_INTERNAL, keyPrefix);
-      assertThat(objects).hasSize(numFiles);
+      await()
+          .pollInterval(Duration.ofSeconds(3))
+          .atMost(Duration.ofSeconds(60))
+          .untilAsserted(() -> assertThat(s3List(s3Client, S3_INTERNAL, keyPrefix, numFiles)).hasSize(numFiles));
 
       LOG.info("...move all files...");
       s3MoveAll(s3Client, S3_INTERNAL, keyPrefix, S3_TARGET_CUSTOMER);
 
+      // todo: if `numFiles` is > 1000 this await() won't work because `s3List` can only list 1000 files at a time. Either fix it or make a comment
       LOG.info("...verify the files are in the new location...");
-      objects = s3List(s3Client, S3_TARGET_CUSTOMER, keyPrefix);
-      assertThat(objects).hasSize(numFiles);
+      await()
+          .pollInterval(Duration.ofSeconds(3))
+          .atMost(Duration.ofSeconds(60))
+          .untilAsserted(() -> assertThat(s3List(s3Client, S3_TARGET_CUSTOMER, keyPrefix, numFiles)).hasSize(numFiles));
 
       LOG.info("...verify the source is empty...");
-      objects = s3List(s3Client, S3_INTERNAL, keyPrefix);
-      assertThat(objects).isEmpty();
+      await()
+          .pollInterval(Duration.ofSeconds(3))
+          .atMost(Duration.ofSeconds(60))
+          .untilAsserted(() -> assertThat(s3List(s3Client, S3_INTERNAL, keyPrefix)).isEmpty());
 
       LOG.info("...cleanup and delete the files...");
       s3DeleteAll(s3Client, S3_TARGET_CUSTOMER, keyPrefix);
