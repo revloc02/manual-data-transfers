@@ -290,7 +290,6 @@ public class S3Operations {
     LOG.info("S3DELETE: The object {} was deleted from the {} bucket.", objectKey, bucket);
   }
 
-  // todo: this needs a unit test
   /**
    * S3Delete with S3Client. Delete all objects from an S3 key prefix.
    */

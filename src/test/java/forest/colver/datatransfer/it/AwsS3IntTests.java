@@ -537,7 +537,7 @@ class AwsS3IntTests {
   }
 
   @Test
-  void testS3MoveAll_PassClient() throws IOException {
+  void testS3MoveAll_PassClient() {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
       LOG.info("...place several files...");
@@ -574,6 +574,36 @@ class AwsS3IntTests {
 
       LOG.info("...cleanup and delete the files...");
       s3DeleteAll(s3Client, S3_TARGET_CUSTOMER, keyPrefix);
+    }
+  }
+
+  @Test
+  void testS3DeleteAll_PassClient() {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      LOG.info("...place several files...");
+      var numFiles = 24;
+      var keyPrefix = "revloc02/target/test/";
+      for(var i=0;i<numFiles;i++){
+        var objectKey = keyPrefix+"test-"+i+".txt";
+        var payload = getDefaultPayload()+" "+i;
+        s3Put(s3Client, S3_INTERNAL, objectKey, payload);
+      }
+
+      LOG.info("...verify the files are on the s3...");
+      await()
+          .pollInterval(Duration.ofSeconds(3))
+          .atMost(Duration.ofSeconds(60))
+          .untilAsserted(() -> assertThat(s3List(s3Client, S3_INTERNAL, keyPrefix, numFiles)).hasSize(numFiles));
+
+      LOG.info("...delete all of the files...");
+      s3DeleteAll(s3Client, S3_INTERNAL, keyPrefix);
+
+      LOG.info("...verify the s3 is empty...");
+      await()
+          .pollInterval(Duration.ofSeconds(3))
+          .atMost(Duration.ofSeconds(60))
+          .untilAsserted(() -> assertThat(s3List(s3Client, S3_INTERNAL, keyPrefix)).isEmpty());
     }
   }
 }
