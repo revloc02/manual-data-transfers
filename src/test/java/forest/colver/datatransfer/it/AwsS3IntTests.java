@@ -258,11 +258,11 @@ class AwsS3IntTests {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
       var objectKey = "revloc02/target/test/mdtTest1.txt";
-      s3Put(creds, S3_INTERNAL, objectKey, getDefaultPayload());
+      s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
       var objects = s3List(s3Client, S3_INTERNAL, "revloc02/target/test", 10);
-      assertThat(objects.get(1).key()).isEqualTo(objectKey);
-      assertThat(objects.get(1).size()).isEqualTo(40L);
-      s3Delete(creds, S3_INTERNAL, objectKey);
+      assertThat(objects.get(0).key()).isEqualTo(objectKey);
+      assertThat(objects.get(0).size()).isEqualTo(40L);
+      s3Delete(s3Client, S3_INTERNAL, objectKey);
     }
   }
 
@@ -288,11 +288,11 @@ class AwsS3IntTests {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
       var objectKey = "revloc02/target/test/mdtTest1.txt";
-      s3Put(creds, S3_INTERNAL, objectKey, getDefaultPayload());
+      s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
       var response = s3ListResponse(s3Client, S3_INTERNAL, "revloc02/target/test", 50);
-      assertThat(response.contents().get(1).key()).isEqualTo(objectKey);
-      assertThat(response.contents().get(1).size()).isEqualTo(40L);
-      s3Delete(creds, S3_INTERNAL, objectKey);
+      assertThat(response.contents().get(0).key()).isEqualTo(objectKey);
+      assertThat(response.contents().get(0).size()).isEqualTo(40L);
+      s3Delete(s3Client, S3_INTERNAL, objectKey);
     }
   }
 
