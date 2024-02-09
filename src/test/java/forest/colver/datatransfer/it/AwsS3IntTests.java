@@ -296,6 +296,29 @@ class AwsS3IntTests {
     }
   }
 
+  /**
+   * Testing S3 List with more than 1000 items in the list.
+   */
+  @Test
+  void testS3ListWithMoreThan1000Items() {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      LOG.info("...place several files...");
+      var numFiles = 1100;
+      var keyPrefix = "revloc02/source/test/";
+      for(var i=0;i<numFiles;i++){
+        var objectKey = keyPrefix+"test-"+i+".txt";
+        var payload = getDefaultPayload()+" "+i;
+        s3Put(s3Client, S3_INTERNAL, objectKey, payload);
+      }
+
+      var objects = s3List(s3Client, S3_INTERNAL, keyPrefix, 1010);
+      LOG.info("number of objects={}", objects.size());
+
+      s3DeleteAll(s3Client, S3_INTERNAL, keyPrefix);
+    }
+  }
+
   // Pass a PutObjectRequest to the S3 operation
 
   /**
