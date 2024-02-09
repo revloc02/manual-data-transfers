@@ -230,9 +230,16 @@ public class S3Operations {
    * S3List with S3Client. List objects (up to 1000) at a certain directory (keyPrefix).
    *
    * @param keyPrefix The "folder" on the S3 to list.
-   * @param maxKeys Sets the maximum number of keys returned in the response, max 1000.
+   * @param maxKeysReq Sets the maximum number of keys returned in the response, max 1000.
    */
-  public static List<S3Object> s3List(S3Client s3Client, String bucket, String keyPrefix, int maxKeys) {
+  public static List<S3Object> s3List(S3Client s3Client, String bucket, String keyPrefix, int maxKeysReq) {
+    int maxKeys;
+    if (maxKeysReq > 1000) {
+      LOG.info("Request to list {} items exceeds the maximum, using max of 1000 instead.", maxKeysReq);
+      maxKeys = 1000;
+    } else {
+      maxKeys = maxKeysReq;
+    }
     var listObjectsRequest =
         ListObjectsV2Request.builder().bucket(bucket).prefix(keyPrefix).maxKeys(maxKeys).build();
     var listObjectsResponse = s3Client.listObjectsV2(listObjectsRequest);
@@ -241,6 +248,7 @@ public class S3Operations {
     for (var object : objects) {
       LOG.info("S3LIST: The object {} is on the {} bucket.", object, bucket);
     }
+    LOG.info("{} items listed.", maxKeys);
     return objects;
   }
 
