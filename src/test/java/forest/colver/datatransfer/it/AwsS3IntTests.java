@@ -312,9 +312,15 @@ class AwsS3IntTests {
         s3Put(s3Client, S3_INTERNAL, objectKey, payload);
       }
 
+      LOG.info("...try to list more than 1000 files, but see that there only is 1000...");
       var objects = s3List(s3Client, S3_INTERNAL, keyPrefix, 1010);
+      await()
+          .pollInterval(Duration.ofSeconds(3))
+          .atMost(Duration.ofSeconds(60))
+          .untilAsserted(() -> assertThat(objects).hasSize(1000));
       LOG.info("number of objects={}", objects.size());
 
+      LOG.info("...cleanup...");
       s3DeleteAll(s3Client, S3_INTERNAL, keyPrefix);
     }
   }
