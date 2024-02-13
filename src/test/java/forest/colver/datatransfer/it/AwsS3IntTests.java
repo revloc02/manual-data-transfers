@@ -570,7 +570,7 @@ class AwsS3IntTests {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
       LOG.info("...place several files...");
-      var numFiles = 14;
+      var numFiles = 14; // don't change this to >1000, because s3List can only list 1000 items
       var keyPrefix = "revloc02/source/test/";
       for(var i=0;i<numFiles;i++){
         var objectKey = keyPrefix+"test-"+i+".txt";
@@ -578,8 +578,8 @@ class AwsS3IntTests {
         s3Put(s3Client, S3_INTERNAL, objectKey, payload);
       }
 
-      // todo: if `numFiles` is > 1000 this await() won't work because `s3List` can only list 1000 files at a time. Either fix it or make a comment
       LOG.info("...verify the files are on the source...");
+      // if `numFiles` is >1000, await() won't work because `s3List` can only list 1000 files at a time.
       await()
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(60))
@@ -588,8 +588,8 @@ class AwsS3IntTests {
       LOG.info("...move all files...");
       s3MoveAll(s3Client, S3_INTERNAL, keyPrefix, S3_TARGET_CUSTOMER);
 
-      // todo: if `numFiles` is > 1000 this await() won't work because `s3List` can only list 1000 files at a time. Either fix it or make a comment
       LOG.info("...verify the files are in the new location...");
+      // if `numFiles` is >1000, await() won't work because `s3List` can only list 1000 files at a time.
       await()
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(60))
