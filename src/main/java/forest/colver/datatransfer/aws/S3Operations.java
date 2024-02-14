@@ -162,6 +162,7 @@ public class S3Operations {
 
   public static void s3CopyAll() {
     // todo: s3List only returns up to 1000 files. Is there a way to count the number of objects in an s3 directory? If there is more than 1000 abort?
+    // todo: here's a better question, is there a way to copy more than 1000 items?
   }
 
   /**
@@ -225,7 +226,6 @@ public class S3Operations {
     return s3List(s3Client, bucket, keyPrefix, 10);
   }
 
-  // todo: what happens if `maxKeys` parameter passed in is > 1000?
   /**
    * S3List with S3Client. List objects (up to 1000) at a certain directory (keyPrefix).
    *
@@ -318,6 +318,10 @@ public class S3Operations {
     LOG.info("S3MOVE: Moved object from {}/{} to {}/{}", sourceBucket, sourceKey, destBucket, destKey);
   }
 
+  /**
+   * Moves all objects from one s3 key prefix to another. Note that it moves them up to 1000 at a
+   * time, but continues until they all have been moved.
+   */
   public static void s3MoveAll(S3Client s3Client, String sourceBucket, String keyPrefix,
       String destBucket) {
     var objects = s3List(s3Client, sourceBucket, keyPrefix, 1000);
@@ -328,7 +332,4 @@ public class S3Operations {
       objects = s3List(s3Client, sourceBucket, keyPrefix, 1000);
     }
   }
-
-  // todo: how about a copyAll? Copy everything in a keyPrefix to another s3.
-  // todo: and if copyAll works how about a moveAll?
 }
