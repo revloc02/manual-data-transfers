@@ -160,9 +160,15 @@ public class S3Operations {
     LOG.info("S3COPY: Copied object from {}/{} to {}/{}", sourceBucket, sourceKey, destBucket, destKey);
   }
 
-  public static void s3CopyAll() {
-    // todo: s3List only returns up to 1000 files. Is there a way to count the number of objects in an s3 directory? If there is more than 1000 abort?
-    // todo: here's a better question, is there a way to copy more than 1000 items?
+  public static void s3CopyAll(S3Client s3Client, String sourceBucket, String keyPrefix, String destBucket) {
+    var keepCopying = true;
+    while (keepCopying) {
+      var response = s3ListResponse(s3Client, sourceBucket, keyPrefix, 1000);
+      for(var object : response.contents()) {
+        s3Copy(s3Client, sourceBucket, object.key(), destBucket, object.key());
+      }
+      keepCopying = response.isTruncated();
+    }
   }
 
   /**
@@ -242,9 +248,9 @@ public class S3Operations {
     }
     var listObjectsRequest =
         ListObjectsV2Request.builder().bucket(bucket).prefix(keyPrefix).maxKeys(maxKeys).build();
-    var listObjectsResponse = s3Client.listObjectsV2(listObjectsRequest);
-    awsResponseValidation(listObjectsResponse);
-    var objects = listObjectsResponse.contents();
+    var listObjectsV2Response = s3Client.listObjectsV2(listObjectsRequest);
+    awsResponseValidation(listObjectsV2Response);
+    var objects = listObjectsV2Response.contents();
     for (var object : objects) {
       LOG.info("S3LIST: The object {} is on the {} bucket.", object, bucket);
     }
