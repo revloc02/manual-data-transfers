@@ -160,6 +160,13 @@ public class S3Operations {
     LOG.info("S3COPY: Copied object from {}/{} to {}/{}", sourceBucket, sourceKey, destBucket, destKey);
   }
 
+  /**
+   * Copies all objects from a given S3 and key-prefix to another S3 bucket. This implementation
+   * uses s3List which batches 1000 objects at a time.
+   * @param sourceBucket Source S3.
+   * @param keyPrefix aka the file path.
+   * @param destBucket Target S3.
+   */
   public static void s3CopyAll(S3Client s3Client, String sourceBucket, String keyPrefix, String destBucket) {
     var keepCopying = true;
     while (keepCopying) {
@@ -169,6 +176,24 @@ public class S3Operations {
       }
       keepCopying = response.isTruncated();
     }
+  }
+
+  // todo: unit test
+  /**
+   * Use s3List to count the number of objects in an S3 directory 1000 items at a time.
+   * @param bucket S3.
+   * @param keyPrefix S3 directory.
+   * @return The number of objects in the key-prefix "directory"
+   */
+  public static int s3CountAll(S3Client s3Client, String bucket, String keyPrefix) {
+    var keepCounting = true;
+    int count =0;
+    while (keepCounting) {
+      var response = s3ListResponse(s3Client, bucket, keyPrefix, 1000);
+      count = count + response.contents().size();
+      keepCounting = response.isTruncated();
+    }
+    return count;
   }
 
   /**
