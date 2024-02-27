@@ -17,9 +17,8 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
-import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
-import software.amazon.awssdk.services.s3.model.ListObjectsResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
@@ -192,7 +191,10 @@ public class S3Operations {
       var response = s3ListResponse(s3Client, bucket, keyPrefix, 1000);
       count = count + response.contents().size();
       keepCounting = response.isTruncated();
+      LOG.info("count={}",count);
+      LOG.info("keepCounting={}", keepCounting);
     }
+    LOG.info("S3COUNT: Counted {} objects in {}/{}", count, bucket, keyPrefix);
     return count;
   }
 
@@ -271,9 +273,9 @@ public class S3Operations {
     } else {
       maxKeys = maxKeysReq;
     }
-    var listObjectsRequest =
+    var listObjectsV2Request =
         ListObjectsV2Request.builder().bucket(bucket).prefix(keyPrefix).maxKeys(maxKeys).build();
-    var listObjectsV2Response = s3Client.listObjectsV2(listObjectsRequest);
+    var listObjectsV2Response = s3Client.listObjectsV2(listObjectsV2Request);
     awsResponseValidation(listObjectsV2Response);
     var objects = listObjectsV2Response.contents();
     for (var object : objects) {
@@ -289,7 +291,7 @@ public class S3Operations {
    *
    * @param keyPrefix The "folder" on the S3 to list. E.g. "revloc02/source/test/test.txt"
    */
-  public static ListObjectsResponse s3ListResponse(AwsCredentialsProvider awsCp, String bucket,
+  public static ListObjectsV2Response s3ListResponse(AwsCredentialsProvider awsCp, String bucket,
       String keyPrefix) {
     try (var s3Client = getS3Client(awsCp)) {
       return s3ListResponse(s3Client, bucket, keyPrefix, 10);
@@ -302,12 +304,13 @@ public class S3Operations {
    * @param keyPrefix The "folder" on the S3 to list.
    * @param maxKeys Sets the maximum number of keys returned in the response.
    */
-  public static ListObjectsResponse s3ListResponse(S3Client s3Client, String bucket, String keyPrefix, int maxKeys) {
-    var listObjectsRequest =
-        ListObjectsRequest.builder().bucket(bucket).prefix(keyPrefix).maxKeys(maxKeys).build();
-    var listObjectsResponse = s3Client.listObjects(listObjectsRequest);
-    awsResponseValidation(listObjectsResponse);
-    return listObjectsResponse;
+  public static ListObjectsV2Response s3ListResponse(S3Client s3Client, String bucket, String keyPrefix, int maxKeys) {
+    var listObjectsV2Request =
+        ListObjectsV2Request.builder().bucket(bucket).prefix(keyPrefix).maxKeys(maxKeys).build();
+    var listObjectsV2Response = s3Client.listObjectsV2(listObjectsV2Request);
+    awsResponseValidation(listObjectsV2Response);
+    LOG.info("S3LIST: Retrieved a list of {} objects from {}/{}", maxKeys, bucket, keyPrefix);
+    return listObjectsV2Response;
   }
 
   /**
