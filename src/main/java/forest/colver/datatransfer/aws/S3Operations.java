@@ -314,6 +314,23 @@ public class S3Operations {
   }
 
   /**
+   * S3List with S3Client. List objects at a certain directory (keyPrefix), using a
+   * continuationToken from a previous S3List in order to get the next batch of objects.
+   *
+   * @param keyPrefix The "folder" on the S3 to list.
+   * @param continuationToken Indicates to Amazon S3 that the list is being continued on this bucket
+   * with a token from a previous listing.
+   */
+  public static ListObjectsV2Response s3ListResponse(S3Client s3Client, String bucket, String keyPrefix, String continuationToken) {
+    var listObjectsV2Request =
+        ListObjectsV2Request.builder().bucket(bucket).prefix(keyPrefix).maxKeys(1000).continuationToken(continuationToken).build();
+    var listObjectsV2Response = s3Client.listObjectsV2(listObjectsV2Request);
+    awsResponseValidation(listObjectsV2Response);
+    LOG.info("S3LIST: Retrieved a list of {} objects from {}/{}", listObjectsV2Response.contents().size(), bucket, keyPrefix);
+    return listObjectsV2Response;
+  }
+
+  /**
    * S3Delete with creds, creates S3Client. Delete an object from an S3.
    */
   public static void s3Delete(AwsCredentialsProvider awsCp, String bucket, String objectKey) {
