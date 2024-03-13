@@ -1,7 +1,7 @@
 package forest.colver.datatransfer.sftp;
 
 import static forest.colver.datatransfer.sftp.Utils.connectChannelSftp;
-import static forest.colver.datatransfer.sftp.Utils.getSession;
+import static forest.colver.datatransfer.sftp.Utils.getPwSession;
 
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.SftpException;
@@ -23,7 +23,7 @@ public class SftpOperations {
   public static void putSftpFilePassword(String host, String username, String password, String path,
       String filename, String payload)
       throws Throwable {
-    var session = getSession(host, username, password);
+    var session = getPwSession(host, username, password);
     var sftp = connectChannelSftp(session);
     try {
       sftp.put(new ByteArrayInputStream(payload.getBytes()), path + "/" + filename);
@@ -37,7 +37,7 @@ public class SftpOperations {
   public static String consumeSftpFilePassword(String host, String username, String password,
       String path,
       String filename) throws Throwable {
-    var session = getSession(host, username, password);
+    var session = getPwSession(host, username, password);
     var sftp = connectChannelSftp(session);
     String contents;
     try (var inputStream = sftp.get(path + "/" + filename)) {
@@ -52,6 +52,13 @@ public class SftpOperations {
     return contents;
   }
 
+  /**
+   * Places a files on the SFTP server.
+   * @param sftp An SFTP Channel (assumes a session and channel was set up using proper credentials and passed in).
+   * @param path The path the file.
+   * @param filename The name of the file.
+   * @param payload The contents of the file.
+   */
   public static void putSftpFile(ChannelSftp sftp, String path, String filename, String payload)
       throws SftpException, IOException {
     try (var file = new ByteArrayInputStream(payload.getBytes()) ) {
@@ -59,6 +66,13 @@ public class SftpOperations {
     }
   }
 
+  /**
+   * Retrieves and then deletes a file from the SFTP server.
+   * @param sftp An SFTP Channel (assumes a session and channel was set up using proper credentials and passed in).
+   * @param path The path to the file.
+   * @param filename The name of the file.
+   * @return The contents of the file--the payload.
+   */
   public static String consumeSftpFile(ChannelSftp sftp, String path, String filename)
       throws IOException, SftpException {
     String contents;

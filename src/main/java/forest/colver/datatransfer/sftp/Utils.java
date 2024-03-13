@@ -18,6 +18,7 @@ public class Utils {
   private static final String KNOWNHOSTS = userCreds.getProperty("sftp.knownhosts");
   public static final String SFTP_HOST = userCreds.getProperty("sftp.host");
   public static final String SFTP_PASSWORD = userCreds.getProperty("sftp.password");
+  public static final String SFTP_KEY = userCreds.getProperty("sftp.key");
 
   private Utils() {
     // https://rules.sonarsource.com/java/RSPEC-1118/
@@ -38,11 +39,22 @@ public class Utils {
     LOG.info("session disconnect");
   }
 
-  public static Session getSession(String host, String username, String password)
+  public static Session getPwSession(String host, String username, String password)
       throws JSchException {
     Session session = JSCH.getSession(username, host, 22);
     session.setPassword(password);
     LOG.info("sftp password auth");
+    JSCH.setKnownHosts(new ByteArrayInputStream(KNOWNHOSTS.getBytes()));
+    session.connect();
+    LOG.info("session connect");
+    return session;
+  }
+
+  public static Session getKeySession(String host, String username, String prvKey)
+      throws JSchException {
+    JSCH.addIdentity(prvKey);
+    Session session = JSCH.getSession(username, host, 22);
+    LOG.info("sftp ssh key auth");
     JSCH.setKnownHosts(new ByteArrayInputStream(KNOWNHOSTS.getBytes()));
     session.connect();
     LOG.info("session connect");
