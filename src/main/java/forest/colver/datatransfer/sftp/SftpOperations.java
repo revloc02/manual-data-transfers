@@ -20,6 +20,10 @@ public class SftpOperations {
     throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
   }
 
+  /**
+   * Places a file on an SFTP server. This method builds a session and channel for the one
+   * connection. If possible, use the method that has an sftp channel argument.
+   */
   public static void putSftpFilePassword(String host, String username, String password, String path,
       String filename, String payload)
       throws Throwable {
@@ -34,6 +38,10 @@ public class SftpOperations {
     }
   }
 
+  /**
+   * Retrieves and then deletes a file from the SFTP server. This method builds a session and
+   * channel for the one connection. If possible, use the method that has an sftp channel argument.
+   */
   public static String consumeSftpFilePassword(String host, String username, String password,
       String path,
       String filename) throws Throwable {
@@ -54,21 +62,25 @@ public class SftpOperations {
 
   /**
    * Places a files on the SFTP server.
-   * @param sftp An SFTP Channel (assumes a session and channel was set up using proper credentials and passed in).
+   *
+   * @param sftp An SFTP Channel (assumes a session and channel was set up using proper credentials
+   * and passed in).
    * @param path The path the file.
    * @param filename The name of the file.
    * @param payload The contents of the file.
    */
   public static void putSftpFile(ChannelSftp sftp, String path, String filename, String payload)
       throws SftpException, IOException {
-    try (var file = new ByteArrayInputStream(payload.getBytes()) ) {
+    try (var file = new ByteArrayInputStream(payload.getBytes())) {
       sftp.put(file, path + "/" + filename);
     }
   }
 
   /**
    * Retrieves and then deletes a file from the SFTP server.
-   * @param sftp An SFTP Channel (assumes a session and channel was set up using proper credentials and passed in).
+   *
+   * @param sftp An SFTP Channel (assumes a session and channel was set up using proper credentials
+   * and passed in).
    * @param path The path to the file.
    * @param filename The name of the file.
    * @return The contents of the file--the payload.
