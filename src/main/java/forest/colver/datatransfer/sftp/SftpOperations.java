@@ -4,6 +4,7 @@ import static forest.colver.datatransfer.sftp.Utils.connectChannelSftp;
 import static forest.colver.datatransfer.sftp.Utils.getPwSession;
 
 import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -22,15 +23,16 @@ public class SftpOperations {
 
   /**
    * Places a file on an SFTP server. This method builds a session and channel for the one
-   * connection. If possible, use the method that has an sftp channel argument.
+   * connection. If possible, use the {@link #putSftpFile putSftpFile} method that takes an sftp
+   * channel argument.
    */
   public static void putSftpFilePassword(String host, String username, String password, String path,
       String filename, String payload)
-      throws Throwable {
+      throws JSchException, SftpException, IOException {
     var session = getPwSession(host, username, password);
     var sftp = connectChannelSftp(session);
-    try {
-      sftp.put(new ByteArrayInputStream(payload.getBytes()), path + "/" + filename);
+    try (var stream = new ByteArrayInputStream(payload.getBytes())) {
+      sftp.put(stream, path + "/" + filename);
     } finally {
       sftp.exit();
       session.disconnect();
@@ -40,11 +42,12 @@ public class SftpOperations {
 
   /**
    * Retrieves and then deletes a file from the SFTP server. This method builds a session and
-   * channel for the one connection. If possible, use the method that has an sftp channel argument.
+   * channel for the one connection. If possible, use the {@link #consumeSftpFile consumeSftpFile}
+   * method that takes an sftp channel argument.
    */
   public static String consumeSftpFilePassword(String host, String username, String password,
       String path,
-      String filename) throws Throwable {
+      String filename) throws JSchException, SftpException, IOException {
     var session = getPwSession(host, username, password);
     var sftp = connectChannelSftp(session);
     String contents;
