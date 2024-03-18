@@ -1,13 +1,13 @@
 package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.sftp.SftpOperations.consumeSftpFile;
-import static forest.colver.datatransfer.sftp.SftpOperations.consumeSftpFilePassword;
 import static forest.colver.datatransfer.sftp.SftpOperations.putSftpFile;
-import static forest.colver.datatransfer.sftp.SftpOperations.putSftpFilePassword;
 import static forest.colver.datatransfer.sftp.Utils.SFTP_HOST;
+import static forest.colver.datatransfer.sftp.Utils.SFTP_KEY;
 import static forest.colver.datatransfer.sftp.Utils.SFTP_PASSWORD;
 import static forest.colver.datatransfer.sftp.Utils.connectChannelSftp;
-import static forest.colver.datatransfer.sftp.Utils.getSession;
+import static forest.colver.datatransfer.sftp.Utils.getKeySession;
+import static forest.colver.datatransfer.sftp.Utils.getPwSession;
 import static forest.colver.datatransfer.sftp.Utils.sftpDisconnect;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -28,32 +28,37 @@ class SftpIntTests {
   public static final String PATH = "target/test";
   public static final String FILENAME = "sftp-test.txt";
   public static final String PAYLOAD = "payload";
-  static Session SESSION;
-  static ChannelSftp SFTP;
+
+  static Session SESSION_PW;
+  static ChannelSftp SFTP_CH_PW;
+  static Session SESSION_KEY;
+  static ChannelSftp SFTP_CH_KEY;
 
   @BeforeAll
   static void setupSftp() throws JSchException {
-    SESSION = getSession(SFTP_HOST, USERNAME, SFTP_PASSWORD);
-    SFTP = connectChannelSftp(SESSION);
+    SESSION_PW = getPwSession(SFTP_HOST, USERNAME, SFTP_PASSWORD);
+    SFTP_CH_PW = connectChannelSftp(SESSION_PW);
+    SESSION_KEY = getKeySession(SFTP_HOST, USERNAME, SFTP_KEY);
+    SFTP_CH_KEY = connectChannelSftp(SESSION_KEY);
   }
 
   @AfterAll
   static void cleanupSftp() {
-    sftpDisconnect(SFTP, SESSION);
+    sftpDisconnect(SFTP_CH_PW, SESSION_PW);
+    sftpDisconnect(SFTP_CH_KEY, SESSION_KEY);
   }
 
   @Test
-  void testSftpPut() throws Throwable {
-    // todo: I should probably? pass the sftp-channel in each test so that it doesn't have to open on for each operation
-    putSftpFilePassword(SFTP_HOST, USERNAME, SFTP_PASSWORD, PATH, FILENAME, PAYLOAD);
-    var contents = consumeSftpFilePassword(SFTP_HOST, USERNAME, SFTP_PASSWORD, PATH, FILENAME);
+  void testSftpPut() throws SftpException, IOException {
+    putSftpFile(SFTP_CH_PW, PATH, FILENAME, PAYLOAD);
+    var contents = consumeSftpFile(SFTP_CH_PW, PATH, FILENAME);
     assertThat(contents).isEqualTo(PAYLOAD);
   }
 
   @Test
-  void testSftpPutPassChannel() throws SftpException, IOException {
-    putSftpFile(SFTP, PATH, FILENAME, PAYLOAD);
-    var contents = consumeSftpFile(SFTP, PATH, FILENAME);
+  void testSftpConsume() throws SftpException, IOException {
+    putSftpFile(SFTP_CH_PW, PATH, FILENAME, PAYLOAD);
+    var contents = consumeSftpFile(SFTP_CH_PW, PATH, FILENAME);
     assertThat(contents).isEqualTo(PAYLOAD);
   }
 
