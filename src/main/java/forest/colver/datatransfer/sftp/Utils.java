@@ -4,10 +4,13 @@ import static forest.colver.datatransfer.config.Utils.userCreds;
 
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.Identity;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.KeyPair;
 import com.jcraft.jsch.Session;
 import java.io.ByteArrayInputStream;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,12 +55,75 @@ public class Utils {
 
   public static Session getKeySession(String host, String username, String prvKey)
       throws JSchException {
-    JSCH.addIdentity(prvKey);
     Session session = JSCH.getSession(username, host, 22);
+//    JSCH.addIdentity(new InMemoryIdentity(prvKey), null);
+    JSCH.addIdentity("src/main/resources/prvKey");
     LOG.info("sftp ssh key auth");
     JSCH.setKnownHosts(new ByteArrayInputStream(KNOWNHOSTS.getBytes()));
     session.connect();
     LOG.info("session connect");
     return session;
+  }
+
+  /**
+   * This class allows an ssh key, an identity, to be created in memory to be used for
+   * authentication. (Currently not being used, but keeping it for reference.)
+   */
+  public static class InMemoryIdentity implements Identity {
+
+    private static final String DEFAULT_PUBLIC_KEY = "publicKeyNotNeededUsingDefault";
+    private static final String DEFAULT_KEY_NAME = "customKeyNamesNotCurrentlyImplemented";
+    private final KeyPair keyPair;
+
+    /**
+     * Example usage: JSCH.addIdentity(new InMemoryIdentity(prvKey), null);
+     * @param prvkey a string representation of the private key
+     */
+    public InMemoryIdentity(String prvkey) throws JSchException {
+      Objects.requireNonNull(prvkey);
+      if (prvkey.isEmpty()) {
+        throw new IllegalArgumentException("prvkey cannot be empty");
+      }
+      var jsch = new JSch();
+      this.keyPair = KeyPair.load(jsch, prvkey.getBytes(), DEFAULT_PUBLIC_KEY.getBytes());
+    }
+
+    @Override
+    public boolean setPassphrase(byte[] passphrase) {
+      return keyPair.decrypt(passphrase);
+    }
+
+    @Override
+    public byte[] getPublicKeyBlob() {
+      return keyPair.getPublicKeyBlob();
+    }
+
+    @Override
+    public byte[] getSignature(byte[] data) {
+      return keyPair.getSignature(data);
+    }
+
+    @Override
+    public String getAlgName() {
+      if (keyPair.getKeyType() == 1) {
+        return "ssh-dss";
+      }
+      return "ssh-rsa";
+    }
+
+    @Override
+    public String getName() {
+      return DEFAULT_KEY_NAME;
+    }
+
+    @Override
+    public boolean isEncrypted() {
+      return keyPair.isEncrypted();
+    }
+
+    @Override
+    public void clear() {
+      keyPair.dispose();
+    }
   }
 }
