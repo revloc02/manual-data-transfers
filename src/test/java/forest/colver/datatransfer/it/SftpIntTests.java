@@ -10,6 +10,7 @@ import static forest.colver.datatransfer.sftp.Utils.getKeySession;
 import static forest.colver.datatransfer.sftp.Utils.getPwSession;
 import static forest.colver.datatransfer.sftp.Utils.sftpDisconnect;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSchException;
@@ -23,11 +24,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 class SftpIntTests {
+
   static final Logger LOG = LoggerFactory.getLogger(SftpIntTests.class);
   public static final String USERNAME = "revloc02";
   public static final String PATH = "target/test";
   public static final String FILENAME = "sftp-test.txt";
   public static final String PAYLOAD = "payload";
+  public static final String SFTP_KEY_LOC = "src/main/resources/prvKey";
 
   static Session SESSION_PW;
   static ChannelSftp SFTP_CH_PW;
@@ -38,7 +41,7 @@ class SftpIntTests {
   static void setupSftp() throws JSchException {
     SESSION_PW = getPwSession(SFTP_HOST, USERNAME, SFTP_PASSWORD);
     SFTP_CH_PW = connectChannelSftp(SESSION_PW);
-    SESSION_KEY = getKeySession(SFTP_HOST, USERNAME, SFTP_KEY);
+    SESSION_KEY = getKeySession(SFTP_HOST, USERNAME, SFTP_KEY_LOC);
     SFTP_CH_KEY = connectChannelSftp(SESSION_KEY);
   }
 
@@ -62,5 +65,28 @@ class SftpIntTests {
     assertThat(contents).isEqualTo(PAYLOAD);
   }
 
-  // TODO: ok, at this point, now that I have some good code in place, I need to revisit why I an setting this up and make stuff to allow me to do that thing.
+  @Test
+  void testAwsSftpAuthFails() throws SftpException, IOException, InterruptedException {
+    for (var i = 0; i < 5; i++) {
+
+      // do a successful password auth
+      putSftpFile(SFTP_CH_PW, PATH, FILENAME, PAYLOAD);
+      consumeSftpFile(SFTP_CH_PW, PATH, FILENAME);
+
+      // do a successful key auth
+      putSftpFile(SFTP_CH_KEY, PATH, FILENAME, PAYLOAD);
+      consumeSftpFile(SFTP_CH_KEY, PATH, FILENAME);
+
+      var username = "hercules"; // this account does no exist
+      // do an unsuccessful password auth
+      assertThatExceptionOfType(JSchException.class).isThrownBy(
+          () -> getPwSession(SFTP_HOST, username, "bogus_password"));
+
+      // do an unsuccessful key auth
+      assertThatExceptionOfType(JSchException.class).isThrownBy(
+          () -> getKeySession(SFTP_HOST, username, "src/main/resources/badPrvKey"));
+
+      Thread.sleep(5000);
+    }
+  }
 }

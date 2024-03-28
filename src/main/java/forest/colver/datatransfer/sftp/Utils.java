@@ -53,11 +53,11 @@ public class Utils {
     return session;
   }
 
-  public static Session getKeySession(String host, String username, String prvKey)
+  public static Session getKeySession(String host, String username, String prvKeyLoc)
       throws JSchException {
     Session session = JSCH.getSession(username, host, 22);
 //    JSCH.addIdentity(new InMemoryIdentity(prvKey), null);
-    JSCH.addIdentity("src/main/resources/prvKey");
+    JSCH.addIdentity(prvKeyLoc);
     LOG.info("sftp ssh key auth");
     JSCH.setKnownHosts(new ByteArrayInputStream(KNOWNHOSTS.getBytes()));
     session.connect();

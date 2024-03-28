@@ -21,6 +21,7 @@ public class SftpOperations {
     throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
   }
 
+  // todo: needs a unit test
   /**
    * Places a file on an SFTP server. This method builds a session and channel for the one
    * connection. If possible, use the {@link #putSftpFile putSftpFile} method that takes an sftp
@@ -40,6 +41,7 @@ public class SftpOperations {
     }
   }
 
+  // todo: needs a unit test
   /**
    * Retrieves and then deletes a file from the SFTP server. This method builds a session and
    * channel for the one connection. If possible, use the {@link #consumeSftpFile consumeSftpFile}
@@ -98,5 +100,7 @@ public class SftpOperations {
     }
     return contents;
   }
+
+  // todo: probably need a sftpDeleteFile method
 
 }
