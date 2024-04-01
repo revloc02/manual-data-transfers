@@ -27,7 +27,7 @@ public class SftpOperations {
    * connection. If possible, use the {@link #putSftpFile putSftpFile} method that takes an sftp
    * channel argument.
    */
-  public static void putSftpFilePassword(String host, String username, String password, String path,
+  public static void putSftpFilePasswordAndSession(String host, String username, String password, String path,
       String filename, String payload)
       throws JSchException, SftpException, IOException {
     var session = getPwSession(host, username, password);
@@ -47,7 +47,7 @@ public class SftpOperations {
    * channel for the one connection. If possible, use the {@link #consumeSftpFile consumeSftpFile}
    * method that takes an sftp channel argument.
    */
-  public static String consumeSftpFilePassword(String host, String username, String password,
+  public static String consumeSftpFilePasswordAndSession(String host, String username, String password,
       String path,
       String filename) throws JSchException, SftpException, IOException {
     var session = getPwSession(host, username, password);

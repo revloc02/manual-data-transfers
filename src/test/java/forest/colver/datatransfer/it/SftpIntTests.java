@@ -1,7 +1,9 @@
 package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.sftp.SftpOperations.consumeSftpFile;
+import static forest.colver.datatransfer.sftp.SftpOperations.consumeSftpFilePasswordAndSession;
 import static forest.colver.datatransfer.sftp.SftpOperations.putSftpFile;
+import static forest.colver.datatransfer.sftp.SftpOperations.putSftpFilePasswordAndSession;
 import static forest.colver.datatransfer.sftp.Utils.SFTP_HOST;
 import static forest.colver.datatransfer.sftp.Utils.SFTP_KEY;
 import static forest.colver.datatransfer.sftp.Utils.SFTP_PASSWORD;
@@ -37,6 +39,10 @@ class SftpIntTests {
   static Session SESSION_KEY;
   static ChannelSftp SFTP_CH_KEY;
 
+  /**
+   * Creates an SFTP channel for both a password auth and a key auth to be used by any of the
+   * following unit tests.
+   */
   @BeforeAll
   static void setupSftp() throws JSchException {
     SESSION_PW = getPwSession(SFTP_HOST, USERNAME, SFTP_PASSWORD);
@@ -88,5 +94,17 @@ class SftpIntTests {
 
       Thread.sleep(5000);
     }
+  }
+
+  /**
+   * This tests the SFTP operations that create a session for the one operation.
+   */
+  @Test
+  void testPutAndConsumeSftpFilePasswordAndSession()
+      throws JSchException, SftpException, IOException {
+    putSftpFilePasswordAndSession(SFTP_HOST, USERNAME, SFTP_PASSWORD, PATH, FILENAME, PAYLOAD);
+    var contents = consumeSftpFilePasswordAndSession(SFTP_HOST, USERNAME, SFTP_PASSWORD, PATH,
+        FILENAME);
+    assertThat(contents).isEqualTo(PAYLOAD);
   }
 }
