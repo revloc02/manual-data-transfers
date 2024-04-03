@@ -1,11 +1,10 @@
 package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.sftp.SftpOperations.consumeSftpFile;
-import static forest.colver.datatransfer.sftp.SftpOperations.consumeSftpFilePasswordAndSession;
+import static forest.colver.datatransfer.sftp.SftpOperations.consumeSftpFileUsePasswordAndSession;
 import static forest.colver.datatransfer.sftp.SftpOperations.putSftpFile;
-import static forest.colver.datatransfer.sftp.SftpOperations.putSftpFilePasswordAndSession;
+import static forest.colver.datatransfer.sftp.SftpOperations.putSftpFileUsePasswordAndSession;
 import static forest.colver.datatransfer.sftp.Utils.SFTP_HOST;
-import static forest.colver.datatransfer.sftp.Utils.SFTP_KEY;
 import static forest.colver.datatransfer.sftp.Utils.SFTP_PASSWORD;
 import static forest.colver.datatransfer.sftp.Utils.connectChannelSftp;
 import static forest.colver.datatransfer.sftp.Utils.getKeySession;
@@ -72,38 +71,42 @@ class SftpIntTests {
   }
 
   @Test
-  void testAwsSftpAuthFails() throws SftpException, IOException, InterruptedException {
+  void testAwsSftpAuthFails()
+      throws SftpException, IOException, InterruptedException, JSchException {
     for (var i = 0; i < 5; i++) {
 
-      // do a successful password auth
-      putSftpFile(SFTP_CH_PW, PATH, FILENAME, PAYLOAD);
-      consumeSftpFile(SFTP_CH_PW, PATH, FILENAME);
+      LOG.info("...do a successful password auth...");
+      putSftpFileUsePasswordAndSession(SFTP_HOST, USERNAME, SFTP_PASSWORD, PATH, FILENAME, PAYLOAD);
+      var contents = consumeSftpFileUsePasswordAndSession(SFTP_HOST, USERNAME, SFTP_PASSWORD, PATH,
+          FILENAME);
+      assertThat(contents).isEqualTo(PAYLOAD);
 
-      // do a successful key auth
+      LOG.info("...do a successful key auth...");
       putSftpFile(SFTP_CH_KEY, PATH, FILENAME, PAYLOAD);
       consumeSftpFile(SFTP_CH_KEY, PATH, FILENAME);
 
-      var username = "hercules"; // this account does no exist
-      // do an unsuccessful password auth
+      var username = "hercules"; // this account does not exist
+      LOG.info("...do an unsuccessful password auth...");
       assertThatExceptionOfType(JSchException.class).isThrownBy(
           () -> getPwSession(SFTP_HOST, username, "bogus_password"));
 
-      // do an unsuccessful key auth
+      LOG.info("...do an unsuccessful key auth...");
       assertThatExceptionOfType(JSchException.class).isThrownBy(
           () -> getKeySession(SFTP_HOST, username, "src/main/resources/badPrvKey"));
 
-      Thread.sleep(5000);
+      Thread.sleep(2000);
     }
   }
 
   /**
-   * This tests the SFTP operations that create a session for the one operation.
+   * This tests the SFTP operations that create a session using password auth, for the one
+   * operation.
    */
   @Test
   void testPutAndConsumeSftpFilePasswordAndSession()
       throws JSchException, SftpException, IOException {
-    putSftpFilePasswordAndSession(SFTP_HOST, USERNAME, SFTP_PASSWORD, PATH, FILENAME, PAYLOAD);
-    var contents = consumeSftpFilePasswordAndSession(SFTP_HOST, USERNAME, SFTP_PASSWORD, PATH,
+    putSftpFileUsePasswordAndSession(SFTP_HOST, USERNAME, SFTP_PASSWORD, PATH, FILENAME, PAYLOAD);
+    var contents = consumeSftpFileUsePasswordAndSession(SFTP_HOST, USERNAME, SFTP_PASSWORD, PATH,
         FILENAME);
     assertThat(contents).isEqualTo(PAYLOAD);
   }
