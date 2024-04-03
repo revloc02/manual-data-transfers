@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 public class Utils {
 
+  public static final String SFTP_EXIT = "sftp exit";
   static final Logger LOG = LoggerFactory.getLogger(Utils.class);
   private static final JSch JSCH = new JSch();
   private static final String KNOWNHOSTS = userCreds.getProperty("sftp.knownhosts");
@@ -37,9 +38,8 @@ public class Utils {
 
   public static void sftpDisconnect(ChannelSftp sftp, Session session) {
     sftp.exit();
-    LOG.info("sftp channel exit");
     session.disconnect();
-    LOG.info("session disconnect");
+    LOG.info(SFTP_EXIT);
   }
 
   public static Session getPwSession(String host, String username, String password)

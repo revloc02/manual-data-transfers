@@ -1,6 +1,8 @@
 package forest.colver.datatransfer.sftp;
 
+import static forest.colver.datatransfer.sftp.Utils.*;
 import static forest.colver.datatransfer.sftp.Utils.connectChannelSftp;
+import static forest.colver.datatransfer.sftp.Utils.getKeySession;
 import static forest.colver.datatransfer.sftp.Utils.getPwSession;
 
 import com.jcraft.jsch.ChannelSftp;
@@ -21,47 +23,73 @@ public class SftpOperations {
     throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
   }
 
-  // todo: needs a unit test
   /**
-   * Places a file on an SFTP server. This method builds a session and channel for the one
-   * connection. If possible, use the {@link #putSftpFile putSftpFile} method that takes an sftp
-   * channel argument.
+   * Places a file on an SFTP server. This method builds a session and channel using password auth,
+   * for the one connection. If possible, use the {@link #putSftpFile putSftpFile} method that takes
+   * an sftp channel argument.
    */
-  public static void putSftpFilePasswordAndSession(String host, String username, String password, String path,
+  public static void putSftpFileUsePasswordAndSession(String host, String username, String password,
+      String path,
       String filename, String payload)
       throws JSchException, SftpException, IOException {
     var session = getPwSession(host, username, password);
     var sftp = connectChannelSftp(session);
-    try (var stream = new ByteArrayInputStream(payload.getBytes())) {
-      sftp.put(stream, path + "/" + filename);
-    } finally {
-      sftp.exit();
-      session.disconnect();
-      LOG.info("sftp exit");
-    }
+    putSftpFile(sftp, path, filename, payload);
+    sftp.exit();
+    session.disconnect();
+    LOG.info(SFTP_EXIT);
   }
 
-  // todo: needs a unit test
   /**
    * Retrieves and then deletes a file from the SFTP server. This method builds a session and
-   * channel for the one connection. If possible, use the {@link #consumeSftpFile consumeSftpFile}
-   * method that takes an sftp channel argument.
+   * channel using password auth, for the one connection. If possible, use the
+   * {@link #consumeSftpFile consumeSftpFile} method that takes an sftp channel argument.
    */
-  public static String consumeSftpFilePasswordAndSession(String host, String username, String password,
+  public static String consumeSftpFileUsePasswordAndSession(String host, String username,
+      String password,
       String path,
       String filename) throws JSchException, SftpException, IOException {
     var session = getPwSession(host, username, password);
     var sftp = connectChannelSftp(session);
-    String contents;
-    try (var inputStream = sftp.get(path + "/" + filename)) {
-      contents = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-      LOG.info("sftp retrieve done");
-      sftp.rm(path + "/" + filename);
-    } finally {
-      sftp.exit();
-      session.disconnect();
-      LOG.info("sftp exit");
-    }
+    var contents = consumeSftpFile(sftp, path, filename);
+    sftp.exit();
+    session.disconnect();
+    LOG.info(SFTP_EXIT);
+    return contents;
+  }
+
+  /**
+   * Places a file on an SFTP server. This method builds a session and channel using key auth, for
+   * the one connection. If possible, use the {@link #putSftpFile putSftpFile} method that takes an
+   * sftp channel argument.
+   */
+  public static void putSftpFileUseKeyAndSession(String host, String username, String keyLocation,
+      String path,
+      String filename, String payload)
+      throws JSchException, SftpException, IOException {
+    var session = getKeySession(host, username, keyLocation);
+    var sftp = connectChannelSftp(session);
+    putSftpFile(sftp, path, filename, payload);
+    sftp.exit();
+    session.disconnect();
+    LOG.info(SFTP_EXIT);
+  }
+
+  /**
+   * Retrieves and then deletes a file from the SFTP server. This method builds a session and
+   * channel using key auth, for the one connection. If possible, use the
+   * {@link #consumeSftpFile consumeSftpFile} method that takes an sftp channel argument.
+   */
+  public static String consumeSftpFileUseKeyAndSession(String host, String username,
+      String keyLocation,
+      String path,
+      String filename) throws JSchException, SftpException, IOException {
+    var session = getKeySession(host, username, keyLocation);
+    var sftp = connectChannelSftp(session);
+    var contents = consumeSftpFile(sftp, path, filename);
+    sftp.exit();
+    session.disconnect();
+    LOG.info(SFTP_EXIT);
     return contents;
   }
 
