@@ -1,8 +1,10 @@
 package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.sftp.SftpOperations.consumeSftpFile;
+import static forest.colver.datatransfer.sftp.SftpOperations.consumeSftpFileUseKeyAndSession;
 import static forest.colver.datatransfer.sftp.SftpOperations.consumeSftpFileUsePasswordAndSession;
 import static forest.colver.datatransfer.sftp.SftpOperations.putSftpFile;
+import static forest.colver.datatransfer.sftp.SftpOperations.putSftpFileUseKeyAndSession;
 import static forest.colver.datatransfer.sftp.SftpOperations.putSftpFileUsePasswordAndSession;
 import static forest.colver.datatransfer.sftp.Utils.SFTP_HOST;
 import static forest.colver.datatransfer.sftp.Utils.SFTP_PASSWORD;
@@ -82,8 +84,10 @@ class SftpIntTests {
       assertThat(contents).isEqualTo(PAYLOAD);
 
       LOG.info("...do a successful key auth...");
-      putSftpFile(SFTP_CH_KEY, PATH, FILENAME, PAYLOAD);
-      consumeSftpFile(SFTP_CH_KEY, PATH, FILENAME);
+      putSftpFileUseKeyAndSession(SFTP_HOST, USERNAME, SFTP_KEY_LOC, PATH, FILENAME, PAYLOAD);
+      contents = consumeSftpFileUseKeyAndSession(SFTP_HOST, USERNAME, SFTP_KEY_LOC, PATH,
+          FILENAME);
+      assertThat(contents).isEqualTo(PAYLOAD);
 
       var username = "hercules"; // this account does not exist
       LOG.info("...do an unsuccessful password auth...");
@@ -103,10 +107,22 @@ class SftpIntTests {
    * operation.
    */
   @Test
-  void testPutAndConsumeSftpFilePasswordAndSession()
+  void testPutAndConsumeSftpFileUsePasswordAndSession()
       throws JSchException, SftpException, IOException {
     putSftpFileUsePasswordAndSession(SFTP_HOST, USERNAME, SFTP_PASSWORD, PATH, FILENAME, PAYLOAD);
     var contents = consumeSftpFileUsePasswordAndSession(SFTP_HOST, USERNAME, SFTP_PASSWORD, PATH,
+        FILENAME);
+    assertThat(contents).isEqualTo(PAYLOAD);
+  }
+
+  /**
+   * This tests the SFTP operations that create a session using key auth, for the one operation.
+   */
+  @Test
+  void testPutAndConsumeSftpFileUseKeyAndSession()
+      throws JSchException, SftpException, IOException {
+    putSftpFileUseKeyAndSession(SFTP_HOST, USERNAME, SFTP_KEY_LOC, PATH, FILENAME, PAYLOAD);
+    var contents = consumeSftpFileUseKeyAndSession(SFTP_HOST, USERNAME, SFTP_KEY_LOC, PATH,
         FILENAME);
     assertThat(contents).isEqualTo(PAYLOAD);
   }
