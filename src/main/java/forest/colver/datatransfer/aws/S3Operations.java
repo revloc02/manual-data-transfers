@@ -197,7 +197,6 @@ public class S3Operations {
       count = count + response.contents().size();
       keepCounting = response.isTruncated();
       LOG.info("count={}", count);
-      LOG.info("keepCounting={}", keepCounting);
     }
     LOG.info("S3COUNT: Counted {} objects in {}/{}", count, bucket, keyPrefix);
     return count;
