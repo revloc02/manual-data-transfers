@@ -177,21 +177,23 @@ public class S3Operations {
     }
   }
 
-  // todo: unit test
   /**
-   * Use s3List to count the number of objects in an S3 directory 1000 items at a time.
+   * Uses s3List variants to count the number of objects in an S3 directory even if it is over 1000
+   * items.
+   *
    * @param bucket S3.
    * @param keyPrefix S3 directory.
    * @return The number of objects in the key-prefix "directory"
    */
   public static int s3CountAll(S3Client s3Client, String bucket, String keyPrefix) {
-    var keepCounting = true;
-    int count =0;
-    while (keepCounting) {
-      var response = s3ListResponse(s3Client, bucket, keyPrefix, 1000);
+    var response = s3ListResponse(s3Client, bucket, keyPrefix, 1000);
+    var count = response.keyCount();
+    var keepCounting = response.isTruncated();
+    while (Boolean.TRUE.equals(keepCounting)) {
+      response = s3ListContResponse(s3Client, bucket, keyPrefix, response.nextContinuationToken());
       count = count + response.contents().size();
       keepCounting = response.isTruncated();
-      LOG.info("count={}",count);
+      LOG.info("count={}", count);
       LOG.info("keepCounting={}", keepCounting);
     }
     LOG.info("S3COUNT: Counted {} objects in {}/{}", count, bucket, keyPrefix);
@@ -313,20 +315,25 @@ public class S3Operations {
     return listObjectsV2Response;
   }
 
+  // todo: this needs a unit test
+
   /**
    * S3List with S3Client. List objects at a certain directory (keyPrefix), using a
-   * continuationToken from a previous S3List in order to get the next batch of objects.
+   * nextContinuationToken from a previous S3List in order to get the next batch of objects.
    *
    * @param keyPrefix The "folder" on the S3 to list.
-   * @param continuationToken Indicates to Amazon S3 that the list is being continued on this bucket
-   * with a token from a previous listing.
+   * @param nextContinuationToken Indicates to Amazon S3 that the list is being continued on this
+   * bucket with a token from a previous listing.
    */
-  public static ListObjectsV2Response s3ListResponse(S3Client s3Client, String bucket, String keyPrefix, String continuationToken) {
+  public static ListObjectsV2Response s3ListContResponse(S3Client s3Client, String bucket,
+      String keyPrefix, String nextContinuationToken) {
     var listObjectsV2Request =
-        ListObjectsV2Request.builder().bucket(bucket).prefix(keyPrefix).maxKeys(1000).continuationToken(continuationToken).build();
+        ListObjectsV2Request.builder().bucket(bucket).prefix(keyPrefix).maxKeys(1000)
+            .continuationToken(nextContinuationToken).build();
     var listObjectsV2Response = s3Client.listObjectsV2(listObjectsV2Request);
     awsResponseValidation(listObjectsV2Response);
-    LOG.info("S3LIST: Retrieved a list of {} objects from {}/{}", listObjectsV2Response.contents().size(), bucket, keyPrefix);
+    LOG.info("S3LIST: Retrieved a list of {} objects from {}/{}",
+        listObjectsV2Response.contents().size(), bucket, keyPrefix);
     return listObjectsV2Response;
   }
 
