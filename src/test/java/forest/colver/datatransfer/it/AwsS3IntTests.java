@@ -2,11 +2,13 @@ package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.aws.S3Operations.s3Copy;
 import static forest.colver.datatransfer.aws.S3Operations.s3CopyAll;
+import static forest.colver.datatransfer.aws.S3Operations.s3CountAll;
 import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
 import static forest.colver.datatransfer.aws.S3Operations.s3DeleteAll;
 import static forest.colver.datatransfer.aws.S3Operations.s3Get;
 import static forest.colver.datatransfer.aws.S3Operations.s3Head;
 import static forest.colver.datatransfer.aws.S3Operations.s3List;
+import static forest.colver.datatransfer.aws.S3Operations.s3ListContResponse;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListResponse;
 import static forest.colver.datatransfer.aws.S3Operations.s3Move;
 import static forest.colver.datatransfer.aws.S3Operations.s3MoveAll;
@@ -19,6 +21,7 @@ import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import forest.colver.datatransfer.aws.S3Operations;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -297,6 +300,8 @@ class AwsS3IntTests {
     }
   }
 
+  // todo: so what is this testing?
+
   /**
    * Testing S3 List with more than 1000 items in the list.
    */
@@ -307,19 +312,56 @@ class AwsS3IntTests {
       LOG.info("...place several files...");
       var numFiles = 1100;
       var keyPrefix = "revloc02/source/test/";
-      for(var i=0;i<numFiles;i++){
-        var objectKey = keyPrefix+"test-"+i+".txt";
-        var payload = getDefaultPayload()+" "+i;
+      for (var i = 0; i < numFiles; i++) {
+        var objectKey = keyPrefix + "test-" + i + ".txt";
+        var payload = getDefaultPayload() + " " + i;
         s3Put(s3Client, S3_INTERNAL, objectKey, payload);
       }
 
       LOG.info("...try to list more than 1000 files, but see that there only is 1000...");
       var objects = s3List(s3Client, S3_INTERNAL, keyPrefix, 1010);
+      // todo: this await() actually doesn't make sense as it is not querying anything
       await()
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(60))
           .untilAsserted(() -> assertThat(objects).hasSize(1000));
       LOG.info("number of objects={}", objects.size());
+
+      LOG.info("...cleanup...");
+      s3DeleteAll(s3Client, S3_INTERNAL, keyPrefix);
+    }
+  }
+
+  // todo: finish this and compare it to the method above
+
+  /**
+   * Testing S3 List with more than 1000 items in the list.
+   */
+  @Test
+  void testS3ListWithMoreThan1000ItemsPart2() {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      LOG.info("...place several files...");
+      var numFiles = 1100;
+      var keyPrefix = "revloc02/source/test/";
+      for (var i = 0; i < numFiles; i++) {
+        var objectKey = keyPrefix + "test-" + i + ".txt";
+        var payload = getDefaultPayload() + " " + i;
+        s3Put(s3Client, S3_INTERNAL, objectKey, payload);
+      }
+
+      LOG.info("...list 1000 objects, then list the rest of the objects...");
+      var response = s3ListResponse(s3Client, S3_INTERNAL, keyPrefix, 1000);
+      LOG.info("first file={}", response.contents().get(0).key());
+      LOG.info("second file={}", response.contents().get(1).key());
+      LOG.info("third file={}", response.contents().get(2).key());
+      response = s3ListContResponse(s3Client, S3_INTERNAL, keyPrefix, response.continuationToken());
+      LOG.info("first file={}", response.contents().get(0).toString());
+      LOG.info("second file={}", response.contents().get(1).toString());
+      LOG.info("third file={}", response.contents().get(2).toString());
+      // todo: it is like the continuationToken is not being used
+      LOG.info("...check the the last list is 100 objects...");
+      assertThat(response.contents()).hasSize(100);
 
       LOG.info("...cleanup...");
       s3DeleteAll(s3Client, S3_INTERNAL, keyPrefix);
@@ -573,9 +615,9 @@ class AwsS3IntTests {
       LOG.info("...place several files...");
       var numFiles = 14; // don't change this to >1000, because s3List can only list 1000 items
       var keyPrefix = "revloc02/source/test/";
-      for(var i=0;i<numFiles;i++){
-        var objectKey = keyPrefix+"test-"+i+".txt";
-        var payload = getDefaultPayload()+" "+i;
+      for (var i = 0; i < numFiles; i++) {
+        var objectKey = keyPrefix + "test-" + i + ".txt";
+        var payload = getDefaultPayload() + " " + i;
         s3Put(s3Client, S3_INTERNAL, objectKey, payload);
       }
 
@@ -584,7 +626,9 @@ class AwsS3IntTests {
       await()
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(60))
-          .untilAsserted(() -> assertThat(s3List(s3Client, S3_INTERNAL, keyPrefix, numFiles)).hasSize(numFiles));
+          .untilAsserted(
+              () -> assertThat(s3List(s3Client, S3_INTERNAL, keyPrefix, numFiles)).hasSize(
+                  numFiles));
 
       LOG.info("...move all files...");
       s3MoveAll(s3Client, S3_INTERNAL, keyPrefix, S3_TARGET_CUSTOMER);
@@ -594,7 +638,9 @@ class AwsS3IntTests {
       await()
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(60))
-          .untilAsserted(() -> assertThat(s3List(s3Client, S3_TARGET_CUSTOMER, keyPrefix, numFiles)).hasSize(numFiles));
+          .untilAsserted(
+              () -> assertThat(s3List(s3Client, S3_TARGET_CUSTOMER, keyPrefix, numFiles)).hasSize(
+                  numFiles));
 
       LOG.info("...verify the source is empty...");
       await()
@@ -614,9 +660,9 @@ class AwsS3IntTests {
       LOG.info("...place several files...");
       var numFiles = 24;
       var keyPrefix = "revloc02/target/test/";
-      for(var i=0;i<numFiles;i++){
-        var objectKey = keyPrefix+"test-"+i+".txt";
-        var payload = getDefaultPayload()+" "+i;
+      for (var i = 0; i < numFiles; i++) {
+        var objectKey = keyPrefix + "test-" + i + ".txt";
+        var payload = getDefaultPayload() + " " + i;
         s3Put(s3Client, S3_INTERNAL, objectKey, payload);
       }
 
@@ -624,7 +670,9 @@ class AwsS3IntTests {
       await()
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(60))
-          .untilAsserted(() -> assertThat(s3List(s3Client, S3_INTERNAL, keyPrefix, numFiles)).hasSize(numFiles));
+          .untilAsserted(
+              () -> assertThat(s3List(s3Client, S3_INTERNAL, keyPrefix, numFiles)).hasSize(
+                  numFiles));
 
       LOG.info("...delete all of the files...");
       s3DeleteAll(s3Client, S3_INTERNAL, keyPrefix);
@@ -644,9 +692,9 @@ class AwsS3IntTests {
       LOG.info("...place several files...");
       var numFiles = 14;
       var keyPrefix = "revloc02/source/test/";
-      for(var i=0;i<numFiles;i++){
-        var objectKey = keyPrefix+"test-"+i+".txt";
-        var payload = getDefaultPayload()+" "+i;
+      for (var i = 0; i < numFiles; i++) {
+        var objectKey = keyPrefix + "test-" + i + ".txt";
+        var payload = getDefaultPayload() + " " + i;
         s3Put(s3Client, S3_INTERNAL, objectKey, payload);
       }
 
@@ -654,7 +702,9 @@ class AwsS3IntTests {
       await()
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(60))
-          .untilAsserted(() -> assertThat(s3List(s3Client, S3_INTERNAL, keyPrefix, numFiles)).hasSize(numFiles));
+          .untilAsserted(
+              () -> assertThat(s3List(s3Client, S3_INTERNAL, keyPrefix, numFiles)).hasSize(
+                  numFiles));
 
       LOG.info("...copy all files...");
       s3CopyAll(s3Client, S3_INTERNAL, keyPrefix, S3_TARGET_CUSTOMER);
@@ -663,17 +713,116 @@ class AwsS3IntTests {
       await()
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(60))
-          .untilAsserted(() -> assertThat(s3List(s3Client, S3_TARGET_CUSTOMER, keyPrefix, numFiles)).hasSize(numFiles));
+          .untilAsserted(
+              () -> assertThat(s3List(s3Client, S3_TARGET_CUSTOMER, keyPrefix, numFiles)).hasSize(
+                  numFiles));
 
       LOG.info("...verify the source still contains all files...");
       await()
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(60))
-          .untilAsserted(() -> assertThat(s3List(s3Client, S3_INTERNAL, keyPrefix, numFiles)).hasSize(numFiles));
+          .untilAsserted(
+              () -> assertThat(s3List(s3Client, S3_INTERNAL, keyPrefix, numFiles)).hasSize(
+                  numFiles));
 
       LOG.info("...cleanup and delete all files...");
       s3DeleteAll(s3Client, S3_INTERNAL, keyPrefix);
       s3DeleteAll(s3Client, S3_TARGET_CUSTOMER, keyPrefix);
+    }
+  }
+
+  // todo: this should be revisited after I understand how continuationToken works.
+  @Test
+  void testS3CopyAllThousands() {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      LOG.info("...place several files...");
+      var numFiles = 1100;
+      var keyPrefix = "revloc02/source/test/";
+      for (var i = 0; i < numFiles; i++) {
+        var objectKey = keyPrefix + "test-" + i + ".txt";
+        var payload = getDefaultPayload() + " " + i;
+        s3Put(s3Client, S3_INTERNAL, objectKey, payload);
+      }
+
+      LOG.info("...verify the files are on the source...");
+      await()
+          .pollInterval(Duration.ofSeconds(3))
+          .atMost(Duration.ofSeconds(60))
+          .untilAsserted(
+              () -> assertThat(s3CountAll(s3Client, S3_INTERNAL, keyPrefix)).isEqualTo(numFiles));
+
+      LOG.info("...copy all files...");
+      s3CopyAll(s3Client, S3_INTERNAL, keyPrefix, S3_TARGET_CUSTOMER);
+
+      LOG.info("...verify the files are in the new location...");
+      await()
+          .pollInterval(Duration.ofSeconds(3))
+          .atMost(Duration.ofSeconds(60))
+          .untilAsserted(
+              () -> assertThat(s3CountAll(s3Client, S3_TARGET_CUSTOMER, keyPrefix)).isEqualTo(
+                  numFiles));
+
+      LOG.info("...verify the source still contains all files...");
+      await()
+          .pollInterval(Duration.ofSeconds(3))
+          .atMost(Duration.ofSeconds(60))
+          .untilAsserted(
+              () -> assertThat(s3CountAll(s3Client, S3_INTERNAL, keyPrefix)).isEqualTo(numFiles));
+
+      LOG.info("...cleanup and delete all files...");
+      s3DeleteAll(s3Client, S3_INTERNAL, keyPrefix);
+      s3DeleteAll(s3Client, S3_TARGET_CUSTOMER, keyPrefix);
+    }
+  }
+
+  @Test
+  void testS3CountAll() {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      LOG.info("...place several files...");
+      var numFiles = 1234;
+      var keyPrefix = "revloc02/source/test/";
+      for (var i = 0; i < numFiles; i++) {
+        var objectKey = keyPrefix + "test-" + i + ".txt";
+        var payload = getDefaultPayload() + " " + i;
+        s3Put(s3Client, S3_INTERNAL, objectKey, payload);
+      }
+
+      LOG.info("...verify the files are on the s3...");
+      await()
+          .pollInterval(Duration.ofSeconds(5))
+          .atMost(Duration.ofSeconds(50))
+          .untilAsserted(
+              () -> assertThat(s3CountAll(s3Client, S3_INTERNAL, keyPrefix)).isEqualTo(numFiles));
+
+      LOG.info("...cleanup and delete all files...");
+      s3DeleteAll(s3Client, S3_INTERNAL, keyPrefix);
+    }
+  }
+
+  @Test
+  void testS3CountAllLessThanOneThousand() {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      LOG.info("...place several files...");
+      var numFiles = 23;
+      var keyPrefix = "revloc02/source/test/";
+      for (var i = 0; i < numFiles; i++) {
+        var objectKey = keyPrefix + "test-" + i + ".txt";
+        var payload = getDefaultPayload() + " " + i;
+        s3Put(s3Client, S3_INTERNAL, objectKey, payload);
+      }
+
+      LOG.info("...verify the files are on the s3...");
+      await()
+          .pollInterval(Duration.ofSeconds(3))
+          .atMost(Duration.ofSeconds(30))
+          .untilAsserted(
+              () -> assertThat(s3CountAll(s3Client, S3_INTERNAL, keyPrefix)).isEqualTo(numFiles));
+
+      LOG.info("...cleanup and delete all files...");
+      s3DeleteAll(s3Client, S3_INTERNAL, keyPrefix);
     }
   }
 }
