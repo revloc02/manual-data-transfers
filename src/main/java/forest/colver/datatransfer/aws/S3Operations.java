@@ -156,21 +156,24 @@ public class S3Operations {
         .sourceKey(sourceKey).destinationBucket(destBucket).destinationKey(destKey).build();
     var copyObjectResponse = s3Client.copyObject(copyObjectRequest);
     awsResponseValidation(copyObjectResponse);
-    LOG.info("S3COPY: Copied object from {}/{} to {}/{}", sourceBucket, sourceKey, destBucket, destKey);
+    LOG.info("S3COPY: Copied object from {}/{} to {}/{}", sourceBucket, sourceKey, destBucket,
+        destKey);
   }
 
   /**
    * Copies all objects from a given S3 and key-prefix to another S3 bucket. This implementation
    * uses s3List which batches 1000 objects at a time.
+   *
    * @param sourceBucket Source S3.
    * @param keyPrefix aka the file path.
    * @param destBucket Target S3.
    */
-  public static void s3CopyAll(S3Client s3Client, String sourceBucket, String keyPrefix, String destBucket) {
+  public static void s3CopyAll(S3Client s3Client, String sourceBucket, String keyPrefix,
+      String destBucket) {
     var keepCopying = true;
     while (keepCopying) {
       var response = s3ListResponse(s3Client, sourceBucket, keyPrefix, 1000);
-      for(var object : response.contents()) {
+      for (var object : response.contents()) {
         s3Copy(s3Client, sourceBucket, object.key(), destBucket, object.key());
       }
       keepCopying = response.isTruncated();
@@ -267,10 +270,12 @@ public class S3Operations {
    * @param keyPrefix The "folder" on the S3 to list.
    * @param maxKeysReq Sets the maximum number of keys returned in the response, max 1000.
    */
-  public static List<S3Object> s3List(S3Client s3Client, String bucket, String keyPrefix, int maxKeysReq) {
+  public static List<S3Object> s3List(S3Client s3Client, String bucket, String keyPrefix,
+      int maxKeysReq) {
     int maxKeys;
     if (maxKeysReq > 1000) {
-      LOG.info("Request to list {} items exceeds the maximum, using max of 1000 instead.", maxKeysReq);
+      LOG.info("Request to list {} items exceeds the maximum, using max of 1000 instead.",
+          maxKeysReq);
       maxKeys = 1000;
     } else {
       maxKeys = maxKeysReq;
@@ -306,7 +311,8 @@ public class S3Operations {
    * @param keyPrefix The "folder" on the S3 to list.
    * @param maxKeys Sets the maximum number of keys returned in the response.
    */
-  public static ListObjectsV2Response s3ListResponse(S3Client s3Client, String bucket, String keyPrefix, int maxKeys) {
+  public static ListObjectsV2Response s3ListResponse(S3Client s3Client, String bucket,
+      String keyPrefix, int maxKeys) {
     var listObjectsV2Request =
         ListObjectsV2Request.builder().bucket(bucket).prefix(keyPrefix).maxKeys(maxKeys).build();
     var listObjectsV2Response = s3Client.listObjectsV2(listObjectsV2Request);
@@ -316,7 +322,6 @@ public class S3Operations {
   }
 
   // todo: this needs a unit test
-
   /**
    * S3List with S3Client. List objects at a certain directory (keyPrefix), using a
    * nextContinuationToken from a previous S3List in order to get the next batch of objects.
@@ -362,7 +367,7 @@ public class S3Operations {
   public static void s3DeleteAll(S3Client s3Client, String bucket, String keyPrefix) {
     var objects = s3List(s3Client, bucket, keyPrefix, 1000);
     while (!objects.isEmpty()) {
-      for(var object : objects) {
+      for (var object : objects) {
         s3Delete(s3Client, bucket, object.key());
       }
       objects = s3List(s3Client, bucket, keyPrefix, 1000);
@@ -373,7 +378,8 @@ public class S3Operations {
       String destBucket, String destKey) {
     s3Copy(s3Client, sourceBucket, sourceKey, destBucket, destKey);
     s3Delete(s3Client, sourceBucket, sourceKey);
-    LOG.info("S3MOVE: Moved object from {}/{} to {}/{}", sourceBucket, sourceKey, destBucket, destKey);
+    LOG.info("S3MOVE: Moved object from {}/{} to {}/{}", sourceBucket, sourceKey, destBucket,
+        destKey);
   }
 
   /**
@@ -384,7 +390,7 @@ public class S3Operations {
       String destBucket) {
     var objects = s3List(s3Client, sourceBucket, keyPrefix, 1000);
     while (!objects.isEmpty()) {
-      for(var object : objects) {
+      for (var object : objects) {
         s3Move(s3Client, sourceBucket, object.key(), destBucket, object.key());
       }
       objects = s3List(s3Client, sourceBucket, keyPrefix, 1000);
