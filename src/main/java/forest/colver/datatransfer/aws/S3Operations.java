@@ -287,7 +287,7 @@ public class S3Operations {
     for (var object : objects) {
       LOG.info("S3LIST: The object {} is on the {} bucket.", object, bucket);
     }
-    LOG.info("{} items listed.", maxKeys);
+    LOG.info("{} items listed.", listObjectsV2Response.keyCount());
     return objects;
   }
 
