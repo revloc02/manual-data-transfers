@@ -189,9 +189,10 @@ public class S3Operations {
    * @return The number of objects in the key-prefix "directory"
    */
   public static int s3CountAll(S3Client s3Client, String bucket, String keyPrefix) {
-    var response = s3ListResponse(s3Client, bucket, keyPrefix, 1000);
-    var count = response.keyCount();
-    var keepCounting = response.isTruncated();
+    // build an empty response so nextContinuationToken() can be referenced even though it's null
+    var response = ListObjectsV2Response.builder().build();
+    var count = 0;
+    var keepCounting = true;
     while (Boolean.TRUE.equals(keepCounting)) {
       response = s3ListContResponse(s3Client, bucket, keyPrefix, response.nextContinuationToken());
       count = count + response.contents().size();
