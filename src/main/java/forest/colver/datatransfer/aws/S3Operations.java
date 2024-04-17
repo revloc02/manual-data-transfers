@@ -170,9 +170,13 @@ public class S3Operations {
    */
   public static void s3CopyAll(S3Client s3Client, String sourceBucket, String keyPrefix,
       String destBucket) {
-    var keepCopying = true;
-    while (keepCopying) {
-      var response = s3ListResponse(s3Client, sourceBucket, keyPrefix, 1000);
+    var response = s3ListResponse(s3Client, sourceBucket, keyPrefix, 1000);
+    for (var object : response.contents()) {
+      s3Copy(s3Client, sourceBucket, object.key(), destBucket, object.key());
+    }
+    var keepCopying = response.isTruncated();
+    while (Boolean.TRUE.equals(keepCopying)) {
+      response = s3ListContResponse(s3Client, sourceBucket, keyPrefix, response.nextContinuationToken());
       for (var object : response.contents()) {
         s3Copy(s3Client, sourceBucket, object.key(), destBucket, object.key());
       }
