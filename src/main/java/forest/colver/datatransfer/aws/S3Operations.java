@@ -325,7 +325,6 @@ public class S3Operations {
     return listObjectsV2Response;
   }
 
-  // todo: this needs a unit test
   /**
    * S3List with S3Client. List objects at a certain directory (keyPrefix), using a
    * nextContinuationToken from a previous S3List in order to get the next batch of objects.
