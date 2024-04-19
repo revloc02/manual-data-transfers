@@ -94,7 +94,7 @@ public class SftpOperations {
   }
 
   /**
-   * Places a files on the SFTP server.
+   * Places a files on the SFTP server. This method takes an SFTP channel as input.
    *
    * @param sftp An SFTP Channel (assumes a session and channel was set up using proper credentials
    * and passed in).
@@ -110,7 +110,8 @@ public class SftpOperations {
   }
 
   /**
-   * Retrieves and then deletes a file from the SFTP server.
+   * Retrieves and then deletes a file from the SFTP server. This method takes an SFTP channel as
+   * input.
    *
    * @param sftp An SFTP Channel (assumes a session and channel was set up using proper credentials
    * and passed in).
