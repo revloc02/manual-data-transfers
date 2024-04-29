@@ -28,7 +28,7 @@ public class SftpOperations {
    * for the one connection. If possible, use the {@link #putSftpFile putSftpFile} method that takes
    * an sftp channel argument.
    */
-  public static void putSftpFileUsePasswordAndSession(String host, String username, String password,
+  public static void putSftpFileUsePasswordMakeSession(String host, String username, String password,
       String path,
       String filename, String payload)
       throws JSchException, SftpException, IOException {
@@ -45,7 +45,7 @@ public class SftpOperations {
    * channel using password auth, for the one connection. If possible, use the
    * {@link #consumeSftpFile consumeSftpFile} method that takes an sftp channel argument.
    */
-  public static String consumeSftpFileUsePasswordAndSession(String host, String username,
+  public static String consumeSftpFileUsePasswordMakeSession(String host, String username,
       String password,
       String path,
       String filename) throws JSchException, SftpException, IOException {
@@ -63,7 +63,7 @@ public class SftpOperations {
    * the one connection. If possible, use the {@link #putSftpFile putSftpFile} method that takes an
    * sftp channel argument.
    */
-  public static void putSftpFileUseKeyAndSession(String host, String username, String keyLocation,
+  public static void putSftpFileUseKeyMakeSession(String host, String username, String keyLocation,
       String path,
       String filename, String payload)
       throws JSchException, SftpException, IOException {
@@ -80,7 +80,7 @@ public class SftpOperations {
    * channel using key auth, for the one connection. If possible, use the
    * {@link #consumeSftpFile consumeSftpFile} method that takes an sftp channel argument.
    */
-  public static String consumeSftpFileUseKeyAndSession(String host, String username,
+  public static String consumeSftpFileUseKeyMakeSession(String host, String username,
       String keyLocation,
       String path,
       String filename) throws JSchException, SftpException, IOException {

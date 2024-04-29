@@ -1,17 +1,16 @@
 package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.sftp.SftpOperations.consumeSftpFile;
-import static forest.colver.datatransfer.sftp.SftpOperations.consumeSftpFileUseKeyAndSession;
-import static forest.colver.datatransfer.sftp.SftpOperations.consumeSftpFileUsePasswordAndSession;
+import static forest.colver.datatransfer.sftp.SftpOperations.consumeSftpFileUseKeyMakeSession;
+import static forest.colver.datatransfer.sftp.SftpOperations.consumeSftpFileUsePasswordMakeSession;
 import static forest.colver.datatransfer.sftp.SftpOperations.putSftpFile;
-import static forest.colver.datatransfer.sftp.SftpOperations.putSftpFileUseKeyAndSession;
-import static forest.colver.datatransfer.sftp.SftpOperations.putSftpFileUsePasswordAndSession;
+import static forest.colver.datatransfer.sftp.SftpOperations.putSftpFileUseKeyMakeSession;
+import static forest.colver.datatransfer.sftp.SftpOperations.putSftpFileUsePasswordMakeSession;
 import static forest.colver.datatransfer.sftp.Utils.SFTP_HOST;
 import static forest.colver.datatransfer.sftp.Utils.SFTP_PASSWORD;
 import static forest.colver.datatransfer.sftp.Utils.connectChannelSftp;
 import static forest.colver.datatransfer.sftp.Utils.getKeySession;
 import static forest.colver.datatransfer.sftp.Utils.getPwSession;
-import static forest.colver.datatransfer.sftp.Utils.sftpDisconnect;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
@@ -20,8 +19,6 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
 import java.io.IOException;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,63 +37,67 @@ class SftpIntTests {
   static Session SESSION_KEY;
   static ChannelSftp SFTP_CH_KEY;
 
+  @Test
+  void testSftpPutConsume_Pw_ManageChannel() throws SftpException, IOException, JSchException {
+    var session = getPwSession(SFTP_HOST, USERNAME, SFTP_PASSWORD);
+    var sftp = connectChannelSftp(session);
+    putSftpFile(sftp, PATH, FILENAME, PAYLOAD);
+    var contents = consumeSftpFile(sftp, PATH, FILENAME);
+    assertThat(contents).isEqualTo(PAYLOAD);
+  }
+
+  @Test
+  void testSftpPutConsume_Key_ManageChannel() throws SftpException, IOException, JSchException {
+    var session = getKeySession(SFTP_HOST, USERNAME, SFTP_KEY_LOC);
+    var sftp = connectChannelSftp(session);
+    putSftpFile(sftp, PATH, FILENAME, PAYLOAD);
+    var contents = consumeSftpFile(sftp, PATH, FILENAME);
+    assertThat(contents).isEqualTo(PAYLOAD);
+  }
+
   /**
-   * Creates an SFTP channel for both a password auth and a key auth to be used by any of the
-   * following unit tests.
+   * This is a temporary test. Was using it to help write CloudWatch Insight auth fail queries.
    */
-  @BeforeAll
-  static void setupSftp() throws JSchException {
-    SESSION_PW = getPwSession(SFTP_HOST, USERNAME, SFTP_PASSWORD);
-    SFTP_CH_PW = connectChannelSftp(SESSION_PW);
-    SESSION_KEY = getKeySession(SFTP_HOST, USERNAME, SFTP_KEY_LOC);
-    SFTP_CH_KEY = connectChannelSftp(SESSION_KEY);
-  }
-
-  @AfterAll
-  static void cleanupSftp() {
-    sftpDisconnect(SFTP_CH_PW, SESSION_PW);
-    sftpDisconnect(SFTP_CH_KEY, SESSION_KEY);
-  }
-
-  @Test
-  void testSftpPut() throws SftpException, IOException {
-    putSftpFile(SFTP_CH_PW, PATH, FILENAME, PAYLOAD);
-    var contents = consumeSftpFile(SFTP_CH_PW, PATH, FILENAME);
-    assertThat(contents).isEqualTo(PAYLOAD);
-  }
-
-  @Test
-  void testSftpConsume() throws SftpException, IOException {
-    putSftpFile(SFTP_CH_PW, PATH, FILENAME, PAYLOAD);
-    var contents = consumeSftpFile(SFTP_CH_PW, PATH, FILENAME);
-    assertThat(contents).isEqualTo(PAYLOAD);
-  }
-
   @Test
   void testAwsSftpAuthFails()
       throws SftpException, IOException, InterruptedException, JSchException {
-    for (var i = 0; i < 5; i++) {
+    for (var i = 0; i < 2; i++) {
 
       LOG.info("...do a successful password auth...");
-      putSftpFileUsePasswordAndSession(SFTP_HOST, USERNAME, SFTP_PASSWORD, PATH, FILENAME, PAYLOAD);
-      var contents = consumeSftpFileUsePasswordAndSession(SFTP_HOST, USERNAME, SFTP_PASSWORD, PATH,
+      putSftpFileUsePasswordMakeSession(SFTP_HOST, USERNAME, SFTP_PASSWORD, PATH, FILENAME, PAYLOAD);
+      var contents = consumeSftpFileUsePasswordMakeSession(SFTP_HOST, USERNAME, SFTP_PASSWORD, PATH,
           FILENAME);
       assertThat(contents).isEqualTo(PAYLOAD);
 
       LOG.info("...do a successful key auth...");
-      putSftpFileUseKeyAndSession(SFTP_HOST, USERNAME, SFTP_KEY_LOC, PATH, FILENAME, PAYLOAD);
-      contents = consumeSftpFileUseKeyAndSession(SFTP_HOST, USERNAME, SFTP_KEY_LOC, PATH,
+      putSftpFileUseKeyMakeSession(SFTP_HOST, USERNAME, SFTP_KEY_LOC, PATH, FILENAME, PAYLOAD);
+      contents = consumeSftpFileUseKeyMakeSession(SFTP_HOST, USERNAME, SFTP_KEY_LOC, PATH,
           FILENAME);
       assertThat(contents).isEqualTo(PAYLOAD);
 
       var username = "hercules"; // this account does not exist
+      LOG.info("...non-existent account password auth...");
+      assertThatExceptionOfType(JSchException.class).isThrownBy(
+          () -> getPwSession(SFTP_HOST, username, "moot"));
+
+      LOG.info("...non-existent account key auth...");
+      assertThatExceptionOfType(JSchException.class).isThrownBy(
+          () -> getKeySession(SFTP_HOST, username, "src/main/resources/badPrvKey"));
+
       LOG.info("...do an unsuccessful password auth...");
       assertThatExceptionOfType(JSchException.class).isThrownBy(
-          () -> getPwSession(SFTP_HOST, username, "bogus_password"));
+          () -> {var session = getPwSession(SFTP_HOST, "revloc02a", "bogus_password");
+          var sftp = connectChannelSftp(session);
+          putSftpFile(sftp, PATH, "this-should-not-work.txt", PAYLOAD);
+          });
 
       LOG.info("...do an unsuccessful key auth...");
       assertThatExceptionOfType(JSchException.class).isThrownBy(
-          () -> getKeySession(SFTP_HOST, username, "src/main/resources/badPrvKey"));
+          () -> {
+            var session = getKeySession(SFTP_HOST, "revloc02a", "src/main/resources/badPrvKey");
+          var sftp = connectChannelSftp(session);
+          putSftpFile(sftp, PATH, "this-should-not-work.txt", PAYLOAD);
+          });
 
       Thread.sleep(2000);
     }
@@ -107,10 +108,10 @@ class SftpIntTests {
    * operation.
    */
   @Test
-  void testPutAndConsumeSftpFileUsePasswordAndSession()
+  void testSftpPutConsume_PasswordMakeSession()
       throws JSchException, SftpException, IOException {
-    putSftpFileUsePasswordAndSession(SFTP_HOST, USERNAME, SFTP_PASSWORD, PATH, FILENAME, PAYLOAD);
-    var contents = consumeSftpFileUsePasswordAndSession(SFTP_HOST, USERNAME, SFTP_PASSWORD, PATH,
+    putSftpFileUsePasswordMakeSession(SFTP_HOST, USERNAME, SFTP_PASSWORD, PATH, FILENAME, PAYLOAD);
+    var contents = consumeSftpFileUsePasswordMakeSession(SFTP_HOST, USERNAME, SFTP_PASSWORD, PATH,
         FILENAME);
     assertThat(contents).isEqualTo(PAYLOAD);
   }
@@ -119,10 +120,10 @@ class SftpIntTests {
    * This tests the SFTP operations that create a session using key auth, for the one operation.
    */
   @Test
-  void testPutAndConsumeSftpFileUseKeyAndSession()
+  void testSftpPutConsume_UseKeyMakeSession()
       throws JSchException, SftpException, IOException {
-    putSftpFileUseKeyAndSession(SFTP_HOST, USERNAME, SFTP_KEY_LOC, PATH, FILENAME, PAYLOAD);
-    var contents = consumeSftpFileUseKeyAndSession(SFTP_HOST, USERNAME, SFTP_KEY_LOC, PATH,
+    putSftpFileUseKeyMakeSession(SFTP_HOST, USERNAME, SFTP_KEY_LOC, PATH, FILENAME, PAYLOAD);
+    var contents = consumeSftpFileUseKeyMakeSession(SFTP_HOST, USERNAME, SFTP_KEY_LOC, PATH,
         FILENAME);
     assertThat(contents).isEqualTo(PAYLOAD);
   }
