@@ -14,9 +14,7 @@ import static forest.colver.datatransfer.sftp.Utils.getPwSession;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
-import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
@@ -31,11 +29,6 @@ class SftpIntTests {
   public static final String FILENAME = "sftp-test.txt";
   public static final String PAYLOAD = "payload";
   public static final String SFTP_KEY_LOC = "src/main/resources/prvKey";
-
-  static Session SESSION_PW;
-  static ChannelSftp SFTP_CH_PW;
-  static Session SESSION_KEY;
-  static ChannelSftp SFTP_CH_KEY;
 
   @Test
   void testSftpPutConsume_Pw_ManageChannel() throws SftpException, IOException, JSchException {
