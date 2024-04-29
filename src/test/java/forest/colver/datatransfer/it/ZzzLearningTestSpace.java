@@ -4,41 +4,49 @@ import static forest.colver.datatransfer.azure.BlobStorageOperations.blobGet;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobGetSas;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobPut;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobPutSas;
-import static forest.colver.datatransfer.azure.Utils.EMX_PROD_EMXPROD_EXT_EMCOR_SAS_TOKEN;
-import static forest.colver.datatransfer.azure.Utils.EMX_PROD_EMXPROD_STORAGE_ACCOUNT_CONNECTION_STRING;
+import static forest.colver.datatransfer.azure.Utils.EMX_EXTEMCORNP_SA_EXT_EMCOR_NP_SAS_TOKEN;
+import static forest.colver.datatransfer.azure.Utils.EMX_PROD_EXT_EMCOR_PROD_SA_CONN_STR;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ZzzLearningTestSpace {
+class ZzzLearningTestSpace {
   private static final Logger LOG = LoggerFactory.getLogger(ZzzLearningTestSpace.class);
   @Test
-  public void testPutEmcorProdBlobWithSas() {
-    var sasToken = EMX_PROD_EMXPROD_EXT_EMCOR_SAS_TOKEN;
-    var endpoint = "https://emxprod.blob.core.windows.net";
-    var containerName = "ext-emcor-prod-source";
-//    var filename = "Parsed/2023/August/1234567890/Receipt/filename3.txt";
-    var filename = "filename6.txt";
+  void testPutEmcorNonProdBlobWithSas() {
+    var sasToken = EMX_EXTEMCORNP_SA_EXT_EMCOR_NP_SAS_TOKEN;
+    var endpoint = "https://extemcornp.blob.core.windows.net";
+    var containerName = "ext-emcor-np-source";
+    var fileTypes = List.of("Quote", "Quotes", "Invoice", "Invoices", "Receipt", "Receipts", "Other", "Others", "Unknown");
     var body = "Hellow Orld!";
+    for(var fileType : fileTypes) {
+      // ParsedInvoices/year/month/invoice-number/file-type
+      var filename = "ParsedInvoices/2004/08/1234567890/"+fileType+"/testfile7.txt";
+      blobPutSas(sasToken, endpoint, containerName, filename, body);
+      LOG.info("put object: {}", filename);
+    }
+    var filename = "ParsedInvoices/2008/08/1234567890/1234567896_manifest.json";
     blobPutSas(sasToken, endpoint, containerName, filename, body);
+    LOG.info("put object: {}", filename);
 
-    var outputStream = blobGetSas(sasToken, endpoint, containerName, filename);
-    String str = outputStream.toString(StandardCharsets.UTF_8);
-    assertThat(str).isEqualTo(body);
+//    var outputStream = blobGetSas(sasToken, endpoint, containerName, filename);
+//    String str = outputStream.toString(StandardCharsets.UTF_8);
+//    assertThat(str).isEqualTo(body);
 
     // cleanup
 //    blobDelete(CONNECT_STR, endpoint, containerName, filename);
   }
 
   @Test
-  public void testPutEmcorProdBlobWithKey() {
-    var connectionStr = EMX_PROD_EMXPROD_STORAGE_ACCOUNT_CONNECTION_STRING;
+  void testPutEmcorProdBlobWithKey() {
+    var connectionStr = EMX_PROD_EXT_EMCOR_PROD_SA_CONN_STR;
     var endpoint = "https://emxprod.blob.core.windows.net";
     var containerName = "ext-emcor-prod-source";
-    var filename = "filename5.txt";
+    var filename = "filename3.txt";
     var body = "Hellow Orld!";
     blobPut(connectionStr, endpoint, containerName, filename, body);
 
