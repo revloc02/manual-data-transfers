@@ -129,7 +129,4 @@ public class SftpOperations {
     }
     return contents;
   }
-
-  // todo: probably need a sftpDeleteFile method
-
 }
