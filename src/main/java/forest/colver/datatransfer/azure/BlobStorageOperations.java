@@ -6,8 +6,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BlobStorageOperations {
+  private static final Logger LOG = LoggerFactory.getLogger(BlobStorageOperations.class);
 
   private BlobStorageOperations() {
     // https://rules.sonarsource.com/java/RSPEC-1118/
@@ -47,8 +50,7 @@ public class BlobStorageOperations {
   }
 
   public static ByteArrayOutputStream blobGet(String connectStr, String endpoint,
-      String containerName,
-      String filename) {
+      String containerName, String filename) {
     BlobServiceClient blobServiceClient = new BlobServiceClientBuilder()
         .connectionString(connectStr)
         .endpoint(endpoint)
@@ -61,6 +63,7 @@ public class BlobStorageOperations {
     } catch (IOException e) {
       e.printStackTrace();
     }
+    LOG.info("BLOBGET: The object {} was retrieved from {}.", filename, containerName);
     return dataStream;
   }
 
@@ -100,6 +103,7 @@ public class BlobStorageOperations {
 
     var blobContainerClient = blobServiceClient.getBlobContainerClient(containerName);
     blobContainerClient.getBlobClient(filename).delete();
+    LOG.info("BLOBDELETE: The object {} was deleted from {}.", filename, containerName);
   }
 
   public static void blobDeleteSas(String sasToken, String endpoint, String containerName,
