@@ -176,7 +176,8 @@ public class S3Operations {
     }
     var keepCopying = response.isTruncated();
     while (Boolean.TRUE.equals(keepCopying)) {
-      response = s3ListContResponse(s3Client, sourceBucket, keyPrefix, response.nextContinuationToken());
+      response = s3ListContResponse(s3Client, sourceBucket, keyPrefix,
+          response.nextContinuationToken());
       for (var object : response.contents()) {
         s3Copy(s3Client, sourceBucket, object.key(), destBucket, object.key());
       }
@@ -243,6 +244,17 @@ public class S3Operations {
     awsResponseValidation(getObjectResponse.response());
     LOG.info("S3GET: The object {} was retrieved from the {} bucket.\n", objectKey, bucket);
     return getObjectResponse;
+  }
+
+  // todo: this needs a unit test
+  /**
+   * Retrieves and deletes an object from an S3 bucket.
+   */
+  public static ResponseInputStream<GetObjectResponse> s3Consume(S3Client s3Client, String bucket,
+      String objectKey) {
+    var response = s3Get(s3Client, bucket, objectKey);
+    s3Delete(s3Client, bucket, objectKey);
+    return response;
   }
 
   /**
