@@ -23,28 +23,32 @@ public class HybridS3AndAzureBlobIntTests {
 
   @Test
   void testMoveS3toAzureBlob() throws IOException {
-    // put a file
+    LOG.info("...put a file on s3...");
     var objectKey = "revloc02/source/test/test.txt";
     var creds = getEmxSbCreds();
     var payload = getDefaultPayload();
     s3Put(creds, S3_INTERNAL, objectKey, payload);
 
-    // verify the file is there
+    LOG.info("...verify the object is there on the s3...");
     var objects = s3List(creds, S3_INTERNAL, objectKey);
     assertThat(objects.size()).isOne();
     assertThat(objects.get(0).key()).isEqualTo(objectKey);
 
-    // move
+    LOG.info("...move the object from S3 to Azure Blob...");
     var endpoint = "https://foresttestsa.blob.core.windows.net";
     var containerName = "forest-test-blob";
     moveOneS3toAzureBlob(creds, S3_INTERNAL, objectKey, CONNECT_STR, endpoint, containerName);
 
-    // verify the move happened
+    LOG.info("...verify the move happened correctly...");
     var outputStream = blobGet(CONNECT_STR, endpoint, containerName, objectKey);
     String str = outputStream.toString(StandardCharsets.UTF_8);
     assertThat(str).isEqualTo(payload);
 
-    // cleanup
+    LOG.info("...verify the file is no longer on the source s3...");
+    objects = s3List(creds, S3_INTERNAL, objectKey);
+    assertThat(objects).isEmpty();
+
+    LOG.info("...cleanup...");
     blobDelete(CONNECT_STR, endpoint, containerName, objectKey);
   }
 }
