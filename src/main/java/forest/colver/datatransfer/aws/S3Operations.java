@@ -246,7 +246,6 @@ public class S3Operations {
     return getObjectResponse;
   }
 
-  // todo: this needs a unit test
   /**
    * Retrieves and deletes an object from an S3 bucket.
    */

@@ -1,5 +1,6 @@
 package forest.colver.datatransfer.it;
 
+import static forest.colver.datatransfer.aws.S3Operations.s3Consume;
 import static forest.colver.datatransfer.aws.S3Operations.s3Copy;
 import static forest.colver.datatransfer.aws.S3Operations.s3CopyAll;
 import static forest.colver.datatransfer.aws.S3Operations.s3CountAll;
@@ -144,6 +145,28 @@ class AwsS3IntTests {
   }
 
   @Test
+  void testS3Consume() {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      LOG.info("...put a file...");
+      var objectKey = "revloc02/source/test/test.txt";
+      s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
+
+      LOG.info("...verify the file is there...");
+      var objects = s3List(s3Client, S3_INTERNAL, objectKey);
+      assertThat(objects.size()).isOne();
+      assertThat(objects.get(0).key()).isEqualTo(objectKey);
+
+      LOG.info("...consume the file...");
+      s3Consume(s3Client, S3_INTERNAL, objectKey);
+
+      LOG.info("...verify the file is gone...");
+      objects = s3List(s3Client, S3_INTERNAL, objectKey);
+      assertThat(objects).isEmpty();
+    }
+  }
+
+  @Test
   void testS3Copy_PassClient() throws IOException {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
@@ -173,6 +196,8 @@ class AwsS3IntTests {
       var respPayload = new String(response.readAllBytes(),
           StandardCharsets.UTF_8);
       assertThat(respPayload).isEqualTo(payload);
+
+      // todo: verify the file is still on the source
 
       // cleanup and delete the files
       response.close();
