@@ -170,36 +170,38 @@ class AwsS3IntTests {
   void testS3Copy_PassClient() throws IOException {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
-      // place a file
+      LOG.info("...place a file...");
       var objectKey = "revloc02/source/test/test.txt";
       var payload = getDefaultPayload();
       s3Put(s3Client, S3_INTERNAL, objectKey, payload);
 
-      // verify the file is in the source
+      LOG.info("...verify the object is on the source...");
       var objects = s3List(s3Client, S3_INTERNAL, objectKey);
       assertThat(objects.size()).isOne();
       assertThat(objects.get(0).key()).isEqualTo(objectKey);
 
-      // copy file
+      LOG.info("...copy object...");
       var destKey = "blake/inbound/dev/some-bank/ack/testCopied.txt";
       s3Copy(s3Client, S3_INTERNAL, objectKey, S3_TARGET_CUSTOMER, destKey);
 
-      // verify the copy is in the new location
+      LOG.info("...verify the copy is in the new location...");
       objects = s3List(s3Client, S3_TARGET_CUSTOMER, destKey);
       assertThat(objects.size()).isOne();
       assertThat(objects.get(0).key()).isEqualTo(destKey);
 
-      // check the contents
+      LOG.info("...check the contents...");
       var response = s3Get(s3Client, S3_TARGET_CUSTOMER, destKey);
       LOG.info("response={}", response.response());
       LOG.info("statusCode={}", response.response().sdkHttpResponse().statusCode());
-      var respPayload = new String(response.readAllBytes(),
-          StandardCharsets.UTF_8);
+      var respPayload = new String(response.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(respPayload).isEqualTo(payload);
 
-      // todo: verify the file is still on the source
+      LOG.info("...verify the object is still on the source...");
+      objects = s3List(s3Client, S3_INTERNAL, objectKey);
+      assertThat(objects.size()).isOne();
+      assertThat(objects.get(0).key()).isEqualTo(objectKey);
 
-      // cleanup and delete the files
+      LOG.info("...cleanup and delete the files...");
       response.close();
       s3Delete(s3Client, S3_INTERNAL, objectKey);
       s3Delete(s3Client, S3_TARGET_CUSTOMER, destKey);
