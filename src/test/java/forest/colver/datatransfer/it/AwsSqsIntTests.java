@@ -115,19 +115,20 @@ class AwsSqsIntTests {
   @Test
   void testSqsClear() {
     LOG.info("Interacting with: sqs={}", SQS1);
-    // place some messages
+    LOG.info("...place some messages...");
     var creds = getEmxSbCreds();
     var numMsgs = 5;
     for (var i = 0; i < numMsgs; i++) {
       sqsSend(creds, SQS1, getDefaultPayload());
     }
+    LOG.info("...wait until all the messages have arrived...");
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(120))
         .until(() -> sqsDepth(creds, SQS1) >= numMsgs);
-
+    LOG.info("...now clear the messages from the sqs...");
     sqsClear(creds, SQS1);
-    // assert the sqs was cleared
+    LOG.info("...assert the sqs was cleared...");
     await()
         .pollInterval(Duration.ofSeconds(10))
         .atMost(Duration.ofSeconds(120))

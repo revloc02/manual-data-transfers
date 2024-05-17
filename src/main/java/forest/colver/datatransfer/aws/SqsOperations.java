@@ -133,7 +133,6 @@ public class SqsOperations {
     }
   }
 
-  // todo: can this be used in sqsClear()?
   /**
    * Reads one or more message from the SQS (but does not consume them). Note that the
    * visibilityTimeout is zero so reading the message doesn't tie it up in any way. This also
@@ -198,9 +197,9 @@ public class SqsOperations {
   }
 
   /**
-   * Clears an SQS if it has less than 500 messages, by consuming them. This exists because an SQS
+   * Clears an SQS if it has less than 200 messages, by consuming them. This exists because an SQS
    * purge can only happen once every 60 sec, and this provides a way to do it more often than that.
-   * If the depth is greater than 500, using the sqsPurge() method is probably better.
+   * If the depth is greater than 200, using the sqsPurge() method is probably better.
    */
   public static void sqsClear(AwsCredentialsProvider awsCP, String queueName) {
     var depth = sqsDepth(awsCP, queueName);
