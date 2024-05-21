@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class HybridS3AndAzureBlobIntTests {
+
   private static final Logger LOG = LoggerFactory.getLogger(HybridS3AndAzureBlobIntTests.class);
   public static final String CONNECT_STR = EMX_SANDBOX_SA_FOREST_CONN_STR;
 

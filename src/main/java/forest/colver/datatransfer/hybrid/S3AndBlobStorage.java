@@ -9,6 +9,7 @@ import java.io.IOException;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 
 public class S3AndBlobStorage {
+
   private S3AndBlobStorage() {
     // https://rules.sonarsource.com/java/RSPEC-1118/
     throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
@@ -16,6 +17,7 @@ public class S3AndBlobStorage {
 
   /**
    * Move one object from S3 to Azure Blob.
+   *
    * @param awsCp AWS creds.
    * @param bucket S3.
    * @param objectKey S3 object key.
@@ -24,7 +26,8 @@ public class S3AndBlobStorage {
    * @param containerName Azure storage container name.
    * @throws IOException For readAllBytes() on the InputStream from the S3 object.
    */
-  public static void moveOneS3toAzureBlob(AwsCredentialsProvider awsCp, String bucket, String objectKey, String connectStr, String endpoint, String containerName)
+  public static void moveOneS3toAzureBlob(AwsCredentialsProvider awsCp, String bucket,
+      String objectKey, String connectStr, String endpoint, String containerName)
       throws IOException {
     try (var s3Client = getS3Client(awsCp)) {
       var response = s3Consume(s3Client, bucket, objectKey);
@@ -35,6 +38,7 @@ public class S3AndBlobStorage {
 
   /**
    * Copy one object from S3 to Azure Blob.
+   *
    * @param awsCp AWS creds.
    * @param bucket S3.
    * @param objectKey S3 object key.
@@ -43,7 +47,8 @@ public class S3AndBlobStorage {
    * @param containerName Azure storage container name.
    * @throws IOException For readAllBytes() on the InputStream from the S3 object.
    */
-  public static void copyOneS3toAzureBlob(AwsCredentialsProvider awsCp, String bucket, String objectKey, String connectStr, String endpoint, String containerName)
+  public static void copyOneS3toAzureBlob(AwsCredentialsProvider awsCp, String bucket,
+      String objectKey, String connectStr, String endpoint, String containerName)
       throws IOException {
     try (var s3Client = getS3Client(awsCp)) {
       var response = s3Get(s3Client, bucket, objectKey);
@@ -54,14 +59,9 @@ public class S3AndBlobStorage {
 
   /**
    * Get all of the S3 objects from a directory and move them to an Azure Storage Container.
-   * @param awsCp
-   * @param bucket
-   * @param objectKey
-   * @param connectStr
-   * @param endpoint
-   * @param containerName
    */
-  public static void moveAllS3ToAzureBlob(AwsCredentialsProvider awsCp, String bucket, String objectKey, String connectStr, String endpoint, String containerName) {
+  public static void moveAllS3ToAzureBlob(AwsCredentialsProvider awsCp, String bucket,
+      String objectKey, String connectStr, String endpoint, String containerName) {
 
   }
 }
