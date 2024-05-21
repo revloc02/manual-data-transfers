@@ -33,7 +33,6 @@ public class S3AndBlobStorage {
     }
   }
 
-  // todo: at some point make copy ops. Needs to be finished, and needs a unit test.
   /**
    * Copy one object from S3 to Azure Blob.
    * @param awsCp AWS creds.
