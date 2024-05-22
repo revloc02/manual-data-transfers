@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AzureServiceBusQueueTests {
+class AzureServiceBusQueueTests {
 
   private static final Logger LOG = LoggerFactory.getLogger(AzureServiceBusQueueTests.class);
   private final ConnectionStringBuilder creds = connect(EMX_SANDBOX_NAMESPACE,
@@ -39,26 +39,27 @@ public class AzureServiceBusQueueTests {
       EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
 
   @Test
-  public void testSend() {
-    // send a message
+  void testSend() {
+    LOG.info("...send a message...");
     Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
         "specificValue");
     asbSend(creds, createIMessage(defaultPayload, properties));
+    LOG.info("...ensure the message arrived...");
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
         .untilAsserted(
             () -> assertThat(messageCount(creds)).isEqualTo(1));
 
-    // read that message
+    LOG.info("...read that message...");
     var message = asbRead(creds);
 
-    // check it
+    LOG.info("...check the message...");
     var body = new String(message.getMessageBody().getBinaryData().get(0));
     assertThat(body).isEqualTo(defaultPayload);
-    assertThat(message.getProperties().get("specificKey")).isEqualTo("specificValue");
+    assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
 
-    // clean up
+    LOG.info("...clean up...");
     asbConsume(creds);
   }
 
