@@ -64,18 +64,19 @@ class AzureServiceBusQueueTests {
   }
 
   @Test
-  public void testMove() throws ServiceBusException, InterruptedException {
-    // send a message
+  void testMove() throws ServiceBusException, InterruptedException {
+    LOG.info("...send a message...");
     Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
         "specificValue");
     asbSend(creds, createIMessage(defaultPayload, properties));
+    LOG.info("...ensure the message arrived...");
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
         .untilAsserted(
             () -> assertThat(messageCount(creds)).isEqualTo(1));
 
-    // move that message
+    LOG.info("...move that message...");
     var toCreds = connect(EMX_SANDBOX_NAMESPACE, EMX_SANDBOX_FOREST_QUEUE2,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
@@ -86,37 +87,38 @@ class AzureServiceBusQueueTests {
         .untilAsserted(
             () -> assertThat(messageCount(toCreds)).isEqualTo(1));
 
-    // check it
+    LOG.info("...check the message...");
     var message = asbRead(toCreds);
     var body = new String(message.getMessageBody().getBinaryData().get(0));
     assertThat(body).isEqualTo(defaultPayload);
-    assertThat(message.getProperties().get("specificKey")).isEqualTo("specificValue");
+    assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
 
-    // clean up
+    LOG.info("...clean up...");
     asbPurge(toCreds);
     asbPurge(creds);
   }
 
   @Test
-  public void testConsume() {
-    // send a message
+  void testConsume() {
+    LOG.info("...send a message...");
     Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
         "specificValue");
     asbSend(creds, createIMessage(defaultPayload, properties));
+    LOG.info("...ensure the message arrived...");
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
         .untilAsserted(
             () -> assertThat(messageCount(creds)).isEqualTo(1));
 
-    // retrieve that message
+    LOG.info("...retrieve that message...");
     var message = asbConsume(creds);
-    assertThat(messageCount(creds)).isEqualTo(0);
+    assertThat(messageCount(creds)).isZero();
 
-    // check it
+    LOG.info("...check the message...");
     var body = new String(message.getMessageBody().getBinaryData().get(0));
     assertThat(body).isEqualTo(defaultPayload);
-    assertThat(message.getProperties().get("specificKey")).isEqualTo("specificValue");
+    assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
   }
 
   @Test
