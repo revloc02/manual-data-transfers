@@ -141,11 +141,11 @@ class AzureServiceBusQueueTests {
     LOG.info("...now purge the queue...");
     assertThat(asbPurge(creds)).isGreaterThanOrEqualTo(num);
     LOG.info("...and check that it was purged...");
-    assertThat(messageCount(creds)).isEqualTo(0);
+    assertThat(messageCount(creds)).isZero();
   }
 
   @Test
-  public void testDeadLetterQueue() {
+  void testDeadLetterQueue() {
     var dlqName = EMX_SANDBOX_FOREST_QUEUE_W_DLQ + "/$DeadLetterQueue";
     // connection string to the queue with a DLQ configured
     var credsQwDlq = connect(EMX_SANDBOX_NAMESPACE,
@@ -155,10 +155,11 @@ class AzureServiceBusQueueTests {
     var credsQwDlq_Dlq = connect(EMX_SANDBOX_NAMESPACE, dlqName,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
 
-    // send a message to the queue
+    LOG.info("...send a message to the queue...");
     Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
         "specificValue");
     asbSend(credsQwDlq, createIMessage(defaultPayload, properties));
+    LOG.info("...ensure the message arrived...");
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
@@ -166,24 +167,23 @@ class AzureServiceBusQueueTests {
             () -> assertThat(messageCount(credsQwDlq)).isEqualTo(
                 1));
 
-    // have the message on the queue move to the DLQ
+    LOG.info("...have the message on the queue move to the DLQ...");
     asbDlq(credsQwDlq);
 
-    // check queue to see if main queue is empty
+    LOG.info("...check queue to see if main queue is empty...");
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
         .untilAsserted(
-            () -> assertThat(messageCount(credsQwDlq)).isEqualTo(
-                0));
+            () -> assertThat(messageCount(credsQwDlq)).isZero());
 
-    // check the DLQ message
+    LOG.info("...check the DLQ message...");
     var message = asbConsume(credsQwDlq_Dlq);
     var body = new String(message.getMessageBody().getBinaryData().get(0));
     assertThat(body).isEqualTo(defaultPayload);
-    assertThat(message.getProperties().get("specificKey")).isEqualTo("specificValue");
+    assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
 
-    // cleanup the queue and the DLQ
+    LOG.info("...cleanup the queue and the DLQ...");
     asbPurge(credsQwDlq);
     asbPurge(credsQwDlq_Dlq);
   }
