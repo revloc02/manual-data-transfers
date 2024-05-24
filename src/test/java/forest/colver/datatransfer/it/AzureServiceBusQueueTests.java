@@ -122,14 +122,15 @@ class AzureServiceBusQueueTests {
   }
 
   @Test
-  public void testPurge() {
+  void testPurge() {
     var message = createIMessage(defaultPayload);
 
-    // send a bunch of messages
+    LOG.info("...send a bunch of messages...");
     var num = 4;
     for (var i = 0; i < num; i++) {
       asbSend(creds, message);
     }
+    LOG.info("...ensure the messages arrived...");
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
@@ -137,8 +138,9 @@ class AzureServiceBusQueueTests {
             () -> assertThat(messageCount(creds)).isGreaterThanOrEqualTo(
                 num));
 
-    // purge the queue
+    LOG.info("...now purge the queue...");
     assertThat(asbPurge(creds)).isGreaterThanOrEqualTo(num);
+    LOG.info("...and check that it was purged...");
     assertThat(messageCount(creds)).isEqualTo(0);
   }
 
