@@ -13,7 +13,7 @@ import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE2;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE_W_DLQ;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE_W_FORWARD;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE_W_TTL;
+import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_TTL_QUEUE;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY;
@@ -194,45 +194,46 @@ class AzureServiceBusQueueTests {
    * the test checks that it arrived there.
    */
   @Test
-  public void testExpireToDeadLetterQueue() {
-    var dlqName = EMX_SANDBOX_FOREST_QUEUE_W_TTL + "/$DeadLetterQueue";
+  void testExpireToDeadLetterQueue() {
+    var dlqName = EMX_SANDBOX_FOREST_TTL_QUEUE + "/$DeadLetterQueue";
     // connection string to the queue with a DLQ configured
-    var credsQwTtl = connect(EMX_SANDBOX_NAMESPACE,
-        EMX_SANDBOX_FOREST_QUEUE_W_TTL,
+    var credsTtlQueue = connect(EMX_SANDBOX_NAMESPACE,
+        EMX_SANDBOX_FOREST_TTL_QUEUE,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
     // connection string to the actual DLQ of the queue (with a DLQ configured)
-    var credsQwTtl_Dlq = connect(EMX_SANDBOX_NAMESPACE, dlqName,
+    var credsTtlQueueDlq = connect(EMX_SANDBOX_NAMESPACE, dlqName,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
 
-    // send a message to the queue
+    LOG.info("...send a message to the queue...");
     Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
         "specificValue");
-    asbSend(credsQwTtl, createIMessage(defaultPayload, properties));
-    // queue configured to expire messages after a 10 sec TTL
+    asbSend(credsTtlQueue, createIMessage(defaultPayload, properties));
+
+    LOG.info("...check to see the message on the queue...");
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
         .untilAsserted(
-            () -> assertThat(messageCount(credsQwTtl)).isEqualTo(
+            () -> assertThat(messageCount(credsTtlQueue)).isEqualTo(
                 1));
 
-    // check queue to see if main queue is empty, indicating that the message has expired
+    LOG.info("...check queue to see if main queue is empty, indicating that the 10 sec TTL message has expired...");
     await()
-        .pollInterval(Duration.ofSeconds(5))
+        .pollInterval(Duration.ofSeconds(10))
         .atMost(Duration.ofSeconds(120))
         .untilAsserted(
-            () -> assertThat(messageCount(credsQwTtl)).isEqualTo(
-                0));
+            () -> assertThat(messageCount(credsTtlQueue)).isZero());
 
+    LOG.info("...check the message in the DLQ...");
     // check the DLQ message
-    var message = asbConsume(credsQwTtl_Dlq);
+    var message = asbConsume(credsTtlQueueDlq);
     var body = new String(message.getMessageBody().getBinaryData().get(0));
     assertThat(body).isEqualTo(defaultPayload);
-    assertThat(message.getProperties().get("specificKey")).isEqualTo("specificValue");
+    assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
 
-    // cleanup the queue and the DLQ
-    asbPurge(credsQwTtl);
-    asbPurge(credsQwTtl_Dlq);
+    LOG.info("...cleanup the queue and the DLQ...");
+    asbPurge(credsTtlQueue);
+    asbPurge(credsTtlQueueDlq);
   }
 
   @Test
