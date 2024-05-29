@@ -12,7 +12,7 @@ import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.message
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE2;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE_W_DLQ;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE_W_FORWARD;
+import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE_WITH_FORWARD;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_TTL_QUEUE;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY;
@@ -237,36 +237,34 @@ class AzureServiceBusQueueTests {
   }
 
   @Test
-  public void testSendAutoForwarding() {
+  void testSendAutoForwarding() {
     // connection string to the queue with a forward_to configured
-    var credsQwForward = connect(EMX_SANDBOX_NAMESPACE,
-        EMX_SANDBOX_FOREST_QUEUE_W_FORWARD,
+    var credsQueWithForward = connect(EMX_SANDBOX_NAMESPACE,
+        EMX_SANDBOX_FOREST_QUEUE_WITH_FORWARD,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
     var toCreds = connect(EMX_SANDBOX_NAMESPACE, EMX_SANDBOX_FOREST_QUEUE2,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
 
-    // send a message
+    LOG.info("...send a message to the queue...");
     Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
         "specificValue");
-    asbSend(credsQwForward, createIMessage(defaultPayload, properties));
+    asbSend(credsQueWithForward, createIMessage(defaultPayload, properties));
 
-    // check message is not on original queue as it was forwarded
+    LOG.info("...check message is not on original queue as it was forwarded...");
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(12))
         .untilAsserted(
-            () -> assertThat(messageCount(credsQwForward)).isEqualTo(0));
+            () -> assertThat(messageCount(credsQueWithForward)).isZero());
 
-    // read the message on the other queue
+    LOG.info("...check the message on the destination queue...");
     var message = asbRead(toCreds);
-
-    // check it
     var body = new String(message.getMessageBody().getBinaryData().get(0));
     assertThat(body).isEqualTo(defaultPayload);
-    assertThat(message.getProperties().get("specificKey")).isEqualTo("specificValue");
+    assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
 
-    // clean up
+    LOG.info("...cleanup...");
     asbConsume(toCreds);
   }
 

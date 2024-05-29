@@ -26,7 +26,7 @@ public class Utils {
   public static final String EMX_SANDBOX_FOREST_QUEUE = "forest-test-servicebus-queue";
   public static final String EMX_SANDBOX_FOREST_QUEUE2 = "forest-test-servicebus-queue2";
   public static final String EMX_SANDBOX_FOREST_QUEUE_W_DLQ = "forest-test-servicebus-queue-dlq";
-  public static final String EMX_SANDBOX_FOREST_QUEUE_W_FORWARD = "forest-test-servicebus-queue-forward";
+  public static final String EMX_SANDBOX_FOREST_QUEUE_WITH_FORWARD = "forest-test-servicebus-queue-forward";
   public static final String EMX_SANDBOX_FOREST_TTL_QUEUE = "forest-test-servicebus-queue-ttl-expiration";
 
   // Team Azure Sandbox event grid resources
