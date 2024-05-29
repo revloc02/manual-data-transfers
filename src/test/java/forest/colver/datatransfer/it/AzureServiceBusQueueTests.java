@@ -11,7 +11,7 @@ import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.connect
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.messageCount;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE2;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE_W_DLQ;
+import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE_WITH_DLQ;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE_WITH_FORWARD;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_TTL_QUEUE;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE;
@@ -146,10 +146,10 @@ class AzureServiceBusQueueTests {
 
   @Test
   void testDeadLetterQueue() {
-    var dlqName = EMX_SANDBOX_FOREST_QUEUE_W_DLQ + "/$DeadLetterQueue";
+    var dlqName = EMX_SANDBOX_FOREST_QUEUE_WITH_DLQ + "/$DeadLetterQueue";
     // connection string to the queue with a DLQ configured
     var credsQwDlq = connect(EMX_SANDBOX_NAMESPACE,
-        EMX_SANDBOX_FOREST_QUEUE_W_DLQ,
+        EMX_SANDBOX_FOREST_QUEUE_WITH_DLQ,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
     // connection string to the actual DLQ of the queue (with a DLQ configured)
     var credsQwDlq_Dlq = connect(EMX_SANDBOX_NAMESPACE, dlqName,
@@ -217,7 +217,8 @@ class AzureServiceBusQueueTests {
             () -> assertThat(messageCount(credsTtlQueue)).isEqualTo(
                 1));
 
-    LOG.info("...check queue to see if main queue is empty, indicating that the 10 sec TTL message has expired...");
+    LOG.info(
+        "...check queue to see if main queue is empty, indicating that the 10 sec TTL message has expired...");
     await()
         .pollInterval(Duration.ofSeconds(10))
         .atMost(Duration.ofSeconds(120))
