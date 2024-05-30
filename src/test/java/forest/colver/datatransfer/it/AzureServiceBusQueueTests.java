@@ -270,32 +270,33 @@ class AzureServiceBusQueueTests {
   }
 
   @Test
-  public void testMoveAll() {
-    // send messages
+  void testMoveAll() {
+    LOG.info("...send some messages...");
     var numMsgs = 7;
     for (var i = 0; i < numMsgs; i++) {
       asbSend(creds, createIMessage(defaultPayload));
     }
+    LOG.info("...check to see the messages arrived...");
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(
             () -> assertThat(messageCount(creds)).isEqualTo(numMsgs));
 
-    // move messages
+    LOG.info("...move the messages...");
     var toCreds = connect(EMX_SANDBOX_NAMESPACE, EMX_SANDBOX_FOREST_QUEUE2,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
     asbMoveAll(creds, toCreds);
 
-    // verify messages are on the target queue
+    LOG.info("...verify messages are on the target queue...");
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(
             () -> assertThat(messageCount(toCreds)).isEqualTo(numMsgs));
 
-    // clean up
+    LOG.info("...cleanup...");
     asbPurge(toCreds);
   }
 }
