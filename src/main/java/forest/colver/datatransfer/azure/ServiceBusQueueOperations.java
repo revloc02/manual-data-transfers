@@ -79,8 +79,7 @@ public class ServiceBusQueueOperations {
     }
   }
 
-  public static void asbMove(ConnectionStringBuilder fromCsb, ConnectionStringBuilder toCsb)
-      throws ServiceBusException, InterruptedException {
+  public static void asbMove(ConnectionStringBuilder fromCsb, ConnectionStringBuilder toCsb) {
     asbSend(toCsb, asbConsume(fromCsb));
   }
 
@@ -89,7 +88,12 @@ public class ServiceBusQueueOperations {
       asbSend(toCsb, asbConsume(fromCsb));
     }
   }
-  // todo: I think I need copy method in here
+
+  public static void asbCopy(ConnectionStringBuilder fromCsb, ConnectionStringBuilder toCsb) {
+    asbSend(toCsb, asbRead(fromCsb));
+  }
+
+  // todo: add a copyAll op
 
   public static int asbPurge(ConnectionStringBuilder connectionStringBuilder) {
     var counter = 0;

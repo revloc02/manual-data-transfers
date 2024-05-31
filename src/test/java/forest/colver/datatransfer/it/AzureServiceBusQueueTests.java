@@ -1,6 +1,7 @@
 package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsume;
+import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbCopy;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbDlq;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbMove;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbMoveAll;
@@ -64,7 +65,7 @@ class AzureServiceBusQueueTests {
   }
 
   @Test
-  void testMove() throws ServiceBusException, InterruptedException {
+  void testMove() {
     LOG.info("...send a message...");
     Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
         "specificValue");
@@ -81,6 +82,7 @@ class AzureServiceBusQueueTests {
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
     asbMove(creds, toCreds);
+    LOG.info("...ensure the message arrived on the other queue...");
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
@@ -93,9 +95,15 @@ class AzureServiceBusQueueTests {
     assertThat(body).isEqualTo(defaultPayload);
     assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
 
-    LOG.info("...clean up...");
+    LOG.info("...ensure there are no messages on the source queue...");
+    await()
+        .pollInterval(Duration.ofSeconds(1))
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () -> assertThat(messageCount(creds)).isZero());
+
+    LOG.info("...cleanup...");
     asbPurge(toCreds);
-    asbPurge(creds);
   }
 
   @Test
@@ -298,5 +306,48 @@ class AzureServiceBusQueueTests {
 
     LOG.info("...cleanup...");
     asbPurge(toCreds);
+  }
+
+  @Test
+  void testCopy() {
+    LOG.info("...send a message...");
+    Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
+        "specificValue");
+    asbSend(creds, createIMessage(defaultPayload, properties));
+    LOG.info("...ensure the message arrived...");
+    await()
+        .pollInterval(Duration.ofSeconds(1))
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () -> assertThat(messageCount(creds)).isEqualTo(1));
+
+    LOG.info("...copy that message...");
+    var toCreds = connect(EMX_SANDBOX_NAMESPACE, EMX_SANDBOX_FOREST_QUEUE2,
+        EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
+        EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
+    asbCopy(creds, toCreds);
+    LOG.info("...ensure the message arrived on the other queue...");
+    await()
+        .pollInterval(Duration.ofSeconds(1))
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () -> assertThat(messageCount(toCreds)).isEqualTo(1));
+
+    LOG.info("...check the message...");
+    var message = asbRead(toCreds);
+    var body = new String(message.getMessageBody().getBinaryData().get(0));
+    assertThat(body).isEqualTo(defaultPayload);
+    assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
+
+    LOG.info("...ensure the message is still on the original queue...");
+    await()
+        .pollInterval(Duration.ofSeconds(1))
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () -> assertThat(messageCount(creds)).isEqualTo(1));
+
+    LOG.info("...cleanup...");
+    asbPurge(toCreds);
+    asbPurge(creds);
   }
 }
