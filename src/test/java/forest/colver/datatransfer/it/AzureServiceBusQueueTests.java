@@ -25,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import com.microsoft.azure.servicebus.primitives.ConnectionStringBuilder;
-import com.microsoft.azure.servicebus.primitives.ServiceBusException;
 import java.time.Duration;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -38,6 +37,18 @@ class AzureServiceBusQueueTests {
   private final ConnectionStringBuilder creds = connect(EMX_SANDBOX_NAMESPACE,
       EMX_SANDBOX_FOREST_QUEUE,
       EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
+
+  /**
+   * This is simply a convenience method for purging the queues used in other unit tests.
+   */
+  @Test
+  void purgeQueues() {
+    var creds2 = connect(EMX_SANDBOX_NAMESPACE, EMX_SANDBOX_FOREST_QUEUE2,
+        EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
+        EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
+    asbPurge(creds);
+    asbPurge(creds2);
+  }
 
   @Test
   void testSend() {
