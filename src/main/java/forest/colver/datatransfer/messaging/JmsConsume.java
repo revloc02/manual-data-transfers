@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 public class JmsConsume {
 
-  private JmsConsume(){
+  private JmsConsume() {
     // https://rules.sonarsource.com/java/RSPEC-1118/
     throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
   }
@@ -103,7 +103,8 @@ public class JmsConsume {
         e.printStackTrace();
       }
     }
-    LOG.info("Deleted {} messages from {}:{} queue with criteria {}.", counter, env.name(), queueName, selector);
+    LOG.info("Deleted {} messages from {}:{} queue with criteria {}.", counter, env.name(),
+        queueName, selector);
     return counter;
   }
 
@@ -239,11 +240,12 @@ public class JmsConsume {
       var fromQ = ctx.createQueue(fromQueueName);
       var counter = 0;
       try (var consumer = ctx.createConsumer(fromQ)) {
-        jmsMove(ctx.createProducer(), consumer, ctx.createQueue(toQueueName));
+        counter = jmsMove(ctx.createProducer(), consumer, ctx.createQueue(toQueueName));
       } catch (JMSException e) {
         e.printStackTrace();
       }
-      LOG.info("Moved {} messages from {} to {} in {}.", counter, fromQueueName, toQueueName, env.name());
+      LOG.info("Moved {} messages from {} to {} in {}.", counter, fromQueueName, toQueueName,
+          env.name());
     }
   }
 
@@ -254,22 +256,23 @@ public class JmsConsume {
       var fromQ = ctx.createQueue(fromQueueName);
       var counter = 0;
       try (var consumer = ctx.createConsumer(fromQ, selector)) {
-        jmsMove(ctx.createProducer(), consumer, ctx.createQueue(toQueueName));
+        counter = jmsMove(ctx.createProducer(), consumer, ctx.createQueue(toQueueName));
       } catch (JMSException e) {
         e.printStackTrace();
       }
-      LOG.info("Moved {} messages from {} to {} in {}, for selector={}.", counter, toQueueName, fromQueueName, env.name(),
-          selector);
+      LOG.info("Moved {} messages from {} to {} in {}, for selector={}.", counter, fromQueueName,
+          toQueueName, env.name(), selector);
     }
   }
 
   /**
    * A utility method that moves messages from one JMS queue to another.
+   *
    * @param producer JMSProducer used for the target queue.
    * @param consumer JMSConsumer configured as the source queue.
    * @param toQueue The target queue.
    */
-  private static void jmsMove(JMSProducer producer, JMSConsumer consumer, Queue toQueue)
+  private static int jmsMove(JMSProducer producer, JMSConsumer consumer, Queue toQueue)
       throws JMSException {
     var moreMessages = true;
     var counter = 0;
@@ -288,6 +291,7 @@ public class JmsConsume {
         moreMessages = false;
       }
     }
+    return counter;
   }
 
   public static void moveSomeSpecificMessages(
