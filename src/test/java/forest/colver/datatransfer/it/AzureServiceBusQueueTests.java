@@ -1,7 +1,9 @@
 package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsume;
+import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsumeReceiveAndDelete;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbCopy;
+import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbCopyAll;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbDlq;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbMove;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbMoveAll;
@@ -72,7 +74,7 @@ class AzureServiceBusQueueTests {
     assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
 
     LOG.info("...clean up...");
-    asbConsume(creds);
+    asbConsumeReceiveAndDelete(creds);
   }
 
   @Test
@@ -285,7 +287,7 @@ class AzureServiceBusQueueTests {
     assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
 
     LOG.info("...cleanup...");
-    asbConsume(toCreds);
+    asbConsumeReceiveAndDelete(toCreds);
   }
 
   @Test
