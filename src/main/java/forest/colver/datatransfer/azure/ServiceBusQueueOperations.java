@@ -151,8 +151,7 @@ public class ServiceBusQueueOperations {
 
   public static void asbMoveAll(ConnectionStringBuilder fromCsb, ConnectionStringBuilder toCsb) {
     while (messageCount(fromCsb) > 0) {
-      // todo: if asbMove get fixed so it is safer, this method should call that one
-      asbSend(toCsb, asbConsume(fromCsb));
+      asbMove(fromCsb, toCsb);
     }
   }
 
