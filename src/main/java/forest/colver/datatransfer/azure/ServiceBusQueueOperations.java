@@ -10,7 +10,6 @@ import com.microsoft.azure.servicebus.primitives.ConnectionStringBuilder;
 import com.microsoft.azure.servicebus.primitives.ServiceBusException;
 import java.net.URI;
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +56,7 @@ public class ServiceBusQueueOperations {
     try {
       IMessageReceiver iMessageReceiver = ClientFactory.createMessageReceiverFromConnectionStringBuilder(
           connectionStringBuilder, ReceiveMode.PEEKLOCK);
-      message = iMessageReceiver.receive(Duration.of(1, ChronoUnit.SECONDS));
+      message = iMessageReceiver.receive(Duration.ofSeconds(1));
       iMessageReceiver.abandon(
           message.getLockToken()); // make message available for other consumers
     } catch (InterruptedException | ServiceBusException e) {
@@ -77,7 +76,7 @@ public class ServiceBusQueueOperations {
     try {
       IMessageReceiver iMessageReceiver = ClientFactory.createMessageReceiverFromConnectionStringBuilder(
           connectionStringBuilder, ReceiveMode.PEEKLOCK);
-      message = iMessageReceiver.receive(Duration.of(1, ChronoUnit.SECONDS));
+      message = iMessageReceiver.receive(Duration.ofSeconds(1));
     } catch (ServiceBusException | InterruptedException e) {
       e.printStackTrace();
     }
