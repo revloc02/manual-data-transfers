@@ -199,7 +199,7 @@ class AzureServiceBusQueueTests {
             () -> assertThat(messageCount(credsQwDlq)).isZero());
 
     LOG.info("...check the DLQ message...");
-    var message = asbConsume(credsQwDlq_Dlq);
+    var message = asbConsumeReceiveAndDelete(credsQwDlq_Dlq);
     var body = new String(message.getMessageBody().getBinaryData().get(0));
     assertThat(body).isEqualTo(defaultPayload);
     assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
@@ -248,7 +248,7 @@ class AzureServiceBusQueueTests {
 
     LOG.info("...check the message in the DLQ...");
     // check the DLQ message
-    var message = asbConsume(credsTtlQueueDlq);
+    var message = asbConsumeReceiveAndDelete(credsTtlQueueDlq);
     var body = new String(message.getMessageBody().getBinaryData().get(0));
     assertThat(body).isEqualTo(defaultPayload);
     assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
