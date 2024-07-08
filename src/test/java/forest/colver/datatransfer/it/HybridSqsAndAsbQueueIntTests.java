@@ -79,7 +79,7 @@ class HybridSqsAndAsbQueueIntTests {
   }
 
   @Test
-  public void testMoveAsbQueueToSqs() {
+  void testMoveAsbQueueToSqs() {
     // send a message to ASB queue
     Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
         "specificValue");
@@ -96,7 +96,7 @@ class HybridSqsAndAsbQueueIntTests {
     var msg = sqsReadOneMessage(awsCreds, SQS1);
     assert msg != null;
     assertThat(msg.body()).isEqualTo(defaultPayload);
-    assertThat(msg.hasMessageAttributes()).isEqualTo(true);
+    assertThat(msg.hasMessageAttributes()).isTrue();
     assertThat(msg.messageAttributes().get("specificKey").stringValue()).isEqualTo("specificValue");
 
     // cleanup
@@ -104,7 +104,7 @@ class HybridSqsAndAsbQueueIntTests {
   }
 
   @Test
-  public void testMoveAllSqsToAsbQueue() {
+  void testMoveAllSqsToAsbQueue() {
     LOG.info("Interacting with: sqs={} and ASB-queue={}", SQS1, EMX_SANDBOX_FOREST_QUEUE);
     // put messages on sqs
     var payload = getDefaultPayload();
@@ -139,7 +139,7 @@ class HybridSqsAndAsbQueueIntTests {
    * process clean the queues up.
    */
   @Test
-  public void testMoveAllAsbQueueToSqs() {
+  void testMoveAllAsbQueueToSqs() {
     // send messages to ASB queue
     var numMsgs = 7;
     for (var i = 0; i < numMsgs; i++) {
@@ -164,7 +164,7 @@ class HybridSqsAndAsbQueueIntTests {
   }
 
   @Test
-  public void testCopyOneSqsToAsbQueue() {
+  void testCopyOneSqsToAsbQueue() {
     // place a message on SQS
     LOG.info("Interacting with: sqs={}", SQS1);
     var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3",
@@ -187,8 +187,8 @@ class HybridSqsAndAsbQueueIntTests {
     // check it
     var body = new String(message.getMessageBody().getBinaryData().get(0));
     assertThat(body).isEqualTo(payload);
-    assertThat(message.getProperties().get("key2")).isEqualTo("value2");
-    assertThat(message.getProperties().get("key3")).isEqualTo("value3");
+    assertThat(message.getProperties()).containsEntry("key2", "value2");
+    assertThat(message.getProperties()).containsEntry("key3", "value3");
 
     // clean up
     asbConsume(asbCreds);
@@ -197,7 +197,7 @@ class HybridSqsAndAsbQueueIntTests {
   }
 
   @Test
-  public void testCopyOneAsbQueueToSqs() {
+  void testCopyOneAsbQueueToSqs() {
     // send a message to ASB queue
     Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
         "specificValue");
@@ -215,7 +215,7 @@ class HybridSqsAndAsbQueueIntTests {
     var msg = sqsReadOneMessage(awsCreds, SQS1);
     assert msg != null;
     assertThat(msg.body()).isEqualTo(defaultPayload);
-    assertThat(msg.hasMessageAttributes()).isEqualTo(true);
+    assertThat(msg.hasMessageAttributes()).isTrue();
     assertThat(msg.messageAttributes().get("specificKey").stringValue()).isEqualTo("specificValue");
 
     // cleanup
