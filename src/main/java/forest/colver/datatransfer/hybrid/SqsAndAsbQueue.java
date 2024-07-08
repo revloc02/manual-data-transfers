@@ -4,7 +4,7 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsConsumeOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.convertSqsMessageAttributesToStrings;
-import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsume;
+import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsumeReceiveAndDelete;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbRead;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbSend;
 import static forest.colver.datatransfer.azure.Utils.createIMessage;
@@ -42,7 +42,7 @@ public class SqsAndAsbQueue {
 
   public static void moveOneAsbQueueToSqs(ConnectionStringBuilder azureConnStr,
       AwsCredentialsProvider awsCreds, String sqs) {
-    IMessage iMessage = asbConsume(azureConnStr);
+    IMessage iMessage = asbConsumeReceiveAndDelete(azureConnStr);
     sendIMessageToSqs(iMessage, awsCreds, sqs);
   }
 
@@ -76,7 +76,7 @@ public class SqsAndAsbQueue {
     var moreMessages = true;
     var counter = 0;
     while (moreMessages) {
-      var iMessage = asbConsume(azureConnStr);
+      var iMessage = asbConsumeReceiveAndDelete(azureConnStr);
       if (iMessage != null) {
         counter++;
         // send body and properties to SQS
