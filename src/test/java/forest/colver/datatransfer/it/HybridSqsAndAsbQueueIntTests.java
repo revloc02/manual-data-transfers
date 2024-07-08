@@ -38,7 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 
-public class HybridSqsAndAsbQueueIntTests {
+class HybridSqsAndAsbQueueIntTests {
 
   private static final Logger LOG = LoggerFactory.getLogger(HybridSqsAndAsbQueueIntTests.class);
   private static final String SQS1 = EMX_SANDBOX_TEST_SQS1;
@@ -48,7 +48,7 @@ public class HybridSqsAndAsbQueueIntTests {
       EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
 
   @Test
-  public void testMoveSqsToAsbQueue() {
+  void testMoveSqsToAsbQueue() {
     // place a message on SQS
     LOG.info("Interacting with: sqs={}", SQS1);
     var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3",
@@ -71,8 +71,8 @@ public class HybridSqsAndAsbQueueIntTests {
     // check it
     var body = new String(message.getMessageBody().getBinaryData().get(0));
     assertThat(body).isEqualTo(payload);
-    assertThat(message.getProperties().get("key2")).isEqualTo("value2");
-    assertThat(message.getProperties().get("key3")).isEqualTo("value3");
+    assertThat(message.getProperties()).containsEntry("key2", "value2");
+    assertThat(message.getProperties()).containsEntry("key3", "value3");
 
     // clean up
     asbConsume(asbCreds);
