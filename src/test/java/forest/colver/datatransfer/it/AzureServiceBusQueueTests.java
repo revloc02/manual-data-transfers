@@ -10,7 +10,7 @@ import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbMove
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbPurge;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbRead;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbSend;
-import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.connect;
+import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.connectAsbQ;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.messageCount;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE2;
@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 class AzureServiceBusQueueTests {
 
   private static final Logger LOG = LoggerFactory.getLogger(AzureServiceBusQueueTests.class);
-  private final ConnectionStringBuilder creds = connect(EMX_SANDBOX_NAMESPACE,
+  private final ConnectionStringBuilder creds = connectAsbQ(EMX_SANDBOX_NAMESPACE,
       EMX_SANDBOX_FOREST_QUEUE,
       EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
 
@@ -45,7 +45,7 @@ class AzureServiceBusQueueTests {
    */
   @Test
   void purgeQueues() {
-    var creds2 = connect(EMX_SANDBOX_NAMESPACE, EMX_SANDBOX_FOREST_QUEUE2,
+    var creds2 = connectAsbQ(EMX_SANDBOX_NAMESPACE, EMX_SANDBOX_FOREST_QUEUE2,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
     asbPurge(creds);
@@ -91,7 +91,7 @@ class AzureServiceBusQueueTests {
             () -> assertThat(messageCount(creds)).isEqualTo(1));
 
     LOG.info("...move that message...");
-    var toCreds = connect(EMX_SANDBOX_NAMESPACE, EMX_SANDBOX_FOREST_QUEUE2,
+    var toCreds = connectAsbQ(EMX_SANDBOX_NAMESPACE, EMX_SANDBOX_FOREST_QUEUE2,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
     asbMove(creds, toCreds);
@@ -169,11 +169,11 @@ class AzureServiceBusQueueTests {
   void testDeadLetterQueue() {
     var dlqName = EMX_SANDBOX_FOREST_QUEUE_WITH_DLQ + "/$DeadLetterQueue";
     // connection string to the queue with a DLQ configured
-    var credsQwDlq = connect(EMX_SANDBOX_NAMESPACE,
+    var credsQwDlq = connectAsbQ(EMX_SANDBOX_NAMESPACE,
         EMX_SANDBOX_FOREST_QUEUE_WITH_DLQ,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
     // connection string to the actual DLQ of the queue (with a DLQ configured)
-    var credsQwDlq_Dlq = connect(EMX_SANDBOX_NAMESPACE, dlqName,
+    var credsQwDlq_Dlq = connectAsbQ(EMX_SANDBOX_NAMESPACE, dlqName,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
 
     LOG.info("...send a message to the queue...");
@@ -218,11 +218,11 @@ class AzureServiceBusQueueTests {
   void testExpireToDeadLetterQueue() {
     var dlqName = EMX_SANDBOX_FOREST_TTL_QUEUE + "/$DeadLetterQueue";
     // connection string to the queue with a DLQ configured
-    var credsTtlQueue = connect(EMX_SANDBOX_NAMESPACE,
+    var credsTtlQueue = connectAsbQ(EMX_SANDBOX_NAMESPACE,
         EMX_SANDBOX_FOREST_TTL_QUEUE,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
     // connection string to the actual DLQ of the queue (with a DLQ configured)
-    var credsTtlQueueDlq = connect(EMX_SANDBOX_NAMESPACE, dlqName,
+    var credsTtlQueueDlq = connectAsbQ(EMX_SANDBOX_NAMESPACE, dlqName,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
 
     LOG.info("...send a message to the queue...");
@@ -261,10 +261,10 @@ class AzureServiceBusQueueTests {
   @Test
   void testSendAutoForwarding() {
     // connection string to the queue with a forward_to configured
-    var credsQueWithForward = connect(EMX_SANDBOX_NAMESPACE,
+    var credsQueWithForward = connectAsbQ(EMX_SANDBOX_NAMESPACE,
         EMX_SANDBOX_FOREST_QUEUE_WITH_FORWARD,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
-    var toCreds = connect(EMX_SANDBOX_NAMESPACE, EMX_SANDBOX_FOREST_QUEUE2,
+    var toCreds = connectAsbQ(EMX_SANDBOX_NAMESPACE, EMX_SANDBOX_FOREST_QUEUE2,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
 
@@ -305,7 +305,7 @@ class AzureServiceBusQueueTests {
             () -> assertThat(messageCount(creds)).isEqualTo(numMsgs));
 
     LOG.info("...move the messages...");
-    var toCreds = connect(EMX_SANDBOX_NAMESPACE, EMX_SANDBOX_FOREST_QUEUE2,
+    var toCreds = connectAsbQ(EMX_SANDBOX_NAMESPACE, EMX_SANDBOX_FOREST_QUEUE2,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
     asbMoveAll(creds, toCreds);
@@ -335,7 +335,7 @@ class AzureServiceBusQueueTests {
             () -> assertThat(messageCount(creds)).isEqualTo(1));
 
     LOG.info("...copy that message...");
-    var toCreds = connect(EMX_SANDBOX_NAMESPACE, EMX_SANDBOX_FOREST_QUEUE2,
+    var toCreds = connectAsbQ(EMX_SANDBOX_NAMESPACE, EMX_SANDBOX_FOREST_QUEUE2,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
         EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
     asbCopy(creds, toCreds);

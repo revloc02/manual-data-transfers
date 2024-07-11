@@ -1,14 +1,12 @@
 package forest.colver.datatransfer.it;
 
-//import static lds.emx.mdt.azure.EventGridOperations.receiveMessage;
-
 import static forest.colver.datatransfer.azure.EventGridOperations.aegSendMessage;
-import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsume;
-import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.connect;
+import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsumeReceiveAndDelete;
+import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.connectAsbQ;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_EVENTGRID_HOST;
+import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_EVENTGRID_SUBSCRIPTION_QUEUE;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_EVENTGRID_TOPIC_KEY;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_EVENTGRID_SUBSCRIPTION_QUEUE;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY;
 import static forest.colver.datatransfer.azure.Utils.createEvent;
@@ -21,7 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AzureEventGridTests {
+class AzureEventGridTests {
 
   private static final Logger LOG = LoggerFactory.getLogger(AzureEventGridTests.class);
   private static final String EVENTGRID_HOST = EMX_SANDBOX_EVENTGRID_HOST;
@@ -32,7 +30,7 @@ public class AzureEventGridTests {
    * devops/terraform/azure/main.tf
    */
   @Test
-  public void testSend() throws IOException {
+  void testSend() throws IOException {
     var id = "test";
     var subject = "AppEventA";
     var body = "this is the body";
@@ -43,8 +41,8 @@ public class AzureEventGridTests {
         "2017-08-10T21:03:07+00:00", dataVersion));
 
     // asb queue is subscribed to event grid, retrieve the message from the queue and check it
-    var msg = asbConsume(
-        connect(EMX_SANDBOX_NAMESPACE, EMX_SANDBOX_EVENTGRID_SUBSCRIPTION_QUEUE,
+    var msg = asbConsumeReceiveAndDelete(
+        connectAsbQ(EMX_SANDBOX_NAMESPACE, EMX_SANDBOX_EVENTGRID_SUBSCRIPTION_QUEUE,
             EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
             EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY));
     LOG.info("message body type: {}", msg.getMessageBody().getBodyType().name());

@@ -207,7 +207,7 @@ public class ServiceBusQueueOperations {
     return messageCount;
   }
 
-  public static ConnectionStringBuilder connect(URI endPoint, String entityPath,
+  public static ConnectionStringBuilder connectAsbQ(URI endPoint, String entityPath,
       String sharedAccessKeyName, String sharedAccessKey) {
     return new ConnectionStringBuilder(endPoint, entityPath, sharedAccessKeyName, sharedAccessKey);
   }

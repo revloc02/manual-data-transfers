@@ -11,7 +11,7 @@ import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbCons
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbPurge;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbRead;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbSend;
-import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.connect;
+import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.connectAsbQ;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.messageCount;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE;
@@ -43,7 +43,7 @@ class HybridSqsAndAsbQueueIntTests {
   private static final Logger LOG = LoggerFactory.getLogger(HybridSqsAndAsbQueueIntTests.class);
   private static final String SQS1 = EMX_SANDBOX_TEST_SQS1;
   private static final AwsCredentialsProvider awsCreds = getEmxSbCreds();
-  private final ConnectionStringBuilder asbCreds = connect(EMX_SANDBOX_NAMESPACE,
+  private final ConnectionStringBuilder asbCreds = connectAsbQ(EMX_SANDBOX_NAMESPACE,
       EMX_SANDBOX_FOREST_QUEUE,
       EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
 
