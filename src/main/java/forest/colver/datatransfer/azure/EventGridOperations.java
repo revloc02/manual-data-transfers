@@ -27,6 +27,7 @@ public class EventGridOperations {
         .credential(new AzureKeyCredential(eventGridTopicKey))
         .buildCustomEventPublisherClient();
     client2.sendEvents(events);
+    LOG.info("=====Sent message to Event Grid: {}", eventGridHost);
   }
 
 }

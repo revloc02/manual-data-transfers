@@ -114,6 +114,7 @@ public class ServiceBusQueueOperations {
     } catch (InterruptedException | ServiceBusException e) {
       e.printStackTrace();
     }
+    LOG.info("=====Consumed message from ASB queue: {}", connectionStringBuilder.getEntityPath());
     return message;
   }
 
