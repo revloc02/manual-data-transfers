@@ -1,7 +1,6 @@
 package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsume;
-import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsumeReceiveAndDelete;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbCopy;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbCopyAll;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbDlq;
@@ -74,7 +73,7 @@ class AzureServiceBusQueueTests {
     assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
 
     LOG.info("...clean up...");
-    asbConsumeReceiveAndDelete(creds);
+    asbConsume(creds);
   }
 
   @Test
@@ -199,7 +198,7 @@ class AzureServiceBusQueueTests {
             () -> assertThat(messageCount(credsQwDlq)).isZero());
 
     LOG.info("...check the DLQ message...");
-    var message = asbConsumeReceiveAndDelete(credsQwDlq_Dlq);
+    var message = asbConsume(credsQwDlq_Dlq);
     var body = new String(message.getMessageBody().getBinaryData().get(0));
     assertThat(body).isEqualTo(defaultPayload);
     assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
@@ -248,7 +247,7 @@ class AzureServiceBusQueueTests {
 
     LOG.info("...check the message in the DLQ...");
     // check the DLQ message
-    var message = asbConsumeReceiveAndDelete(credsTtlQueueDlq);
+    var message = asbConsume(credsTtlQueueDlq);
     var body = new String(message.getMessageBody().getBinaryData().get(0));
     assertThat(body).isEqualTo(defaultPayload);
     assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
@@ -287,7 +286,7 @@ class AzureServiceBusQueueTests {
     assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
 
     LOG.info("...cleanup...");
-    asbConsumeReceiveAndDelete(toCreds);
+    asbConsume(toCreds);
   }
 
   @Test

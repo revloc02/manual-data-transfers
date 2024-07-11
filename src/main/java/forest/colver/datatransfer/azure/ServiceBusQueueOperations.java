@@ -49,7 +49,8 @@ public class ServiceBusQueueOperations {
   // todo: How do I create a message retriever that makes the message unavailable for the default 60 sec
 
   /**
-   * This method reads a message off of the queue, and then immediately abandons the lock on the message and makes it available for any other consumers to access that message.
+   * This method reads a message off of the queue, and then immediately abandons the lock on the
+   * message and makes it available for any other consumers to access that message.
    */
   public static IMessage asbRead(ConnectionStringBuilder connectionStringBuilder) {
     IMessage message = null;
@@ -66,10 +67,10 @@ public class ServiceBusQueueOperations {
   }
 
   // todo: I tried this version of asbRead and got a null when I tried to get the message body, so what gives?
+
   /**
-   * This method will read a message, and then it will not be available for any other consumers for 60 sec, as the message is locked by the queue.
-   * @param connectionStringBuilder
-   * @return
+   * This method will read a message, and then it will not be available for any other consumers for
+   * 60 sec, as the message is locked by the queue.
    */
   public static IMessage asbReadWithPeeklock(ConnectionStringBuilder connectionStringBuilder) {
     IMessage message = null;
@@ -83,29 +84,12 @@ public class ServiceBusQueueOperations {
     return message;
   }
 
-  public static IMessage asbConsume(ConnectionStringBuilder connectionStringBuilder) {
-    IMessage message = null;
-    try {
-      IMessageReceiver iMessageReceiver = ClientFactory.createMessageReceiverFromConnectionStringBuilder(
-          connectionStringBuilder, ReceiveMode.PEEKLOCK); // PEEKLOCK should be used when the message needs to be processed before it is deleted from the queue.
-      message = iMessageReceiver.receive(Duration.ofSeconds(1));
-      // todo: why are we doing this null check? Can't we just use ReceiveMode.RECEIVEANDDELETE (see below)? Perhaps there are implications that are not apparent?
-      if (message != null) { // ensuring the message is not null before removing it from the queue
-        iMessageReceiver.completeAsync(message.getLockToken());
-      }
-    } catch (InterruptedException | ServiceBusException e) {
-      e.printStackTrace();
-    }
-    return message;
-  }
-
   /**
-   * //todo: Will this method work in some cases? In all cases? I need to try it out.
-   * // todo: Eventually write this JavaDoc.
-   * @param connectionStringBuilder
-   * @return
+   * Consumes a message from an ASB queue. Uses ReceiveMode.RECEIVEANDDELETE which immediately
+   * deletes the message after retrieving it--simply consuming the message without any thought of
+   * processing first.
    */
-  public static IMessage asbConsumeReceiveAndDelete(ConnectionStringBuilder connectionStringBuilder) {
+  public static IMessage asbConsume(ConnectionStringBuilder connectionStringBuilder) {
     IMessage message = null;
     try {
       IMessageReceiver iMessageReceiver = ClientFactory.createMessageReceiverFromConnectionStringBuilder(

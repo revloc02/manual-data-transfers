@@ -1,7 +1,7 @@
 package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.azure.EventGridOperations.aegSendMessage;
-import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsumeReceiveAndDelete;
+import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsume;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.connectAsbQ;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_EVENTGRID_HOST;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_EVENTGRID_SUBSCRIPTION_QUEUE;
@@ -41,7 +41,7 @@ class AzureEventGridTests {
         "2017-08-10T21:03:07+00:00", dataVersion));
 
     // asb queue is subscribed to event grid, retrieve the message from the queue and check it
-    var msg = asbConsumeReceiveAndDelete(
+    var msg = asbConsume(
         connectAsbQ(EMX_SANDBOX_NAMESPACE, EMX_SANDBOX_EVENTGRID_SUBSCRIPTION_QUEUE,
             EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
             EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY));

@@ -7,7 +7,7 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
-import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsumeReceiveAndDelete;
+import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsume;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbPurge;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbRead;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbSend;
@@ -75,7 +75,7 @@ class HybridSqsAndAsbQueueIntTests {
     assertThat(message.getProperties()).containsEntry("key3", "value3");
 
     // clean up
-    asbConsumeReceiveAndDelete(asbCreds);
+    asbConsume(asbCreds);
   }
 
   @Test
@@ -191,7 +191,7 @@ class HybridSqsAndAsbQueueIntTests {
     assertThat(message.getProperties()).containsEntry("key3", "value3");
 
     // clean up
-    asbConsumeReceiveAndDelete(asbCreds);
+    asbConsume(asbCreds);
     var msg = sqsReadOneMessage(awsCreds, SQS1);
     sqsDeleteMessage(awsCreds, SQS1, msg);
   }
@@ -220,6 +220,6 @@ class HybridSqsAndAsbQueueIntTests {
 
     // cleanup
     sqsDeleteMessage(awsCreds, SQS1, msg);
-    asbConsumeReceiveAndDelete(asbCreds);
+    asbConsume(asbCreds);
   }
 }
