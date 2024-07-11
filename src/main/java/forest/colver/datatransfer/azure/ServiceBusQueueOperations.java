@@ -87,7 +87,7 @@ public class ServiceBusQueueOperations {
   /**
    * Consumes a message from an ASB queue. Uses ReceiveMode.RECEIVEANDDELETE which immediately
    * deletes the message after retrieving it--simply consuming the message without any thought of
-   * processing first.
+   * processing it first.
    */
   public static IMessage asbConsume(ConnectionStringBuilder connectionStringBuilder) {
     IMessage message = null;
