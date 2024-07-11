@@ -33,7 +33,7 @@ public class Utils {
   public static final URI EMX_SANDBOX_NAMESPACE = URI.create(userCreds.getProperty("azure-emx-sandbox-forest-namespace"));
   public static final String EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY = userCreds.getProperty("azure-emx-sandbox-forest-ns-shared-access-policy");
   public static final String EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY = userCreds.getProperty("azure-emx-sandbox-forest-ns-shared-access-key");
-  public static final String EMX_SANDBOX_EVENTGRID_SUBSCRIPTION_QUEUE = "emx-core-test-eventgrid-subscription-queue";
+  public static final String EMX_SANDBOX_EVENTGRID_SUBSCRIPTION_QUEUE = userCreds.getProperty("azure-emx-sandbox-test-eventgrid-subscription-queue");
   public static final String EMX_SANDBOX_EVENTGRID_HOST = userCreds.getProperty("azure-emx-sandbox-eventgrid-host");
   public static final String EMX_SANDBOX_EVENTGRID_TOPIC_KEY = userCreds.getProperty("azure-emx-sandbox-eventgrid-topic-key");
   public static final String EMX_SANDBOX_SA_FOREST_CONN_STR = "DefaultEndpointsProtocol=https;AccountName=foresttestsa;AccountKey=" + userCreds.getProperty("azure-emx-sandbox-forest-sa-account-key") + ";EndpointSuffix=core.windows.net";
