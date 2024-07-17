@@ -12,10 +12,10 @@ import static forest.colver.datatransfer.config.Utils.writeFile;
 import static forest.colver.datatransfer.messaging.Environment.PROD;
 import static forest.colver.datatransfer.messaging.JmsBrowse.browseAndCountSpecificMessages;
 import static forest.colver.datatransfer.messaging.JmsBrowse.browseForSpecificMessage;
+import static forest.colver.datatransfer.messaging.JmsBrowse.copySpecificMessages;
 import static forest.colver.datatransfer.messaging.Utils.getJmsMsgPayload;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import forest.colver.datatransfer.messaging.Environment;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -34,15 +34,15 @@ public class CommonTasks {
   private static final Logger LOG = LoggerFactory.getLogger(CommonTasks.class);
 
   /**
-   * Retrieves a message from the Qpid Replay Caches and writes it as a file to the local Downloads
-   * directory.
+   * Retrieves a message from the Prod Qpid Replay Caches and saves it as a file to the local
+   * Downloads directory.
    *
    * @param selector JMS selector for identifying a unique message. Example:
    * "name='gtmbancoindustrialACH20230331123002258.xml'"
    * @param fullyQualifiedPath The path to write the file. Example:
    * "/Users/revloc02/Downloads/gtmbancoindustrialACH20230331123002258.xml"
    */
-  public static void retrieveMessageFromQpidReplayCache(String selector,
+  public static void saveMessageFromQpidReplayCache(String selector,
       String fullyQualifiedPath) {
     // possible selectors:
     //    emxReplayEnvironmentName = prod
@@ -56,6 +56,14 @@ public class CommonTasks {
     var message = browseForSpecificMessage(PROD, "emx-replay-cache", selector);
     var payload = getJmsMsgPayload(message);
     writeFile(fullyQualifiedPath, payload.getBytes());
+  }
+
+  /**
+   * Retrieves a message from the Qpid Replay Caches and copies it to another queue.
+   */
+  public static void copyMessageFromQpidReplayCache(Environment env, String selector,
+      String toQueue) {
+    copySpecificMessages(env, "emx-replay-cache", selector, toQueue);
   }
 
   /**
