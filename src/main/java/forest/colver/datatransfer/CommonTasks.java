@@ -63,6 +63,7 @@ public class CommonTasks {
    */
   public static void copyMessageFromQpidReplayCache(Environment env, String selector,
       String toQueue) {
+    // Example selector: traceparent='00-ab1cd1673eca0818d440923099cb9123-6a72088af80545d8-01'
     copySpecificMessages(env, "emx-replay-cache", selector, toQueue);
   }
 
