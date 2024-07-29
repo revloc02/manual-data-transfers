@@ -66,7 +66,7 @@ public class ServiceBusQueueOperations {
     return message;
   }
 
-  // todo: I tried this version of asbRead and got a null when I tried to get the message body, so what gives?
+  // todo: I tried this version of asbRead and got a null when I tried to get the message body, so what gives? Works with RECEIVEANDDELETE, Azure is stupid.
 
   /**
    * This method will read a message, and then it will not be available for any other consumers for
@@ -144,9 +144,29 @@ public class ServiceBusQueueOperations {
   }
 
   // todo: this won't work because there needs to be a visibility timeout
+  /**
+   * Copy all messages from one queue to another. The challenge here is if the queue is too deep,
+   * messages that were copied early will become available on the queue before the copyAll process
+   * is complete, and then those messages will get copied again. So this code employs this strategy:
+   * 1) Check the queue message count, if it is deeper than 1000 messages, abort. 2) Currently this code
+   * relies on ReceiveMode.PEEKLOCK which has a 60 sec timeout before making the message available
+   * again. 3) Retrieve each message from the queue. 4) Copy the message to the other queue.
+   */
   public static void asbCopyAll(ConnectionStringBuilder fromCsb, ConnectionStringBuilder toCsb) {
-    while (messageCount(fromCsb) > 0) {
-      asbSend(toCsb, asbReadWithPeeklock(fromCsb));
+    // check the queue depth, if it is beyond a certain size, abort
+    var depth = messageCount(fromCsb);
+    var maxDepth = 1000;
+    if (depth < maxDepth) {
+      while (depth > 0) {
+        LOG.info("depth={}", depth);
+        var message = asbReadWithPeeklock(fromCsb);
+        if (message != null){
+          asbSend(toCsb, asbReadWithPeeklock(fromCsb));
+        }
+        depth = messageCount(fromCsb);
+      }
+    } else {
+      LOG.info("Queue is too deep ({}), for a copy all, max depth is currently {}.", depth, maxDepth);
     }
   }
 

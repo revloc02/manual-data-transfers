@@ -362,4 +362,44 @@ class AzureServiceBusQueueTests {
     asbPurge(toCreds);
     asbPurge(creds);
   }
+
+  // todo: this is not working yet, I haven't found a strategy to apply the equivalent of a VisibilityTimeout to Azure messages
+  @Test
+  void testCopyAll() {
+    LOG.info("...send some messages...");
+    var numMsgs = 4;
+    for (var i = 0; i < numMsgs; i++) {
+      asbSend(creds, createIMessage(defaultPayload));
+    }
+    LOG.info("...check to see the messages arrived...");
+    await()
+        .pollInterval(Duration.ofSeconds(5))
+        .atMost(Duration.ofSeconds(80))
+        .untilAsserted(
+            () -> assertThat(messageCount(creds)).isEqualTo(numMsgs));
+
+    LOG.info("...copy the messages...");
+    var toCreds = connectAsbQ(EMX_SANDBOX_NAMESPACE, EMX_SANDBOX_FOREST_QUEUE2,
+        EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
+        EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
+    asbCopyAll(creds, toCreds);
+
+    LOG.info("...verify messages are on the target queue...");
+    await()
+        .pollInterval(Duration.ofSeconds(5))
+        .atMost(Duration.ofSeconds(80))
+        .untilAsserted(
+            () -> assertThat(messageCount(toCreds)).isEqualTo(numMsgs));
+
+    LOG.info("...ensure the messages are still on the original queue...");
+    await()
+        .pollInterval(Duration.ofSeconds(1))
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () -> assertThat(messageCount(creds)).isEqualTo(numMsgs));
+
+    LOG.info("...cleanup...");
+    asbPurge(toCreds);
+    asbPurge(creds);
+  }
 }
