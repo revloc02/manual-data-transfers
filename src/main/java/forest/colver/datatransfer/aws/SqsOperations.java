@@ -301,7 +301,7 @@ public class SqsOperations {
   /**
    * Goes and gets the queueUrl so that queue can be accessed for operations.
    */
-  private static String qUrl(SqsClient sqsClient, String queueName) {
+  public static String qUrl(SqsClient sqsClient, String queueName) {
     return sqsClient.getQueueUrl(GetQueueUrlRequest.builder().queueName(queueName).build())
         .queueUrl();
   }
@@ -416,8 +416,7 @@ public class SqsOperations {
     } else {
       counter = -1;
       LOG.info("Queue {} is too deep ({}), for an SQS copy all, max depth is currently {}.",
-          fromSqs,
-          depth, maxDepth);
+          fromSqs, depth, maxDepth);
     }
     return counter;
   }
