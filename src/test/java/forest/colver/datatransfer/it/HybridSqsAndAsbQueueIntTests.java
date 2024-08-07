@@ -43,16 +43,19 @@ class HybridSqsAndAsbQueueIntTests {
   private static final Logger LOG = LoggerFactory.getLogger(HybridSqsAndAsbQueueIntTests.class);
   private static final String SQS1 = EMX_SANDBOX_TEST_SQS1;
   private static final AwsCredentialsProvider awsCreds = getEmxSbCreds();
-  private final ConnectionStringBuilder asbCreds = connectAsbQ(EMX_SANDBOX_NAMESPACE,
-      EMX_SANDBOX_FOREST_QUEUE,
-      EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY, EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
+  private final ConnectionStringBuilder asbCreds =
+      connectAsbQ(
+          EMX_SANDBOX_NAMESPACE,
+          EMX_SANDBOX_FOREST_QUEUE,
+          EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
+          EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
 
   @Test
   void testMoveSqsToAsbQueue() {
     // place a message on SQS
     LOG.info("Interacting with: sqs={}", SQS1);
-    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3",
-        "value3");
+    var messageProps =
+        Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3", "value3");
     var payload = getDefaultPayload();
     sqsSend(awsCreds, SQS1, payload, messageProps);
 
@@ -81,14 +84,13 @@ class HybridSqsAndAsbQueueIntTests {
   @Test
   void testMoveAsbQueueToSqs() {
     // send a message to ASB queue
-    Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
-        "specificValue");
+    Map<String, Object> properties =
+        Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
     asbSend(asbCreds, createIMessage(defaultPayload, properties));
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
-        .untilAsserted(
-            () -> assertThat(messageCount(asbCreds)).isEqualTo(1));
+        .untilAsserted(() -> assertThat(messageCount(asbCreds)).isEqualTo(1));
 
     moveOneAsbQueueToSqs(asbCreds, awsCreds, SQS1);
 
@@ -125,8 +127,7 @@ class HybridSqsAndAsbQueueIntTests {
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(
-            () -> assertThat(messageCount(asbCreds)).isEqualTo(numMsgs));
+        .untilAsserted(() -> assertThat(messageCount(asbCreds)).isEqualTo(numMsgs));
 
     // cleanup
     asbPurge(asbCreds);
@@ -134,7 +135,7 @@ class HybridSqsAndAsbQueueIntTests {
 
   /**
    * Tests the method that moves all messages from an ASB queue to an SQS. Note: the assertThat() in
-   * both of the await() items  uses .isGreaterThanOrEqualTo instead of .isEqualTo because if there
+   * both of the await() items uses .isGreaterThanOrEqualTo instead of .isEqualTo because if there
    * happens to be a network glitch, a subsequent run will still run successfully and in that
    * process clean the queues up.
    */
@@ -148,8 +149,7 @@ class HybridSqsAndAsbQueueIntTests {
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(
-            () -> assertThat(messageCount(asbCreds)).isGreaterThanOrEqualTo(numMsgs));
+        .untilAsserted(() -> assertThat(messageCount(asbCreds)).isGreaterThanOrEqualTo(numMsgs));
 
     moveAllAsbQueueToSqs(asbCreds, SQS1, awsCreds);
 
@@ -167,8 +167,8 @@ class HybridSqsAndAsbQueueIntTests {
   void testCopyOneSqsToAsbQueue() {
     // place a message on SQS
     LOG.info("Interacting with: sqs={}", SQS1);
-    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3",
-        "value3");
+    var messageProps =
+        Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3", "value3");
     var payload = getDefaultPayload();
     sqsSend(awsCreds, SQS1, payload, messageProps);
 
@@ -199,14 +199,13 @@ class HybridSqsAndAsbQueueIntTests {
   @Test
   void testCopyOneAsbQueueToSqs() {
     // send a message to ASB queue
-    Map<String, Object> properties = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
-        "specificValue");
+    Map<String, Object> properties =
+        Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
     asbSend(asbCreds, createIMessage(defaultPayload, properties));
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
-        .untilAsserted(
-            () -> assertThat(messageCount(asbCreds)).isEqualTo(1));
+        .untilAsserted(() -> assertThat(messageCount(asbCreds)).isEqualTo(1));
 
     // copy the message to SQS
     copyOneAsbQueueToSqs(asbCreds, awsCreds, SQS1);
