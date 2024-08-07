@@ -21,6 +21,7 @@ import static forest.colver.datatransfer.azure.Utils.createIMessage;
 import static forest.colver.datatransfer.config.Utils.defaultPayload;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
+import static forest.colver.datatransfer.hybrid.SqsAndAsbQueue.copyAllSqsToAsbQueue;
 import static forest.colver.datatransfer.hybrid.SqsAndAsbQueue.copyOneAsbQueueToSqs;
 import static forest.colver.datatransfer.hybrid.SqsAndAsbQueue.copyOneSqsToAsbQueue;
 import static forest.colver.datatransfer.hybrid.SqsAndAsbQueue.moveAllAsbQueueToSqs;
@@ -220,5 +221,40 @@ class HybridSqsAndAsbQueueIntTests {
     // cleanup
     sqsDeleteMessage(awsCreds, SQS1, msg);
     asbConsume(asbCreds);
+  }
+
+  @Test
+  void testCopyAllSqsToAsbQueue() {
+    LOG.info("Interacting with: sqs={} and ASB-queue={}", SQS1, EMX_SANDBOX_FOREST_QUEUE);
+    // put messages on sqs
+    var payload = getDefaultPayload();
+    var numMsgs = 4;
+    for (var i = 0; i < numMsgs; i++) {
+      sqsSend(awsCreds, SQS1, payload);
+    }
+
+    // verify messages are on the sqs
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(awsCreds, SQS1)).isEqualTo(numMsgs));
+
+    copyAllSqsToAsbQueue(awsCreds, SQS1, asbCreds);
+
+    // verify messages are on the ASB queue
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(messageCount(asbCreds)).isEqualTo(numMsgs));
+
+    // verify messages are still on the sqs
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(sqsDepth(awsCreds, SQS1)).isEqualTo(numMsgs));
+
+    // cleanup
+    asbPurge(asbCreds);
+    sqsPurge(awsCreds, SQS1);
   }
 }
