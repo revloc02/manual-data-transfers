@@ -123,7 +123,6 @@ public class SqsAndAsbQueue {
     }
   }
 
-  // todo: see if I can get this to work
   public static int copyAllSqsToAsbQueue(AwsCredentialsProvider awsCreds, String sqs,
       ConnectionStringBuilder azureConnStr) {
     // check the queue depth, if it is beyond a certain size, abort
