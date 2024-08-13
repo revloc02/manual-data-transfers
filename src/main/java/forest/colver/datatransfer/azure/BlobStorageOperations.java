@@ -117,5 +117,18 @@ public class BlobStorageOperations {
     blobContainerClient.getBlobClient(filename).delete();
   }
 
+  public static void blobCopy(
+      String sasTokenSource,
+      String endpoint,
+      String containerNameSource,
+      String filename,
+      String sasTokenTarget,
+      String containerNameTarget) {
+    var outputStream = blobGetSas(sasTokenSource, endpoint, containerNameSource, filename);
+    var contents = outputStream.toString(StandardCharsets.UTF_8);
+
+    blobPutSas(sasTokenTarget, endpoint, containerNameTarget, filename, contents);
+  }
+
   // todo: can I make move and copy methods between 2 blob containers?
 }
