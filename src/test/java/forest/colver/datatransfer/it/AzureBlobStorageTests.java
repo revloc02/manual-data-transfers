@@ -23,6 +23,11 @@ import org.slf4j.LoggerFactory;
  * are connecting to the EMX Enterprise Sandbox account.
  */
 public class AzureBlobStorageTests {
+
+  public static final String ENDPOINT = "https://foresttestsa.blob.core.windows.net";
+  public static final String CONTAINER_NAME = "forest-test-blob";
+  public static final String FILENAME = "filename.txt";
+  public static final String BODY = "Hellow Orld!";
   private static final Logger LOG = LoggerFactory.getLogger(AzureBlobStorageTests.class);
   public static final String CONNECT_STR = EMX_SANDBOX_SA_FOREST_CONN_STR;
   public static final String SAS_TOKEN = EMX_SANDBOX_SA_FOREST_FOREST_TEST_BLOB_SAS;
@@ -30,18 +35,14 @@ public class AzureBlobStorageTests {
 
   @Test
   public void testPut() {
-    var endpoint = "https://foresttestsa.blob.core.windows.net";
-    var containerName = "forest-test-blob";
-    var filename = "filename.txt";
-    var body = "Hellow Orld!";
-    blobPut(CONNECT_STR, endpoint, containerName, filename, body);
+    blobPut(CONNECT_STR, ENDPOINT, CONTAINER_NAME, FILENAME, BODY);
 
-    var outputStream = blobGet(CONNECT_STR, endpoint, containerName, filename);
+    var outputStream = blobGet(CONNECT_STR, ENDPOINT, CONTAINER_NAME, FILENAME);
     String str = outputStream.toString(StandardCharsets.UTF_8);
-    assertThat(str).isEqualTo(body);
+    assertThat(str).isEqualTo(BODY);
 
     // cleanup
-    blobDelete(CONNECT_STR, endpoint, containerName, filename);
+    blobDelete(CONNECT_STR, ENDPOINT, CONTAINER_NAME, FILENAME);
   }
 
   /**
@@ -54,52 +55,40 @@ public class AzureBlobStorageTests {
    */
   @Test
   public void testPutSas() {
-    var endpoint = "https://foresttestsa.blob.core.windows.net";
-    var containerName = "forest-test-blob";
-    var filename = "filename.txt";
-    var body = "Hellow Orld!";
-    blobPutSas(SAS_TOKEN, endpoint, containerName, filename, body);
+    blobPutSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, FILENAME, BODY);
 
-    var outputStream = blobGetSas(SAS_TOKEN, endpoint, containerName, filename);
+    var outputStream = blobGetSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, FILENAME);
     String str = outputStream.toString(StandardCharsets.UTF_8);
-    assertThat(str).isEqualTo(body);
+    assertThat(str).isEqualTo(BODY);
 
     // cleanup
-    blobDeleteSas(SAS_TOKEN, endpoint, containerName, filename);
+    blobDeleteSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, FILENAME);
   }
 
   @Test
   public void testBlobList() {
-    var endpoint = "https://foresttestsa.blob.core.windows.net";
-    var containerName = "forest-test-blob";
-    var filename = "filename1.txt";
-    var body = "Hellow Orld!";
-    blobPutSas(SAS_TOKEN, endpoint, containerName, filename, body);
+    blobPutSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, FILENAME, BODY);
 
-    var list = blobListSas(SAS_TOKEN, endpoint, containerName);
+    var list = blobListSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME);
     list.forEach(blob -> LOG.info("Name={}", blob.getName()));
     assertThat(list.stream().count()).isOne();
 
     // cleanup
-    blobDeleteSas(SAS_TOKEN, endpoint, containerName, filename);
+    blobDeleteSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, FILENAME);
   }
 
   @Test
   public void testBlobCopy() {
-    var endpoint = "https://foresttestsa.blob.core.windows.net";
-    var containerNameSource = "forest-test-blob";
-    var filename = "filename.txt";
-    var body = "Hellow Orld!";
-    blobPutSas(SAS_TOKEN, endpoint, containerNameSource, filename, body);
+    blobPutSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, FILENAME, BODY);
     // todo: should I have an awaitility that checks for its arrival?
 
     var containerNameTarget = "forest-test-blob2";
-    blobCopy(SAS_TOKEN, endpoint, containerNameSource, filename, SAS_TOKEN2, containerNameTarget);
+    blobCopy(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, FILENAME, SAS_TOKEN2, containerNameTarget);
 
     // todo: need an assert that the copy succeeded
 
     // cleanup
-    blobDeleteSas(SAS_TOKEN, endpoint, containerNameSource, filename);
-    blobDeleteSas(SAS_TOKEN2, endpoint, containerNameTarget, filename);
+    blobDeleteSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, FILENAME);
+    blobDeleteSas(SAS_TOKEN2, ENDPOINT, containerNameTarget, FILENAME);
   }
 }
