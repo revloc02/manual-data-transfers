@@ -5,6 +5,7 @@ import static forest.colver.datatransfer.azure.BlobStorageOperations.blobDelete;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobDeleteSas;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobGet;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobGetSas;
+import static forest.colver.datatransfer.azure.BlobStorageOperations.blobListSas;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobPut;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobPutSas;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_SA_FOREST_CONN_STR;
@@ -14,13 +15,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tests for Azure Blob Storage, aka Azure Storage Containers. Use 'az login' to login, these tests
  * are connecting to the EMX Enterprise Sandbox account.
  */
 public class AzureBlobStorageTests {
-
+  private static final Logger LOG = LoggerFactory.getLogger(AzureBlobStorageTests.class);
   public static final String CONNECT_STR = EMX_SANDBOX_SA_FOREST_CONN_STR;
   public static final String SAS_TOKEN = EMX_SANDBOX_SA_FOREST_FOREST_TEST_BLOB_SAS;
   public static final String SAS_TOKEN2 = EMX_SANDBOX_SA_FOREST_FOREST_TEST_BLOB2_SAS;
@@ -66,6 +69,22 @@ public class AzureBlobStorageTests {
   }
 
   @Test
+  public void testBlobList() {
+    var endpoint = "https://foresttestsa.blob.core.windows.net";
+    var containerName = "forest-test-blob";
+    var filename = "filename1.txt";
+    var body = "Hellow Orld!";
+    blobPutSas(SAS_TOKEN, endpoint, containerName, filename, body);
+
+    var list = blobListSas(SAS_TOKEN, endpoint, containerName);
+    list.forEach(blob -> LOG.info("Name={}", blob.getName()));
+    assertThat(list.stream().count()).isOne();
+
+    // cleanup
+    blobDeleteSas(SAS_TOKEN, endpoint, containerName, filename);
+  }
+
+  @Test
   public void testBlobCopy() {
     var endpoint = "https://foresttestsa.blob.core.windows.net";
     var containerNameSource = "forest-test-blob";
@@ -76,6 +95,8 @@ public class AzureBlobStorageTests {
 
     var containerNameTarget = "forest-test-blob2";
     blobCopy(SAS_TOKEN, endpoint, containerNameSource, filename, SAS_TOKEN2, containerNameTarget);
+
+    // todo: need an assert that the copy succeeded
 
     // cleanup
     blobDeleteSas(SAS_TOKEN, endpoint, containerNameSource, filename);

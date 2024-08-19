@@ -1,7 +1,9 @@
 package forest.colver.datatransfer.azure;
 
+import com.azure.core.http.rest.PagedIterable;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
+import com.azure.storage.blob.models.BlobItem;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -115,6 +117,14 @@ public class BlobStorageOperations {
 
     var blobContainerClient = blobServiceClient.getBlobContainerClient(containerName);
     blobContainerClient.getBlobClient(filename).delete();
+  }
+
+  public static PagedIterable<BlobItem> blobListSas(
+      String sasToken, String endpoint, String containerName) {
+    BlobServiceClient blobServiceClient =
+        new BlobServiceClientBuilder().sasToken(sasToken).endpoint(endpoint).buildClient();
+    var blobContainerClient = blobServiceClient.getBlobContainerClient(containerName);
+    return blobContainerClient.listBlobs();
   }
 
   public static void blobCopy(
