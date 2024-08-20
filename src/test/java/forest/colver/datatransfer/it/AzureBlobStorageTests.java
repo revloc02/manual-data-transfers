@@ -70,11 +70,25 @@ public class AzureBlobStorageTests {
     blobPutSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, FILENAME, BODY);
 
     var list = blobListSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME);
-    list.forEach(blob -> LOG.info("Name={}", blob.getName()));
     assertThat(list.stream().count()).isOne();
 
     // cleanup
     blobDeleteSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, FILENAME);
+  }
+
+  @Test
+  void testBlobListMoreThanOne() {
+    blobPutSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, "file1.txt", BODY);
+    blobPutSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, "file2.txt", BODY);
+    blobPutSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, "file3.txt", BODY);
+
+    var list = blobListSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME);
+    assertThat(list.stream().count()).isEqualTo(3);
+
+    // cleanup
+    blobDeleteSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, "file1.txt");
+    blobDeleteSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, "file2.txt");
+    blobDeleteSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, "file3.txt");
   }
 
   @Test
