@@ -23,18 +23,17 @@ import org.slf4j.LoggerFactory;
  * are connecting to the EMX Enterprise Sandbox account.
  */
 public class AzureBlobStorageTests {
-
+  private static final Logger LOG = LoggerFactory.getLogger(AzureBlobStorageTests.class);
   public static final String ENDPOINT = "https://foresttestsa.blob.core.windows.net";
   public static final String CONTAINER_NAME = "forest-test-blob";
   public static final String FILENAME = "filename.txt";
   public static final String BODY = "Hellow Orld!";
-  private static final Logger LOG = LoggerFactory.getLogger(AzureBlobStorageTests.class);
   public static final String CONNECT_STR = EMX_SANDBOX_SA_FOREST_CONN_STR;
   public static final String SAS_TOKEN = EMX_SANDBOX_SA_FOREST_FOREST_TEST_BLOB_SAS;
   public static final String SAS_TOKEN2 = EMX_SANDBOX_SA_FOREST_FOREST_TEST_BLOB2_SAS;
 
   @Test
-  public void testPut() {
+  void testPut() {
     blobPut(CONNECT_STR, ENDPOINT, CONTAINER_NAME, FILENAME, BODY);
 
     var outputStream = blobGet(CONNECT_STR, ENDPOINT, CONTAINER_NAME, FILENAME);
@@ -54,7 +53,7 @@ public class AzureBlobStorageTests {
    * so copy it where you need it to go.
    */
   @Test
-  public void testPutSas() {
+  void testPutSas() {
     blobPutSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, FILENAME, BODY);
 
     var outputStream = blobGetSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, FILENAME);
@@ -66,33 +65,37 @@ public class AzureBlobStorageTests {
   }
 
   @Test
-  public void testBlobList() {
+  void testBlobList() {
+    LOG.info("...place a file...");
     blobPutSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, FILENAME, BODY);
 
+    LOG.info("...get a list of files and assert it is the right length...");
     var list = blobListSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME);
     assertThat(list.stream().count()).isOne();
 
-    // cleanup
+    LOG.info("...cleanup...");
     blobDeleteSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, FILENAME);
   }
 
   @Test
   void testBlobListMoreThanOne() {
+    LOG.info("...place several files...");
     blobPutSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, "file1.txt", BODY);
     blobPutSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, "file2.txt", BODY);
     blobPutSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, "file3.txt", BODY);
 
+    LOG.info("...get a list of files and assert it is the right length...");
     var list = blobListSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME);
     assertThat(list.stream().count()).isEqualTo(3);
 
-    // cleanup
+    LOG.info("...cleanup...");
     blobDeleteSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, "file1.txt");
     blobDeleteSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, "file2.txt");
     blobDeleteSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, "file3.txt");
   }
 
   @Test
-  public void testBlobCopy() {
+  void testBlobCopy() {
     blobPutSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, FILENAME, BODY);
     // todo: should I have an awaitility that checks for its arrival?
 
