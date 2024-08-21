@@ -96,15 +96,27 @@ public class AzureBlobStorageTests {
 
   @Test
   void testBlobCopy() {
+    LOG.info("...place a file...");
     blobPutSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, FILENAME, BODY);
-    // todo: should I have an awaitility that checks for its arrival?
 
+    LOG.info("...verify the file arrived...");
+    var list = blobListSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME);
+    assertThat(list.stream().count()).isOne();
+
+    LOG.info("...copy the file...");
     var containerNameTarget = "forest-test-blob2";
     blobCopy(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, FILENAME, SAS_TOKEN2, containerNameTarget);
 
-    // todo: need an assert that the copy succeeded
+    LOG.info("...verify the file was copied...");
+    list = blobListSas(SAS_TOKEN2, ENDPOINT, containerNameTarget);
+    assertThat(list.stream().count()).isOne();
+    list.forEach(blob -> assertThat(blob.getName()).isEqualTo(FILENAME));
 
-    // cleanup
+    LOG.info("...verify the original file is still available on the source container...");
+    list = blobListSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME);
+    assertThat(list.stream().count()).isOne();
+
+    LOG.info("...cleanup...");
     blobDeleteSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, FILENAME);
     blobDeleteSas(SAS_TOKEN2, ENDPOINT, containerNameTarget, FILENAME);
   }
