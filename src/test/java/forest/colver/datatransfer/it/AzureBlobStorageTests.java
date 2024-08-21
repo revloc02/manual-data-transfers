@@ -60,7 +60,7 @@ public class AzureBlobStorageTests {
     String str = outputStream.toString(StandardCharsets.UTF_8);
     assertThat(str).isEqualTo(BODY);
 
-    // cleanup
+    LOG.info("...cleanup...");
     blobDeleteSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, FILENAME);
   }
 
