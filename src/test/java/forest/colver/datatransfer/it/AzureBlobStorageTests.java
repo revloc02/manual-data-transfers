@@ -34,13 +34,15 @@ public class AzureBlobStorageTests {
 
   @Test
   void testPut() {
+    LOG.info("...place a file...");
     blobPut(CONNECT_STR, ENDPOINT, CONTAINER_NAME, FILENAME, BODY);
 
+    LOG.info("...get the file and check it...");
     var outputStream = blobGet(CONNECT_STR, ENDPOINT, CONTAINER_NAME, FILENAME);
     String str = outputStream.toString(StandardCharsets.UTF_8);
     assertThat(str).isEqualTo(BODY);
 
-    // cleanup
+    LOG.info("...cleanup...");
     blobDelete(CONNECT_STR, ENDPOINT, CONTAINER_NAME, FILENAME);
   }
 
@@ -54,8 +56,10 @@ public class AzureBlobStorageTests {
    */
   @Test
   void testPutSas() {
+    LOG.info("...place a file...");
     blobPutSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, FILENAME, BODY);
 
+    LOG.info("...get the file and check it...");
     var outputStream = blobGetSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, FILENAME);
     String str = outputStream.toString(StandardCharsets.UTF_8);
     assertThat(str).isEqualTo(BODY);
