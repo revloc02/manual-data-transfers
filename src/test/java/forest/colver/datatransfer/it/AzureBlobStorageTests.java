@@ -6,6 +6,7 @@ import static forest.colver.datatransfer.azure.BlobStorageOperations.blobDeleteS
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobGet;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobGetSas;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobListSas;
+import static forest.colver.datatransfer.azure.BlobStorageOperations.blobMove;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobPut;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobPutSas;
 import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_SA_FOREST_CONN_STR;
@@ -122,6 +123,32 @@ public class AzureBlobStorageTests {
 
     LOG.info("...cleanup...");
     blobDeleteSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, FILENAME);
+    blobDeleteSas(SAS_TOKEN2, ENDPOINT, containerNameTarget, FILENAME);
+  }
+
+  @Test
+  void testBlobMove() {
+    LOG.info("...place a file...");
+    blobPutSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, FILENAME, BODY);
+
+    LOG.info("...verify the file arrived...");
+    var list = blobListSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME);
+    assertThat(list.stream().count()).isOne();
+
+    LOG.info("...move the file...");
+    var containerNameTarget = "forest-test-blob2";
+    blobMove(SAS_TOKEN, ENDPOINT, CONTAINER_NAME, FILENAME, SAS_TOKEN2, containerNameTarget);
+
+    LOG.info("...verify the file was moved...");
+    list = blobListSas(SAS_TOKEN2, ENDPOINT, containerNameTarget);
+    assertThat(list.stream().count()).isOne();
+    list.forEach(blob -> assertThat(blob.getName()).isEqualTo(FILENAME));
+
+    LOG.info("...verify the original file is not available on the source container...");
+    list = blobListSas(SAS_TOKEN, ENDPOINT, CONTAINER_NAME);
+    assertThat(list.stream().count()).isZero();
+
+    LOG.info("...cleanup...");
     blobDeleteSas(SAS_TOKEN2, ENDPOINT, containerNameTarget, FILENAME);
   }
 }
