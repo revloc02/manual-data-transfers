@@ -18,31 +18,36 @@ import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
-/**
- * AWS specific utils
- */
+/** AWS specific utils */
 public class Utils {
 
   private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
 
   public static Map<String, String> personalSandboxRole;
-  public static final String PERSONAL_SANDBOX_KEY_ID = userCreds.getProperty(
-      "aws-access-personal-sandbox.access-key-id");
-  public static final String PERSONAL_SANDBOX_SECRET = userCreds.getProperty(
-      "aws-access-personal-sandbox.secret-access-key");
+  public static final String PERSONAL_SANDBOX_KEY_ID =
+      userCreds.getProperty("aws-access-personal-sandbox.access-key-id");
+  public static final String PERSONAL_SANDBOX_SECRET =
+      userCreds.getProperty("aws-access-personal-sandbox.secret-access-key");
   public static final String NP_KEY_ID = userCreds.getProperty("aws-access-np.access-key-id");
   public static final String NP_SECRET = userCreds.getProperty("aws-access-np.secret-access-key");
   public static final String PROD_KEY_ID = userCreds.getProperty("aws-access-prod.access-key-id");
-  public static final String PROD_SECRET = userCreds.getProperty("aws-access-prod.secret-access-key");
+  public static final String PROD_SECRET =
+      userCreds.getProperty("aws-access-prod.secret-access-key");
 
   // probably overkill, but this hides some resource names in the creds config file
-  public static final String EMX_SANDBOX_TEST_SQS1 = userCreds.getProperty("aws-emx-sandbox-test-sqs1");
-  public static final String EMX_SANDBOX_TEST_SQS2 = userCreds.getProperty("aws-emx-sandbox-test-sqs2");
-  public static final String S3_INTERNAL = userCreds.getProperty("aws-enterprise-sandbox-test-s3-internal");
-  public static final String S3_TARGET_CUSTOMER = userCreds.getProperty("aws-enterprise-sandbox-test-s3-target-customer");
-  public static final String S3_SOURCE_CACHE = userCreds.getProperty("aws-enterprise-sandbox-test-s3-source-cache");
+  public static final String EMX_SANDBOX_TEST_SQS1 =
+      userCreds.getProperty("aws-emx-sandbox-test-sqs1");
+  public static final String EMX_SANDBOX_TEST_SQS2 =
+      userCreds.getProperty("aws-emx-sandbox-test-sqs2");
+  public static final String S3_INTERNAL =
+      userCreds.getProperty("aws-enterprise-sandbox-test-s3-internal");
+  public static final String S3_TARGET_CUSTOMER =
+      userCreds.getProperty("aws-enterprise-sandbox-test-s3-target-customer");
+  public static final String S3_SOURCE_CACHE =
+      userCreds.getProperty("aws-enterprise-sandbox-test-s3-source-cache");
 
-  public static final String PERSONAL_SANDBOX_TEST_SNS_TOPIC_ARN = userCreds.getProperty("aws-personal-sandbox-test-sns-topic-arn");
+  public static final String PERSONAL_SANDBOX_TEST_SNS_TOPIC_ARN =
+      userCreds.getProperty("aws-personal-sandbox-test-sns-topic-arn");
   public static final String PERSONAL_SANDBOX_SQS_SUB_SNS = "sub_demo_adv_queue";
 
   public static AwsCredentialsProvider getEmxNpCreds() {
@@ -50,7 +55,7 @@ public class Utils {
   }
 
   public static AwsCredentialsProvider getEmxSbCreds() { // enterprise sandbox
-//    return ProfileCredentialsProvider.create("enterprise-sb"); // old way
+    //    return ProfileCredentialsProvider.create("enterprise-sb"); // old way
     return ProfileCredentialsProvider.create("aws-cloud-admin-646129096172");
   }
 
@@ -59,7 +64,7 @@ public class Utils {
   }
 
   public static AwsCredentialsProvider getPersonalSbCreds() {
-    return ProfileCredentialsProvider.create("personal-sandbox");
+    return ProfileCredentialsProvider.create("269703398122_aws-cloud-admin");
   }
 
   public static SqsClient getSqsClient(AwsCredentialsProvider awsCredentialsProvider) {
@@ -90,7 +95,8 @@ public class Utils {
         .build();
   }
 
-  public static CloudWatchLogsClient getCloudWatchLogsClient(AwsCredentialsProvider awsCredentialsProvider) {
+  public static CloudWatchLogsClient getCloudWatchLogsClient(
+      AwsCredentialsProvider awsCredentialsProvider) {
     return CloudWatchLogsClient.builder()
         .region(Region.US_EAST_1)
         .credentialsProvider(awsCredentialsProvider)
@@ -142,10 +148,9 @@ public class Utils {
   public static void awsResponseValidation(AwsResponse response) {
     var responseCode = response.sdkHttpResponse().statusCode();
     if (responseCode >= 300) {
-      LOG.info("ERROR: {}, responseMetadata={}", responseCode,
-          response.responseMetadata().toString());
-      throw new IllegalStateException(
-          "Unsuccessful AWS request. Status Code: " + responseCode);
+      LOG.info(
+          "ERROR: {}, responseMetadata={}", responseCode, response.responseMetadata().toString());
+      throw new IllegalStateException("Unsuccessful AWS request. Status Code: " + responseCode);
     }
   }
 
@@ -159,7 +164,8 @@ public class Utils {
    */
   public static int sqsCalcVisTimeout(int depth) {
     var min = 10; // minimum of 10 seconds
-    var visibilityTimeout = min + (depth / 4); // conservative estimate processing 4 messages per sec
+    var visibilityTimeout =
+        min + (depth / 4); // conservative estimate processing 4 messages per sec
     if (visibilityTimeout > 43_200) {
       visibilityTimeout = 43_200; // 12 hour max visibilityTimeout
     }
