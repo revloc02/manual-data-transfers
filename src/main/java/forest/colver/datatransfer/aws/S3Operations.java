@@ -316,6 +316,20 @@ public class S3Operations {
     return objects;
   }
 
+  public static List<ObjectVersion> s3ListVersions(
+      S3Client s3Client, String bucket, String keyPrefix) {
+    var listObjectVersionsRequest =
+        ListObjectVersionsRequest.builder().bucket(bucket).prefix(keyPrefix).build();
+    var listObjectVersionsResponse = s3Client.listObjectVersions(listObjectVersionsRequest);
+    awsResponseValidation(listObjectVersionsResponse);
+    var versions = listObjectVersionsResponse.versions();
+    for (var version : versions) {
+      LOG.info("S3LISTVERSIONS: The object {} is on the {} bucket.", version, bucket);
+    }
+    LOG.info("{} items listed.", listObjectVersionsResponse.versions().size());
+    return versions;
+  }
+
   /**
    * S3List with AwsCreds, creates S3Client. List up to 10 of the objects at a certain directory
    * (keyPrefix).
