@@ -17,14 +17,14 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
+import software.amazon.awssdk.services.s3.model.ListObjectVersionsRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.ObjectVersion;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
-/**
- * Operation for connecting to S3 buckets.
- */
+/** Operation for connecting to S3 buckets. */
 public class S3Operations {
 
   private static final Logger LOG = LoggerFactory.getLogger(S3Operations.class);
@@ -65,7 +65,10 @@ public class S3Operations {
    * operations and passing the client around.
    */
   public static void s3Put(
-      AwsCredentialsProvider awsCp, String bucket, String objectKey, String payload,
+      AwsCredentialsProvider awsCp,
+      String bucket,
+      String objectKey,
+      String payload,
       Map<String, String> metadata) {
     try (var s3Client = getS3Client(awsCp)) {
       s3Put(s3Client, bucket, objectKey, payload, metadata);
@@ -77,13 +80,14 @@ public class S3Operations {
    * Creates an S3Client--good to use this for one-off S3 operations, as opposed to doing several S3
    * operations and passing the client around.
    */
-  public static void s3Put(S3Client s3Client, String bucket, String objectKey, String payload,
+  public static void s3Put(
+      S3Client s3Client,
+      String bucket,
+      String objectKey,
+      String payload,
       Map<String, String> metadata) {
-    var putObjectRequest = PutObjectRequest.builder()
-        .bucket(bucket)
-        .key(objectKey)
-        .metadata(metadata)
-        .build();
+    var putObjectRequest =
+        PutObjectRequest.builder().bucket(bucket).key(objectKey).metadata(metadata).build();
     var requestBody = RequestBody.fromString(payload);
     var putObjectResponse = s3Client.putObject(putObjectRequest, requestBody);
     awsResponseValidation(putObjectResponse);
@@ -110,16 +114,15 @@ public class S3Operations {
     var requestBody = RequestBody.fromString(payload);
     var putObjectResponse = s3Client.putObject(putObjectRequest, requestBody);
     awsResponseValidation(putObjectResponse);
-    LOG.info(PUT_SUCCESS, putObjectRequest.key(),
-        putObjectRequest.bucket());
+    LOG.info(PUT_SUCCESS, putObjectRequest.key(), putObjectRequest.bucket());
   }
 
   /**
    * s3Head with AwsCreds. The HEAD action retrieves metadata from an object without returning the
    * object itself. This action is useful if you're only interested in an object's metadata.
    */
-  public static HeadObjectResponse s3Head(AwsCredentialsProvider awsCp, String bucket,
-      String objectKey) {
+  public static HeadObjectResponse s3Head(
+      AwsCredentialsProvider awsCp, String bucket, String objectKey) {
     try (var s3Client = getS3Client(awsCp)) {
       return s3Head(s3Client, bucket, objectKey);
     }
@@ -140,24 +143,31 @@ public class S3Operations {
    * Yeah, so...s3Copy with AwsCreds. Copies an object. Yeah, so...this might not actually be that
    * useful.
    */
-  public static void s3Copy(AwsCredentialsProvider awsCp, String sourceBucket, String sourceKey,
-      String destBucket, String destKey) {
+  public static void s3Copy(
+      AwsCredentialsProvider awsCp,
+      String sourceBucket,
+      String sourceKey,
+      String destBucket,
+      String destKey) {
     try (var s3Client = getS3Client(awsCp)) {
       s3Copy(s3Client, sourceBucket, sourceKey, destBucket, destKey);
     }
   }
 
-  /**
-   * s3Copy with s3Client. Copies an object from one s3 to another.
-   */
-  public static void s3Copy(S3Client s3Client, String sourceBucket, String sourceKey,
-      String destBucket, String destKey) {
-    var copyObjectRequest = CopyObjectRequest.builder().sourceBucket(sourceBucket)
-        .sourceKey(sourceKey).destinationBucket(destBucket).destinationKey(destKey).build();
+  /** s3Copy with s3Client. Copies an object from one s3 to another. */
+  public static void s3Copy(
+      S3Client s3Client, String sourceBucket, String sourceKey, String destBucket, String destKey) {
+    var copyObjectRequest =
+        CopyObjectRequest.builder()
+            .sourceBucket(sourceBucket)
+            .sourceKey(sourceKey)
+            .destinationBucket(destBucket)
+            .destinationKey(destKey)
+            .build();
     var copyObjectResponse = s3Client.copyObject(copyObjectRequest);
     awsResponseValidation(copyObjectResponse);
-    LOG.info("S3COPY: Copied object from {}/{} to {}/{}", sourceBucket, sourceKey, destBucket,
-        destKey);
+    LOG.info(
+        "S3COPY: Copied object from {}/{} to {}/{}", sourceBucket, sourceKey, destBucket, destKey);
   }
 
   /**
@@ -168,16 +178,16 @@ public class S3Operations {
    * @param keyPrefix aka the file path.
    * @param destBucket Target S3.
    */
-  public static void s3CopyAll(S3Client s3Client, String sourceBucket, String keyPrefix,
-      String destBucket) {
+  public static void s3CopyAll(
+      S3Client s3Client, String sourceBucket, String keyPrefix, String destBucket) {
     var response = s3ListResponse(s3Client, sourceBucket, keyPrefix, 1000);
     for (var object : response.contents()) {
       s3Copy(s3Client, sourceBucket, object.key(), destBucket, object.key());
     }
     var keepCopying = response.isTruncated();
     while (Boolean.TRUE.equals(keepCopying)) {
-      response = s3ListContResponse(s3Client, sourceBucket, keyPrefix,
-          response.nextContinuationToken());
+      response =
+          s3ListContResponse(s3Client, sourceBucket, keyPrefix, response.nextContinuationToken());
       for (var object : response.contents()) {
         s3Copy(s3Client, sourceBucket, object.key(), destBucket, object.key());
       }
@@ -210,8 +220,8 @@ public class S3Operations {
 
   /**
    * DOES NOT WORK! Use the s3Get where you pass in the s3Client.
-   * <p>
-   * Get an object on a desired S3 bucket, creates an S3Client. This method does not work because
+   *
+   * <p>Get an object on a desired S3 bucket, creates an S3Client. This method does not work because
    * the S3 client gets garbage collected (by Java) in the middle of the download. Error looks like
    * this: org.apache.http.ConnectionClosedException: Premature end of Content-Length delimited
    * message body (expected: 56; received: 0). See: <a
@@ -229,16 +239,17 @@ public class S3Operations {
    * together so only one client is created.
    *
    * @param s3Client Pass in the S3 client. It was discovered that passing credentials and creating
-   * a client for each S3 connection/operation caused said client to be garbage collected by Java
-   * before the s3Client.getObject(getObjectRequest) download was finished, and errors ensued.
-   * Passing in the s3client allows it to stay around longer so that Get operation can finish.
+   *     a client for each S3 connection/operation caused said client to be garbage collected by
+   *     Java before the s3Client.getObject(getObjectRequest) download was finished, and errors
+   *     ensued. Passing in the s3client allows it to stay around longer so that Get operation can
+   *     finish.
    * @param bucket S3 bucket.
    * @param objectKey Object path and name.
    * @return Input stream that provides access to the unmarshalled POJO response returned by the
-   * service in addition to the streamed contents.
+   *     service in addition to the streamed contents.
    */
-  public static ResponseInputStream<GetObjectResponse> s3Get(S3Client s3Client, String bucket,
-      String objectKey) {
+  public static ResponseInputStream<GetObjectResponse> s3Get(
+      S3Client s3Client, String bucket, String objectKey) {
     var getObjectRequest = GetObjectRequest.builder().bucket(bucket).key(objectKey).build();
     var getObjectResponse = s3Client.getObject(getObjectRequest);
     awsResponseValidation(getObjectResponse.response());
@@ -246,11 +257,9 @@ public class S3Operations {
     return getObjectResponse;
   }
 
-  /**
-   * Retrieves and deletes an object from an S3 bucket.
-   */
-  public static ResponseInputStream<GetObjectResponse> s3Consume(S3Client s3Client, String bucket,
-      String objectKey) {
+  /** Retrieves and deletes an object from an S3 bucket. */
+  public static ResponseInputStream<GetObjectResponse> s3Consume(
+      S3Client s3Client, String bucket, String objectKey) {
     var response = s3Get(s3Client, bucket, objectKey);
     s3Delete(s3Client, bucket, objectKey);
     return response;
@@ -262,8 +271,8 @@ public class S3Operations {
    *
    * @param keyPrefix The "folder" on the S3 to list. E.g. "revloc02/source/test/test.txt"
    */
-  public static List<S3Object> s3List(AwsCredentialsProvider awsCp, String bucket,
-      String keyPrefix) {
+  public static List<S3Object> s3List(
+      AwsCredentialsProvider awsCp, String bucket, String keyPrefix) {
     try (var s3Client = getS3Client(awsCp)) {
       return s3List(s3Client, bucket, keyPrefix);
     }
@@ -285,12 +294,12 @@ public class S3Operations {
    * @param keyPrefix The "folder" on the S3 to list.
    * @param maxKeysReq Sets the maximum number of keys returned in the response, max 1000.
    */
-  public static List<S3Object> s3List(S3Client s3Client, String bucket, String keyPrefix,
-      int maxKeysReq) {
+  public static List<S3Object> s3List(
+      S3Client s3Client, String bucket, String keyPrefix, int maxKeysReq) {
     int maxKeys;
     if (maxKeysReq > 1000) {
-      LOG.info("Request to list {} items exceeds the maximum, using max of 1000 instead.",
-          maxKeysReq);
+      LOG.info(
+          "Request to list {} items exceeds the maximum, using max of 1000 instead.", maxKeysReq);
       maxKeys = 1000;
     } else {
       maxKeys = maxKeysReq;
@@ -313,8 +322,8 @@ public class S3Operations {
    *
    * @param keyPrefix The "folder" on the S3 to list. E.g. "revloc02/source/test/test.txt"
    */
-  public static ListObjectsV2Response s3ListResponse(AwsCredentialsProvider awsCp, String bucket,
-      String keyPrefix) {
+  public static ListObjectsV2Response s3ListResponse(
+      AwsCredentialsProvider awsCp, String bucket, String keyPrefix) {
     try (var s3Client = getS3Client(awsCp)) {
       return s3ListResponse(s3Client, bucket, keyPrefix, 10);
     }
@@ -326,8 +335,8 @@ public class S3Operations {
    * @param keyPrefix The "folder" on the S3 to list.
    * @param maxKeys Sets the maximum number of keys returned in the response.
    */
-  public static ListObjectsV2Response s3ListResponse(S3Client s3Client, String bucket,
-      String keyPrefix, int maxKeys) {
+  public static ListObjectsV2Response s3ListResponse(
+      S3Client s3Client, String bucket, String keyPrefix, int maxKeys) {
     var listObjectsV2Request =
         ListObjectsV2Request.builder().bucket(bucket).prefix(keyPrefix).maxKeys(maxKeys).build();
     var listObjectsV2Response = s3Client.listObjectsV2(listObjectsV2Request);
@@ -342,32 +351,35 @@ public class S3Operations {
    *
    * @param keyPrefix The "folder" on the S3 to list.
    * @param nextContinuationToken Indicates to Amazon S3 that the list is being continued on this
-   * bucket with a token from a previous listing.
+   *     bucket with a token from a previous listing.
    */
-  public static ListObjectsV2Response s3ListContResponse(S3Client s3Client, String bucket,
-      String keyPrefix, String nextContinuationToken) {
+  public static ListObjectsV2Response s3ListContResponse(
+      S3Client s3Client, String bucket, String keyPrefix, String nextContinuationToken) {
     var listObjectsV2Request =
-        ListObjectsV2Request.builder().bucket(bucket).prefix(keyPrefix).maxKeys(1000)
-            .continuationToken(nextContinuationToken).build();
+        ListObjectsV2Request.builder()
+            .bucket(bucket)
+            .prefix(keyPrefix)
+            .maxKeys(1000)
+            .continuationToken(nextContinuationToken)
+            .build();
     var listObjectsV2Response = s3Client.listObjectsV2(listObjectsV2Request);
     awsResponseValidation(listObjectsV2Response);
-    LOG.info("S3LIST: Retrieved a list of {} objects from {}/{}",
-        listObjectsV2Response.contents().size(), bucket, keyPrefix);
+    LOG.info(
+        "S3LIST: Retrieved a list of {} objects from {}/{}",
+        listObjectsV2Response.contents().size(),
+        bucket,
+        keyPrefix);
     return listObjectsV2Response;
   }
 
-  /**
-   * S3Delete with creds, creates S3Client. Delete an object from an S3.
-   */
+  /** S3Delete with creds, creates S3Client. Delete an object from an S3. */
   public static void s3Delete(AwsCredentialsProvider awsCp, String bucket, String objectKey) {
     try (var s3Client = getS3Client(awsCp)) {
       s3Delete(s3Client, bucket, objectKey);
     }
   }
 
-  /**
-   * S3Delete with S3Client. Delete an object from an S3.
-   */
+  /** S3Delete with S3Client. Delete an object from an S3. */
   public static void s3Delete(S3Client s3Client, String bucket, String objectKey) {
     var deleteObjectRequest = DeleteObjectRequest.builder().bucket(bucket).key(objectKey).build();
     var deleteObjectResponse = s3Client.deleteObject(deleteObjectRequest);
@@ -375,9 +387,7 @@ public class S3Operations {
     LOG.info("S3DELETE: The object {} was deleted from the {} bucket.", objectKey, bucket);
   }
 
-  /**
-   * S3Delete with S3Client. Delete all objects from an S3 key prefix.
-   */
+  /** S3Delete with S3Client. Delete all objects from an S3 key prefix. */
   public static void s3DeleteAll(S3Client s3Client, String bucket, String keyPrefix) {
     var objects = s3List(s3Client, bucket, keyPrefix, 1000);
     while (!objects.isEmpty()) {
@@ -388,20 +398,20 @@ public class S3Operations {
     }
   }
 
-  public static void s3Move(S3Client s3Client, String sourceBucket, String sourceKey,
-      String destBucket, String destKey) {
+  public static void s3Move(
+      S3Client s3Client, String sourceBucket, String sourceKey, String destBucket, String destKey) {
     s3Copy(s3Client, sourceBucket, sourceKey, destBucket, destKey);
     s3Delete(s3Client, sourceBucket, sourceKey);
-    LOG.info("S3MOVE: Moved object from {}/{} to {}/{}", sourceBucket, sourceKey, destBucket,
-        destKey);
+    LOG.info(
+        "S3MOVE: Moved object from {}/{} to {}/{}", sourceBucket, sourceKey, destBucket, destKey);
   }
 
   /**
    * Moves all objects from one s3 key prefix to another. Note that it moves them up to 1000 at a
    * time, but continues until they all have been moved.
    */
-  public static void s3MoveAll(S3Client s3Client, String sourceBucket, String keyPrefix,
-      String destBucket) {
+  public static void s3MoveAll(
+      S3Client s3Client, String sourceBucket, String keyPrefix, String destBucket) {
     var objects = s3List(s3Client, sourceBucket, keyPrefix, 1000);
     while (!objects.isEmpty()) {
       for (var object : objects) {
