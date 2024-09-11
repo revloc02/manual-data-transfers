@@ -119,10 +119,30 @@ public class BlobStorageOperations {
     blobContainerClient.getBlobClient(filename).delete();
   }
 
+  public static void blobDeleteAll(String connectStr, String endpoint, String containerName) {
+    var list = blobList(connectStr, endpoint, containerName);
+    for (var blobItem : list) {
+      blobDelete(connectStr, endpoint, containerName, blobItem.getName());
+    }
+  }
+
+  // todo: can we get some javadocs here? And what's the difference between sas token and connection
+  // string? and do I need both?
   public static PagedIterable<BlobItem> blobListSas(
       String sasToken, String endpoint, String containerName) {
     BlobServiceClient blobServiceClient =
         new BlobServiceClientBuilder().sasToken(sasToken).endpoint(endpoint).buildClient();
+    var blobContainerClient = blobServiceClient.getBlobContainerClient(containerName);
+    return blobContainerClient.listBlobs();
+  }
+
+  public static PagedIterable<BlobItem> blobList(
+      String connectStr, String endpoint, String containerName) {
+    BlobServiceClient blobServiceClient =
+        new BlobServiceClientBuilder()
+            .connectionString(connectStr)
+            .endpoint(endpoint)
+            .buildClient();
     var blobContainerClient = blobServiceClient.getBlobContainerClient(containerName);
     return blobContainerClient.listBlobs();
   }

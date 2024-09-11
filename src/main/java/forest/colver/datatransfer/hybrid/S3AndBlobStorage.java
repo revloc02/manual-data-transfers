@@ -2,6 +2,7 @@ package forest.colver.datatransfer.hybrid;
 
 import static forest.colver.datatransfer.aws.S3Operations.s3Consume;
 import static forest.colver.datatransfer.aws.S3Operations.s3Get;
+import static forest.colver.datatransfer.aws.S3Operations.s3List;
 import static forest.colver.datatransfer.aws.Utils.getS3Client;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobPut;
 
@@ -57,11 +58,17 @@ public class S3AndBlobStorage {
     }
   }
 
-  /**
-   * Get all of the S3 objects from a directory and move them to an Azure Storage Container.
-   */
-  public static void moveAllS3ToAzureBlob(AwsCredentialsProvider awsCp, String bucket,
-      String objectKey, String connectStr, String endpoint, String containerName) {
-
+  /** Get all of the S3 objects from a directory and move them to an Azure Storage Container. */
+  public static void moveAllS3ToAzureBlob(
+      AwsCredentialsProvider awsCp,
+      String bucket,
+      String objectKey,
+      String connectStr,
+      String endpoint,
+      String containerName) throws IOException {
+      var objects = s3List(awsCp, bucket, objectKey);
+      for (var object : objects) {
+        moveOneS3toAzureBlob(awsCp, bucket, object.key(), connectStr, endpoint, containerName);
+      }
   }
 }
