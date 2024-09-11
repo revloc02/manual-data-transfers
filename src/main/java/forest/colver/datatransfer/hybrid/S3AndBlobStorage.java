@@ -27,8 +27,13 @@ public class S3AndBlobStorage {
    * @param containerName Azure storage container name.
    * @throws IOException For readAllBytes() on the InputStream from the S3 object.
    */
-  public static void moveOneS3toAzureBlob(AwsCredentialsProvider awsCp, String bucket,
-      String objectKey, String connectStr, String endpoint, String containerName)
+  public static void moveOneS3toAzureBlob(
+      AwsCredentialsProvider awsCp,
+      String bucket,
+      String objectKey,
+      String connectStr,
+      String endpoint,
+      String containerName)
       throws IOException {
     try (var s3Client = getS3Client(awsCp)) {
       var response = s3Consume(s3Client, bucket, objectKey);
@@ -48,8 +53,13 @@ public class S3AndBlobStorage {
    * @param containerName Azure storage container name.
    * @throws IOException For readAllBytes() on the InputStream from the S3 object.
    */
-  public static void copyOneS3toAzureBlob(AwsCredentialsProvider awsCp, String bucket,
-      String objectKey, String connectStr, String endpoint, String containerName)
+  public static void copyOneS3toAzureBlob(
+      AwsCredentialsProvider awsCp,
+      String bucket,
+      String objectKey,
+      String connectStr,
+      String endpoint,
+      String containerName)
       throws IOException {
     try (var s3Client = getS3Client(awsCp)) {
       var response = s3Get(s3Client, bucket, objectKey);
