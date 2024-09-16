@@ -326,7 +326,7 @@ public class S3Operations {
     for (var version : versions) {
       LOG.info("S3LISTVERSIONS: The object {} is on the {} bucket.", version, bucket);
     }
-    LOG.info("{} items listed.", listObjectVersionsResponse.versions().size());
+    LOG.info("{} versions listed.", listObjectVersionsResponse.versions().size());
     return versions;
   }
 
@@ -399,6 +399,20 @@ public class S3Operations {
     var deleteObjectResponse = s3Client.deleteObject(deleteObjectRequest);
     awsResponseValidation(deleteObjectResponse);
     LOG.info("S3DELETE: The object {} was deleted from the {} bucket.", objectKey, bucket);
+  }
+
+  /** S3Delete with versionId using S3Client. Delete an object version from an S3. */
+  public static void s3Delete(
+      S3Client s3Client, String bucket, String objectKey, String versionId) {
+    var deleteObjectRequest =
+        DeleteObjectRequest.builder().bucket(bucket).key(objectKey).versionId(versionId).build();
+    var deleteObjectResponse = s3Client.deleteObject(deleteObjectRequest);
+    awsResponseValidation(deleteObjectResponse);
+    LOG.info(
+        "S3DELETEVERSION: The object {} with version {} was deleted from the {} bucket.",
+        objectKey,
+        versionId,
+        bucket);
   }
 
   /** S3Delete with S3Client. Delete all objects from an S3 key prefix. */
