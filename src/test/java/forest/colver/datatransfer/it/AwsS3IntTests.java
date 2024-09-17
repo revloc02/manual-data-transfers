@@ -11,6 +11,7 @@ import static forest.colver.datatransfer.aws.S3Operations.s3Head;
 import static forest.colver.datatransfer.aws.S3Operations.s3List;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListContResponse;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListResponse;
+import static forest.colver.datatransfer.aws.S3Operations.s3ListVersions;
 import static forest.colver.datatransfer.aws.S3Operations.s3Move;
 import static forest.colver.datatransfer.aws.S3Operations.s3MoveAll;
 import static forest.colver.datatransfer.aws.S3Operations.s3Put;
@@ -811,9 +812,33 @@ class AwsS3IntTests {
     }
   }
 
-  /**
-   * Checks counting many, many thousands of objects.
-   */
+  @Test
+  void testS3ListVersions() {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      var objectKey = "revloc02/target/test/file-with-versions.txt";
+      LOG.info("...place the same file 3 times...");
+      s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
+      s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
+      s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
+
+      LOG.info("...check that there is one file in a list...");
+      var objects = s3List(creds, S3_INTERNAL, "revloc02/target/test");
+      assertThat(objects.size()).isEqualTo(2); // includes the directory
+      assertThat(objects.get(1).size()).isEqualTo(40L);
+
+      LOG.info("...check for 3 versions...");
+      var versions = s3ListVersions(s3Client, S3_INTERNAL, "revloc02/target/test");
+      assertThat(versions.size()).isGreaterThanOrEqualTo(3);
+
+      LOG.info("...cleanup and delete the file and its versions...");
+      for (var version : versions) {
+        s3Delete(s3Client, S3_INTERNAL, objectKey, version.versionId());
+      }
+    }
+  }
+
+  /** Checks counting many, many thousands of objects. */
   @Test
   void countAllS3LoggingFiles() {
     var creds = getEmxSbCreds();
