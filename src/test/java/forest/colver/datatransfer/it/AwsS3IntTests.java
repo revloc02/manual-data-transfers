@@ -32,18 +32,14 @@ import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.s3.model.GetObjectTaggingRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
-/**
- * Integration Tests for AWS S3
- */
+/** Integration Tests for AWS S3 */
 class AwsS3IntTests {
 
   private static final Logger LOG = LoggerFactory.getLogger(AwsS3IntTests.class);
 
   // Pass parameters to the S3 operation
 
-  /**
-   * Each S3 operation uses the creds to create its own S3Client.
-   */
+  /** Each S3 operation uses the creds to create its own S3Client. */
   @Test
   void testS3Put_PassCredsAndParams() {
     // put a file
@@ -235,8 +231,7 @@ class AwsS3IntTests {
       var response = s3Get(s3Client, S3_TARGET_CUSTOMER, destKey);
       LOG.info("response={}", response.response());
       LOG.info("statusCode={}", response.response().sdkHttpResponse().statusCode());
-      var respPayload = new String(response.readAllBytes(),
-          StandardCharsets.UTF_8);
+      var respPayload = new String(response.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(respPayload).isEqualTo(payload);
 
       // cleanup and delete the files
@@ -266,9 +261,7 @@ class AwsS3IntTests {
     assertThat(objects).isEmpty();
   }
 
-  /**
-   * Tests s3List that requires creds and returns a List of objects.
-   */
+  /** Tests s3List that requires creds and returns a List of objects. */
   @Test
   void testS3List() {
     var creds = getEmxSbCreds();
@@ -280,9 +273,7 @@ class AwsS3IntTests {
     s3Delete(creds, S3_INTERNAL, objectKey);
   }
 
-  /**
-   * Tests s3List that requires S3 Client and maxKeys, and returns a List of objects.
-   */
+  /** Tests s3List that requires S3 Client and maxKeys, and returns a List of objects. */
   @Test
   void testS3ListWithMaxkeys() {
     var creds = getEmxSbCreds();
@@ -296,9 +287,7 @@ class AwsS3IntTests {
     }
   }
 
-  /**
-   * Tests s3List that requires creds and returns a ListObjectResponse.
-   */
+  /** Tests s3List that requires creds and returns a ListObjectResponse. */
   @Test
   void testS3ListResponse() {
     var creds = getEmxSbCreds();
@@ -310,9 +299,7 @@ class AwsS3IntTests {
     s3Delete(creds, S3_INTERNAL, objectKey);
   }
 
-  /**
-   * Tests s3List that requires S3 Client and maxKeys, and returns a ListObjectsResponse.
-   */
+  /** Tests s3List that requires S3 Client and maxKeys, and returns a ListObjectsResponse. */
   @Test
   void testS3ListResponseWithMaxKeys() {
     var creds = getEmxSbCreds();
@@ -353,9 +340,7 @@ class AwsS3IntTests {
     }
   }
 
-  /**
-   * Testing S3 List with more than 1000 items in the list.
-   */
+  /** Testing S3 List with more than 1000 items in the list. */
   @Test
   void testS3ListWithMoreThan1000Items() {
     var creds = getEmxSbCreds();
@@ -371,8 +356,8 @@ class AwsS3IntTests {
 
       LOG.info("...list 1000 objects, then list the rest of the objects...");
       var response = s3ListResponse(s3Client, S3_INTERNAL, keyPrefix, 1000);
-      response = s3ListContResponse(s3Client, S3_INTERNAL, keyPrefix,
-          response.nextContinuationToken());
+      response =
+          s3ListContResponse(s3Client, S3_INTERNAL, keyPrefix, response.nextContinuationToken());
       LOG.info("...check the the last list is 100 objects...");
       assertThat(response.contents()).hasSizeGreaterThanOrEqualTo(100);
 
@@ -383,18 +368,13 @@ class AwsS3IntTests {
 
   // Pass a PutObjectRequest to the S3 operation
 
-  /**
-   * Each S3 operation uses the creds to create its own S3Client.
-   */
+  /** Each S3 operation uses the creds to create its own S3Client. */
   @Test
   void testS3Put_PassCredsPassPutObjReq() {
     // put a file
     var objectKey = "revloc02/source/test/test.txt";
     var creds = getEmxSbCreds();
-    var putObjectRequest = PutObjectRequest.builder()
-        .bucket(S3_INTERNAL)
-        .key(objectKey)
-        .build();
+    var putObjectRequest = PutObjectRequest.builder().bucket(S3_INTERNAL).key(objectKey).build();
     s3Put(creds, getDefaultPayload(), putObjectRequest);
 
     // verify the file is there
@@ -411,19 +391,14 @@ class AwsS3IntTests {
     assertThat(objects).isEmpty();
   }
 
-  /**
-   * One S3Client is created and then passed to each of the S3 operations.
-   */
+  /** One S3Client is created and then passed to each of the S3 operations. */
   @Test
   void testS3Put_PassClientPassPutObjReq() {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
       // put a file
       var objectKey = "revloc02/source/test/test.txt";
-      var putObjectRequest = PutObjectRequest.builder()
-          .bucket(S3_INTERNAL)
-          .key(objectKey)
-          .build();
+      var putObjectRequest = PutObjectRequest.builder().bucket(S3_INTERNAL).key(objectKey).build();
       s3Put(s3Client, getDefaultPayload(), putObjectRequest);
 
       // verify the file is there
@@ -447,11 +422,8 @@ class AwsS3IntTests {
       // put a file
       var objectKey = "revloc02/source/test/test.txt";
       var tagging = "expirableObject=true";
-      var putObjectRequest = PutObjectRequest.builder()
-          .bucket(S3_INTERNAL)
-          .key(objectKey)
-          .tagging(tagging)
-          .build();
+      var putObjectRequest =
+          PutObjectRequest.builder().bucket(S3_INTERNAL).key(objectKey).tagging(tagging).build();
       s3Put(s3Client, getDefaultPayload(), putObjectRequest);
 
       // verify the file is there
@@ -486,10 +458,7 @@ class AwsS3IntTests {
     try (var s3Client = getS3Client(getEmxSbCreds())) {
       // put a file
       var objectKey = "revloc02/source/test/test.txt";
-      var putObjectRequest = PutObjectRequest.builder()
-          .bucket(S3_INTERNAL)
-          .key(objectKey)
-          .build();
+      var putObjectRequest = PutObjectRequest.builder().bucket(S3_INTERNAL).key(objectKey).build();
       s3Put(s3Client, getDefaultPayload(), putObjectRequest);
 
       // verify the file is there
@@ -518,11 +487,8 @@ class AwsS3IntTests {
     var objectKey = "revloc02/source/test/test.txt";
     var creds = getEmxSbCreds();
     var metadata = Map.of("key", "value");
-    var putObjectRequest = PutObjectRequest.builder()
-        .bucket(S3_INTERNAL)
-        .key(objectKey)
-        .metadata(metadata)
-        .build();
+    var putObjectRequest =
+        PutObjectRequest.builder().bucket(S3_INTERNAL).key(objectKey).metadata(metadata).build();
     s3Put(creds, getDefaultPayload(), putObjectRequest);
 
     // verify the file is there
@@ -548,11 +514,8 @@ class AwsS3IntTests {
       // put a file
       var objectKey = "revloc02/source/test/test.txt";
       var metadata = Map.of("key", "value", "key2", "value2");
-      var putObjectRequest = PutObjectRequest.builder()
-          .bucket(S3_INTERNAL)
-          .key(objectKey)
-          .metadata(metadata)
-          .build();
+      var putObjectRequest =
+          PutObjectRequest.builder().bucket(S3_INTERNAL).key(objectKey).metadata(metadata).build();
       s3Put(s3Client, getDefaultPayload(), putObjectRequest);
 
       // verify the file is there
@@ -607,8 +570,7 @@ class AwsS3IntTests {
       var response = s3Get(s3Client, S3_TARGET_CUSTOMER, destKey);
       LOG.info("response={}", response.response());
       LOG.info("statusCode={}", response.response().sdkHttpResponse().statusCode());
-      var respPayload = new String(response.readAllBytes(),
-          StandardCharsets.UTF_8);
+      var respPayload = new String(response.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(respPayload).isEqualTo(payload);
 
       // verify the file is no longer on the source s3
@@ -635,25 +597,28 @@ class AwsS3IntTests {
       }
 
       LOG.info("...verify the files are on the source...");
-      // if `numFiles` is >1000, await() won't work because `s3List` can only list 1000 files at a time.
+      // if `numFiles` is >1000, await() won't work because `s3List` can only list 1000 files at a
+      // time.
       await()
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(60))
           .untilAsserted(
-              () -> assertThat(s3List(s3Client, S3_INTERNAL, keyPrefix, numFiles)).hasSize(
-                  numFiles));
+              () ->
+                  assertThat(s3List(s3Client, S3_INTERNAL, keyPrefix, numFiles)).hasSize(numFiles));
 
       LOG.info("...move all files...");
       s3MoveAll(s3Client, S3_INTERNAL, keyPrefix, S3_TARGET_CUSTOMER);
 
       LOG.info("...verify the files are in the new location...");
-      // if `numFiles` is >1000, await() won't work because `s3List` can only list 1000 files at a time.
+      // if `numFiles` is >1000, await() won't work because `s3List` can only list 1000 files at a
+      // time.
       await()
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(60))
           .untilAsserted(
-              () -> assertThat(s3List(s3Client, S3_TARGET_CUSTOMER, keyPrefix, numFiles)).hasSize(
-                  numFiles));
+              () ->
+                  assertThat(s3List(s3Client, S3_TARGET_CUSTOMER, keyPrefix, numFiles))
+                      .hasSize(numFiles));
 
       LOG.info("...verify the source is empty...");
       await()
@@ -684,8 +649,8 @@ class AwsS3IntTests {
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(60))
           .untilAsserted(
-              () -> assertThat(s3List(s3Client, S3_INTERNAL, keyPrefix, numFiles)).hasSize(
-                  numFiles));
+              () ->
+                  assertThat(s3List(s3Client, S3_INTERNAL, keyPrefix, numFiles)).hasSize(numFiles));
 
       LOG.info("...delete all of the files...");
       s3DeleteAll(s3Client, S3_INTERNAL, keyPrefix);
@@ -716,8 +681,8 @@ class AwsS3IntTests {
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(60))
           .untilAsserted(
-              () -> assertThat(s3List(s3Client, S3_INTERNAL, keyPrefix, numFiles)).hasSize(
-                  numFiles));
+              () ->
+                  assertThat(s3List(s3Client, S3_INTERNAL, keyPrefix, numFiles)).hasSize(numFiles));
 
       LOG.info("...copy all files...");
       s3CopyAll(s3Client, S3_INTERNAL, keyPrefix, S3_TARGET_CUSTOMER);
@@ -727,16 +692,17 @@ class AwsS3IntTests {
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(60))
           .untilAsserted(
-              () -> assertThat(s3List(s3Client, S3_TARGET_CUSTOMER, keyPrefix, numFiles)).hasSize(
-                  numFiles));
+              () ->
+                  assertThat(s3List(s3Client, S3_TARGET_CUSTOMER, keyPrefix, numFiles))
+                      .hasSize(numFiles));
 
       LOG.info("...verify the source still contains all files...");
       await()
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(60))
           .untilAsserted(
-              () -> assertThat(s3List(s3Client, S3_INTERNAL, keyPrefix, numFiles)).hasSize(
-                  numFiles));
+              () ->
+                  assertThat(s3List(s3Client, S3_INTERNAL, keyPrefix, numFiles)).hasSize(numFiles));
 
       LOG.info("...cleanup and delete all files...");
       s3DeleteAll(s3Client, S3_INTERNAL, keyPrefix);
@@ -762,8 +728,9 @@ class AwsS3IntTests {
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(60))
           .untilAsserted(
-              () -> assertThat(s3CountAll(s3Client, S3_INTERNAL, keyPrefix)).isGreaterThanOrEqualTo(
-                  numFiles)); // sometimes there is 1 extra
+              () ->
+                  assertThat(s3CountAll(s3Client, S3_INTERNAL, keyPrefix))
+                      .isGreaterThanOrEqualTo(numFiles)); // sometimes there is 1 extra
 
       LOG.info("...copy all files...");
       s3CopyAll(s3Client, S3_INTERNAL, keyPrefix, S3_TARGET_CUSTOMER);
@@ -773,17 +740,18 @@ class AwsS3IntTests {
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(60))
           .untilAsserted(
-              () -> assertThat(
-                  s3CountAll(s3Client, S3_TARGET_CUSTOMER, keyPrefix)).isGreaterThanOrEqualTo(
-                  numFiles));
+              () ->
+                  assertThat(s3CountAll(s3Client, S3_TARGET_CUSTOMER, keyPrefix))
+                      .isGreaterThanOrEqualTo(numFiles));
 
       LOG.info("...verify the source still contains all files...");
       await()
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(60))
           .untilAsserted(
-              () -> assertThat(s3CountAll(s3Client, S3_INTERNAL, keyPrefix)).isGreaterThanOrEqualTo(
-                  numFiles));
+              () ->
+                  assertThat(s3CountAll(s3Client, S3_INTERNAL, keyPrefix))
+                      .isGreaterThanOrEqualTo(numFiles));
 
       LOG.info("...cleanup and delete all files...");
       s3DeleteAll(s3Client, S3_INTERNAL, keyPrefix);
@@ -834,8 +802,9 @@ class AwsS3IntTests {
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(30))
           .untilAsserted(
-              () -> assertThat(s3CountAll(s3Client, S3_INTERNAL, keyPrefix)).isGreaterThanOrEqualTo(
-                  numFiles)); // todo: why is there sometimes 24?
+              () ->
+                  assertThat(s3CountAll(s3Client, S3_INTERNAL, keyPrefix))
+                      .isGreaterThanOrEqualTo(numFiles)); // todo: why is there sometimes 24?
 
       LOG.info("...cleanup and delete all files...");
       s3DeleteAll(s3Client, S3_INTERNAL, keyPrefix);
@@ -849,7 +818,8 @@ class AwsS3IntTests {
   void countAllS3LoggingFiles() {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
-      LOG.info("sandbox-sftp-s3-logging-file-count={}",
+      LOG.info(
+          "sandbox-sftp-s3-logging-file-count={}",
           s3CountAll(s3Client, "cp-aws-gayedtiak3nflbiftucz-s3-logging", "emx-sandbox-sftp"));
     }
   }
