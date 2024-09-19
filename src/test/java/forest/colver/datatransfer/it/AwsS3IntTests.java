@@ -269,8 +269,8 @@ class AwsS3IntTests {
     var objectKey = "revloc02/target/test/mdtTest1.txt";
     s3Put(creds, S3_INTERNAL, objectKey, getDefaultPayload());
     var objects = s3List(creds, S3_INTERNAL, "revloc02/target/test");
-    assertThat(objects.get(1).key()).isEqualTo(objectKey);
-    assertThat(objects.get(1).size()).isEqualTo(40L);
+    assertThat(objects.get(0).key()).isEqualTo(objectKey);
+    assertThat(objects.get(0).size()).isEqualTo(40L);
     s3Delete(creds, S3_INTERNAL, objectKey);
   }
 
@@ -295,8 +295,8 @@ class AwsS3IntTests {
     var objectKey = "revloc02/target/test/mdtTest1.txt";
     s3Put(creds, S3_INTERNAL, objectKey, getDefaultPayload());
     var response = s3ListResponse(creds, S3_INTERNAL, "revloc02/target/test");
-    assertThat(response.contents().get(1).key()).isEqualTo(objectKey);
-    assertThat(response.contents().get(1).size()).isEqualTo(40L);
+    assertThat(response.contents().get(0).key()).isEqualTo(objectKey);
+    assertThat(response.contents().get(0).size()).isEqualTo(40L);
     s3Delete(creds, S3_INTERNAL, objectKey);
   }
 
@@ -824,8 +824,8 @@ class AwsS3IntTests {
 
       LOG.info("...check that there is one file in a list...");
       var objects = s3List(creds, S3_INTERNAL, "revloc02/target/test");
-      assertThat(objects.size()).isEqualTo(2); // includes the directory
-      assertThat(objects.get(1).size()).isEqualTo(40L);
+      assertThat(objects.size()).isEqualTo(1);
+      assertThat(objects.get(0).size()).isEqualTo(40L);
 
       LOG.info("...check for 3 versions...");
       var versions = s3ListVersions(s3Client, S3_INTERNAL, "revloc02/target/test");
