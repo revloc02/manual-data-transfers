@@ -148,8 +148,7 @@ public class Utils {
   public static void awsResponseValidation(AwsResponse response) {
     var responseCode = response.sdkHttpResponse().statusCode();
     if (responseCode >= 300) {
-      LOG.info(
-          "ERROR: {}, responseMetadata={}", responseCode, response.responseMetadata().toString());
+      LOG.info("ERROR: {}, responseMetadata={}", responseCode, response.responseMetadata());
       throw new IllegalStateException("Unsuccessful AWS request. Status Code: " + responseCode);
     }
   }
