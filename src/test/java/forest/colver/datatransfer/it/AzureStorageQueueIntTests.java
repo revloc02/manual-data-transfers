@@ -9,7 +9,7 @@ import static forest.colver.datatransfer.azure.StorageQueueOperations.asqPurge;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqQueueDepth;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqSend;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqSendMultipleUniqueMessages;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_SA_FOREST_CONN_STR;
+import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_SA_CONN_STR;
 import static forest.colver.datatransfer.config.Utils.generateUniqueStrings;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -25,31 +25,25 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Integration tests for Azure Storage Queue (ASQ) operations.
- */
+/** Integration tests for Azure Storage Queue (ASQ) operations. */
 public class AzureStorageQueueIntTests {
 
-  public static final String CONNECT_STR = EMX_SANDBOX_SA_FOREST_CONN_STR;
+  public static final String CONNECT_STR = EMX_SANDBOX_SA_CONN_STR;
   public static final String QUEUE_NAME = "forest-test-storage-queue";
   public static final String QUEUE2_NAME = "forest-test-storage-queue2";
   public static final String PAYLOAD = "this is the body";
   private static final Logger LOG = LoggerFactory.getLogger(AzureStorageQueueIntTests.class);
 
-  /**
-   * Test Azure Storage Queue Send
-   */
+  /** Test Azure Storage Queue Send */
   @Test
   void testAsqSend() {
     asqSend(CONNECT_STR, QUEUE_NAME, PAYLOAD);
     assertThat(asqPeek(CONNECT_STR, QUEUE_NAME)).isEqualTo(PAYLOAD);
-    //cleanup
+    // cleanup
     asqConsume(CONNECT_STR, QUEUE_NAME);
   }
 
-  /**
-   * Test Azure Storage Queue Consume
-   */
+  /** Test Azure Storage Queue Consume */
   @Test
   void testAsqConsume() {
     // send message
@@ -63,9 +57,7 @@ public class AzureStorageQueueIntTests {
     assertThat(message.getBody()).hasToString(PAYLOAD);
   }
 
-  /**
-   * Test Azure Storage Queue Purge
-   */
+  /** Test Azure Storage Queue Purge */
   @Test
   void testAsqPurge() {
     var num = 3;
@@ -87,8 +79,7 @@ public class AzureStorageQueueIntTests {
    * them against the master list of unique messages to ensure everything got consumed correctly.
    */
   @Test
-  void testCompetingConsumer()
-      throws ExecutionException, InterruptedException {
+  void testCompetingConsumer() throws ExecutionException, InterruptedException {
     asqPurge(CONNECT_STR, QUEUE_NAME);
 
     var numMsgs = 300;
@@ -107,7 +98,7 @@ public class AzureStorageQueueIntTests {
     for (Future<QueueMessageItem> future : futuresList) {
       // remember, future.get() blocks execution until the task is complete
       uuids.remove(future.get().getBody().toString());
-      LOG.info("removed {}", future.get().getBody().toString());
+      LOG.info("removed {}", future.get().getBody());
     }
     assertThat(uuids).isEmpty();
   }
@@ -122,7 +113,7 @@ public class AzureStorageQueueIntTests {
     asqMove(CONNECT_STR, QUEUE_NAME, QUEUE2_NAME);
     // ensure it moved
     assertThat(asqPeek(CONNECT_STR, QUEUE2_NAME)).isEqualTo(PAYLOAD);
-    //cleanup
+    // cleanup
     asqConsume(CONNECT_STR, QUEUE2_NAME);
   }
 
@@ -136,7 +127,7 @@ public class AzureStorageQueueIntTests {
     asqCopy(CONNECT_STR, QUEUE_NAME, QUEUE2_NAME);
     // ensure it moved
     assertThat(asqPeek(CONNECT_STR, QUEUE2_NAME)).isEqualTo(PAYLOAD);
-    //cleanup
+    // cleanup
     asqConsume(CONNECT_STR, QUEUE_NAME);
     asqConsume(CONNECT_STR, QUEUE2_NAME);
   }
@@ -152,15 +143,20 @@ public class AzureStorageQueueIntTests {
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(asqQueueDepth(CONNECT_STR, QUEUE_NAME)).isGreaterThanOrEqualTo(numMsgs));
+        .untilAsserted(
+            () ->
+                assertThat(asqQueueDepth(CONNECT_STR, QUEUE_NAME)).isGreaterThanOrEqualTo(numMsgs));
     // move the messages
     asqMoveAll(CONNECT_STR, QUEUE_NAME, QUEUE2_NAME);
     // verify messages are on the source queue
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(asqQueueDepth(CONNECT_STR, QUEUE2_NAME)).isGreaterThanOrEqualTo(numMsgs));
-    //cleanup
+        .untilAsserted(
+            () ->
+                assertThat(asqQueueDepth(CONNECT_STR, QUEUE2_NAME))
+                    .isGreaterThanOrEqualTo(numMsgs));
+    // cleanup
     asqPurge(CONNECT_STR, QUEUE2_NAME);
   }
 }
