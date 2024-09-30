@@ -9,9 +9,9 @@ import static forest.colver.datatransfer.azure.BlobStorageOperations.blobListSas
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobMove;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobPut;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobPutSas;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_SA_FOREST_CONN_STR;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_SA_FOREST_FOREST_TEST_BLOB2_SAS;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_SA_FOREST_FOREST_TEST_BLOB_SAS;
+import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_SA_CONN_STR;
+import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_SA_FOREST_TEST_BLOB2_SAS;
+import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_SA_FOREST_TEST_BLOB_SAS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
@@ -25,14 +25,17 @@ import org.slf4j.LoggerFactory;
  */
 public class AzureBlobStorageTests {
   private static final Logger LOG = LoggerFactory.getLogger(AzureBlobStorageTests.class);
-  public static final String ENDPOINT = "https://foresttestsa.blob.core.windows.net";
+  public static final String ENDPOINT = "https://emxsandbox.blob.core.windows.net";
   public static final String CONTAINER_NAME = "forest-test-blob";
   public static final String FILENAME = "filename.txt";
   public static final String BODY = "Hellow Orld!";
-  public static final String CONNECT_STR = EMX_SANDBOX_SA_FOREST_CONN_STR;
-  public static final String SAS_TOKEN = EMX_SANDBOX_SA_FOREST_FOREST_TEST_BLOB_SAS;
-  public static final String SAS_TOKEN2 = EMX_SANDBOX_SA_FOREST_FOREST_TEST_BLOB2_SAS;
+  public static final String CONNECT_STR = EMX_SANDBOX_SA_CONN_STR;
+  public static final String SAS_TOKEN = EMX_SANDBOX_SA_FOREST_TEST_BLOB_SAS;
+  public static final String SAS_TOKEN2 = EMX_SANDBOX_SA_FOREST_TEST_BLOB2_SAS;
 
+  // todo: Note to self: In the Azure Portal, I manually added my IP address to the firewall
+  // settings to get this test to work. So I need to decide if that stays a manual step or if I put
+  // it into Terraform.
   @Test
   void testPut() {
     LOG.info("...place a file...");
