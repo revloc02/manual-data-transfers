@@ -64,7 +64,7 @@ public class Utils {
   }
 
   public static AwsCredentialsProvider getPersonalSbCreds() {
-    return ProfileCredentialsProvider.create("269703398122_aws-cloud-admin");
+    return ProfileCredentialsProvider.create("aws-cloud-admin-006578578026");
   }
 
   public static SqsClient getSqsClient(AwsCredentialsProvider awsCredentialsProvider) {
