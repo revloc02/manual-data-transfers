@@ -824,8 +824,8 @@ class AwsS3IntTests {
 
       LOG.info("...check that there is one file in a list...");
       var objects = s3List(creds, S3_INTERNAL, "revloc02/target/test");
-      assertThat(objects.size()).isEqualTo(1);
-      assertThat(objects.get(0).size()).isEqualTo(40L);
+      assertThat(objects.size()).isEqualTo(2); // directory is also counted
+      assertThat(objects.get(1).size()).isEqualTo(40L);
 
       LOG.info("...check for 3 versions...");
       var versions = s3ListVersions(s3Client, S3_INTERNAL, "revloc02/target/test");
