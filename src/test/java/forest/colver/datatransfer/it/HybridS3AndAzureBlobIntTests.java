@@ -10,7 +10,7 @@ import static forest.colver.datatransfer.azure.BlobStorageOperations.blobDelete;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobDeleteAll;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobGet;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobList;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_SA_FOREST_CONN_STR;
+import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_SA_CONN_STR;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.hybrid.S3AndBlobStorage.copyOneS3toAzureBlob;
 import static forest.colver.datatransfer.hybrid.S3AndBlobStorage.moveAllS3ToAzureBlob;
@@ -27,71 +27,68 @@ import org.slf4j.LoggerFactory;
 
 public class HybridS3AndAzureBlobIntTests {
 
+  public static final String OBJECT_KEY = "revloc02/source/test/test.txt";
   private static final Logger LOG = LoggerFactory.getLogger(HybridS3AndAzureBlobIntTests.class);
-  public static final String CONNECT_STR = EMX_SANDBOX_SA_FOREST_CONN_STR;
+  public static final String CONNECT_STR = EMX_SANDBOX_SA_CONN_STR;
+  public static final String ENDPOINT = "https://emxsandbox.blob.core.windows.net";
+  public static final String CONTAINER_NAME = "forest-test-blob";
 
   @Test
   void testMoveS3toAzureBlob() throws IOException {
     LOG.info("...put a file on s3...");
-    var objectKey = "revloc02/source/test/test.txt";
     var creds = getEmxSbCreds();
     var payload = getDefaultPayload();
-    s3Put(creds, S3_INTERNAL, objectKey, payload);
+    s3Put(creds, S3_INTERNAL, OBJECT_KEY, payload);
 
     LOG.info("...verify the object is there on the s3...");
-    var objects = s3List(creds, S3_INTERNAL, objectKey);
+    var objects = s3List(creds, S3_INTERNAL, OBJECT_KEY);
     assertThat(objects.size()).isOne();
-    assertThat(objects.get(0).key()).isEqualTo(objectKey);
+    assertThat(objects.get(0).key()).isEqualTo(OBJECT_KEY);
 
     LOG.info("...move the object from S3 to Azure Blob...");
-    var endpoint = "https://foresttestsa.blob.core.windows.net";
-    var containerName = "forest-test-blob";
-    moveOneS3toAzureBlob(creds, S3_INTERNAL, objectKey, CONNECT_STR, endpoint, containerName);
+    moveOneS3toAzureBlob(creds, S3_INTERNAL, OBJECT_KEY, CONNECT_STR, ENDPOINT, CONTAINER_NAME);
 
     LOG.info("...verify the move happened correctly...");
-    var outputStream = blobGet(CONNECT_STR, endpoint, containerName, objectKey);
+    var outputStream = blobGet(CONNECT_STR, ENDPOINT, CONTAINER_NAME, OBJECT_KEY);
     String str = outputStream.toString(StandardCharsets.UTF_8);
     assertThat(str).isEqualTo(payload);
 
     LOG.info("...verify the file is no longer on the source s3...");
-    objects = s3List(creds, S3_INTERNAL, objectKey);
+    objects = s3List(creds, S3_INTERNAL, OBJECT_KEY);
     assertThat(objects).isEmpty();
 
     LOG.info("...cleanup...");
-    blobDelete(CONNECT_STR, endpoint, containerName, objectKey);
+    blobDelete(CONNECT_STR, ENDPOINT, CONTAINER_NAME, OBJECT_KEY);
   }
 
   @Test
   void testCopyS3toAzureBlob() throws IOException {
     LOG.info("...put a file on s3...");
-    var objectKey = "revloc02/source/test/test.txt";
     var creds = getEmxSbCreds();
     var payload = getDefaultPayload();
-    s3Put(creds, S3_INTERNAL, objectKey, payload);
+    s3Put(creds, S3_INTERNAL, OBJECT_KEY, payload);
 
     LOG.info("...verify the object is there on the s3...");
-    var objects = s3List(creds, S3_INTERNAL, objectKey);
+    var objects = s3List(creds, S3_INTERNAL, OBJECT_KEY);
     assertThat(objects.size()).isOne();
-    assertThat(objects.get(0).key()).isEqualTo(objectKey);
+    assertThat(objects.get(0).key()).isEqualTo(OBJECT_KEY);
 
     LOG.info("...copy the object from S3 to Azure Blob...");
-    var endpoint = "https://foresttestsa.blob.core.windows.net";
-    var containerName = "forest-test-blob";
-    copyOneS3toAzureBlob(creds, S3_INTERNAL, objectKey, CONNECT_STR, endpoint, containerName);
+    copyOneS3toAzureBlob(creds, S3_INTERNAL, OBJECT_KEY, CONNECT_STR, ENDPOINT, CONTAINER_NAME);
 
     LOG.info("...verify the copy happened correctly...");
-    var outputStream = blobGet(CONNECT_STR, endpoint, containerName, objectKey);
+    var outputStream = blobGet(CONNECT_STR, ENDPOINT, CONTAINER_NAME, OBJECT_KEY);
     String str = outputStream.toString(StandardCharsets.UTF_8);
     assertThat(str).isEqualTo(payload);
 
     LOG.info("...verify the file is still on the source s3...");
-    objects = s3List(creds, S3_INTERNAL, objectKey);
+    objects = s3List(creds, S3_INTERNAL, OBJECT_KEY);
     assertThat(objects.size()).isOne();
-    assertThat(objects.get(0).key()).isEqualTo(objectKey);
+    assertThat(objects.get(0).key()).isEqualTo(OBJECT_KEY);
 
     LOG.info("...cleanup...");
-    blobDelete(CONNECT_STR, endpoint, containerName, objectKey);
-    s3Delete(creds, S3_INTERNAL, objectKey);
+    blobDelete(CONNECT_STR, ENDPOINT, CONTAINER_NAME, OBJECT_KEY);
+    s3Delete(creds, S3_INTERNAL, OBJECT_KEY);
   }
 
   @Test
@@ -116,9 +113,7 @@ public class HybridS3AndAzureBlobIntTests {
                   assertThat(s3List(s3Client, S3_INTERNAL, keyPrefix, numFiles)).hasSize(numFiles));
 
       LOG.info("...move objects from S3 to Azure Blob...");
-      var endpoint = "https://foresttestsa.blob.core.windows.net";
-      var containerName = "forest-test-blob";
-      moveAllS3ToAzureBlob(creds, S3_INTERNAL, keyPrefix, CONNECT_STR, endpoint, containerName);
+      moveAllS3ToAzureBlob(creds, S3_INTERNAL, keyPrefix, CONNECT_STR, ENDPOINT, CONTAINER_NAME);
 
       LOG.info("...verify the files are no longer on the source s3...");
       await()
@@ -132,11 +127,11 @@ public class HybridS3AndAzureBlobIntTests {
           .atMost(Duration.ofSeconds(60))
           .untilAsserted(
               () ->
-                  assertThat(blobList(CONNECT_STR, endpoint, containerName).stream().count())
+                  assertThat(blobList(CONNECT_STR, ENDPOINT, CONTAINER_NAME).stream().count())
                       .isGreaterThanOrEqualTo(numFiles));
 
       LOG.info("...cleanup...");
-      blobDeleteAll(CONNECT_STR, endpoint, containerName);
+      blobDeleteAll(CONNECT_STR, ENDPOINT, CONTAINER_NAME);
     }
   }
 }
