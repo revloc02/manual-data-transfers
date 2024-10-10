@@ -401,16 +401,20 @@ public class S3Operations {
     LOG.info("S3DELETE: The object {} was deleted from the {} bucket.", objectKey, bucket);
   }
 
-  /** S3Delete with versionId using S3Client. Delete an object version from an S3. */
+  /**
+   * S3Delete with versionId using S3Client. Delete an object version from an S3. A versioned object
+   * that has been deleted, still has a delete marker, using a versionId in the delete request will
+   * then delete the delete marker.
+   */
   public static void s3Delete(
-      S3Client s3Client, String bucket, String objectKey, String versionId) {
+      S3Client s3Client, String bucket, String versionKey, String versionId) {
     var deleteObjectRequest =
-        DeleteObjectRequest.builder().bucket(bucket).key(objectKey).versionId(versionId).build();
+        DeleteObjectRequest.builder().bucket(bucket).key(versionKey).versionId(versionId).build();
     var deleteObjectResponse = s3Client.deleteObject(deleteObjectRequest);
     awsResponseValidation(deleteObjectResponse);
     LOG.info(
         "S3DELETEVERSION: The object {} with version {} was deleted from the {} bucket.",
-        objectKey,
+        versionKey,
         versionId,
         bucket);
   }
