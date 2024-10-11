@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.core.pagination.sync.SdkIterable;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
@@ -316,17 +317,38 @@ public class S3Operations {
     return objects;
   }
 
+  /**
+   * Lists the versions of objects in an S3 bucket. A version could be multiple files of the same
+   * name, or a file that has been deleted, which is still stored as a delete marker.
+   */
   public static List<ObjectVersion> s3ListVersions(
       S3Client s3Client, String bucket, String keyPrefix) {
-    var listObjectVersionsRequest =
-        ListObjectVersionsRequest.builder().bucket(bucket).prefix(keyPrefix).build();
-    var listObjectVersionsResponse = s3Client.listObjectVersions(listObjectVersionsRequest);
-    awsResponseValidation(listObjectVersionsResponse);
-    var versions = listObjectVersionsResponse.versions();
+    var listRequest = ListObjectVersionsRequest.builder().bucket(bucket).prefix(keyPrefix).build();
+    var listResponse = s3Client.listObjectVersions(listRequest);
+    awsResponseValidation(listResponse);
+    var versions = listResponse.versions();
     for (var version : versions) {
       LOG.info("S3LISTVERSIONS: The object {} is on the {} bucket.", version, bucket);
     }
-    LOG.info("{} versions listed.", listObjectVersionsResponse.versions().size());
+    LOG.info("{} versions listed.", listResponse.versions().size());
+    return versions;
+  }
+
+  /**
+   * Lists the versions of objects in an S3 bucket. A version could be multiple files of the same
+   * name, or a file that has been deleted, which is still stored as a delete marker. I still don't
+   * know how the Paginator is useful, but keeping this for now. Currently, this method has worked
+   * exactly the same as s3ListVersions.
+   */
+  public static SdkIterable<ObjectVersion> s3ListVersionsPaginator(
+      S3Client s3Client, String bucket, String keyPrefix) {
+    var listRequest = ListObjectVersionsRequest.builder().bucket(bucket).prefix(keyPrefix).build();
+    var listResponse = s3Client.listObjectVersionsPaginator(listRequest);
+    var versions = listResponse.versions();
+    for (var version : versions) {
+      LOG.info("S3LISTVERSIONS: The object {} is on the {} bucket.", version, bucket);
+    }
+    LOG.info("{} versions listed.", versions.stream().count());
     return versions;
   }
 

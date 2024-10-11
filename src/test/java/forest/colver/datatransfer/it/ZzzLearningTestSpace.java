@@ -1,11 +1,18 @@
 package forest.colver.datatransfer.it;
 
+import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
+import static forest.colver.datatransfer.aws.S3Operations.s3List;
+import static forest.colver.datatransfer.aws.S3Operations.s3ListVersions;
+import static forest.colver.datatransfer.aws.S3Operations.s3Put;
+import static forest.colver.datatransfer.aws.Utils.S3_INTERNAL;
+import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
+import static forest.colver.datatransfer.aws.Utils.getS3Client;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobGet;
-import static forest.colver.datatransfer.azure.BlobStorageOperations.blobGetSas;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobPut;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobPutSas;
 import static forest.colver.datatransfer.azure.Utils.EMX_EXTEMCORNP_SA_EXT_EMCOR_NP_SAS_TOKEN;
 import static forest.colver.datatransfer.azure.Utils.EMX_PROD_EXT_EMCOR_PROD_SA_CONN_STR;
+import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
@@ -16,16 +23,27 @@ import org.slf4j.LoggerFactory;
 
 class ZzzLearningTestSpace {
   private static final Logger LOG = LoggerFactory.getLogger(ZzzLearningTestSpace.class);
+
   @Test
   void testPutEmcorNonProdBlobWithSas() {
     var sasToken = EMX_EXTEMCORNP_SA_EXT_EMCOR_NP_SAS_TOKEN;
     var endpoint = "https://extemcornp.blob.core.windows.net";
     var containerName = "ext-emcor-np-source";
-    var fileTypes = List.of("Quote", "Quotes", "Invoice", "Invoices", "Receipt", "Receipts", "Other", "Others", "Unknown");
+    var fileTypes =
+        List.of(
+            "Quote",
+            "Quotes",
+            "Invoice",
+            "Invoices",
+            "Receipt",
+            "Receipts",
+            "Other",
+            "Others",
+            "Unknown");
     var body = "Hellow Orld!";
-    for(var fileType : fileTypes) {
+    for (var fileType : fileTypes) {
       // ParsedInvoices/year/month/invoice-number/file-type
-      var filename = "ParsedInvoices/2004/08/1234567890/"+fileType+"/testfile7.txt";
+      var filename = "ParsedInvoices/2004/08/1234567890/" + fileType + "/testfile7.txt";
       blobPutSas(sasToken, endpoint, containerName, filename, body);
       LOG.info("put object: {}", filename);
     }
@@ -33,12 +51,12 @@ class ZzzLearningTestSpace {
     blobPutSas(sasToken, endpoint, containerName, filename, body);
     LOG.info("put object: {}", filename);
 
-//    var outputStream = blobGetSas(sasToken, endpoint, containerName, filename);
-//    String str = outputStream.toString(StandardCharsets.UTF_8);
-//    assertThat(str).isEqualTo(body);
+    //    var outputStream = blobGetSas(sasToken, endpoint, containerName, filename);
+    //    String str = outputStream.toString(StandardCharsets.UTF_8);
+    //    assertThat(str).isEqualTo(body);
 
     // cleanup
-//    blobDelete(CONNECT_STR, endpoint, containerName, filename);
+    //    blobDelete(CONNECT_STR, endpoint, containerName, filename);
   }
 
   @Test
@@ -55,6 +73,32 @@ class ZzzLearningTestSpace {
     assertThat(str).isEqualTo(body);
 
     // cleanup
-//    blobDelete(connectionStr, endpoint, containerName, filename);
+    //    blobDelete(connectionStr, endpoint, containerName, filename);
+  }
+
+  @Test
+  void testLearnS3Versioning() {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      var objectKey = "revloc02/target/test/file-with-versions.txt";
+      LOG.info("...place a file...");
+      s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
+
+      LOG.info("...check the file...");
+      var objects = s3List(creds, S3_INTERNAL, "revloc02/target/test");
+      assertThat(objects).hasSizeGreaterThanOrEqualTo(1);
+      assertThat(objects.get(0).size()).isEqualTo(40L);
+
+      LOG.info("...delete the file...");
+      s3Delete(creds, S3_INTERNAL, objectKey);
+
+      LOG.info("...check for versions, can the delete marker be seen?...");
+      var versions = s3ListVersions(s3Client, S3_INTERNAL, "revloc02/target/test");
+
+      LOG.info("...cleanup and delete the file and its versions...");
+      for (var version : versions) {
+        s3Delete(s3Client, S3_INTERNAL, version.key(), version.versionId());
+      }
+    }
   }
 }
