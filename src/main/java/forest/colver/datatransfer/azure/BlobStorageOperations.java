@@ -11,6 +11,11 @@ import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Azure Blob Storage Operations. This class contains methods to interact with Azure Blob Storage.
+ * SAS tokens are used for authentication to an individual container within the storage account. A
+ * connection string is to authenticate to the whole storage account.
+ */
 public class BlobStorageOperations {
   private static final Logger LOG = LoggerFactory.getLogger(BlobStorageOperations.class);
 
@@ -126,8 +131,14 @@ public class BlobStorageOperations {
     }
   }
 
-  // todo: can we get some javadocs here? And what's the difference between sas token and connection
-  // string? and do I need both?
+  /**
+   * Lists all the blobs in a container.
+   *
+   * @param sasToken Shared Access Signature Token for auth that is container specific.
+   * @param endpoint Azure storage account endpoint.
+   * @param containerName Blob storage container name.
+   * @return A list of BlobItems.
+   */
   public static PagedIterable<BlobItem> blobListSas(
       String sasToken, String endpoint, String containerName) {
     BlobServiceClient blobServiceClient =
@@ -136,6 +147,14 @@ public class BlobStorageOperations {
     return blobContainerClient.listBlobs();
   }
 
+  /**
+   * Lists all the blobs in a container.
+   *
+   * @param connectStr Azure connection string that for the whole storage account.
+   * @param endpoint Azure storage account endpoint.
+   * @param containerName Blob storage container name.
+   * @return A list of BlobItems.
+   */
   public static PagedIterable<BlobItem> blobList(
       String connectStr, String endpoint, String containerName) {
     BlobServiceClient blobServiceClient =
