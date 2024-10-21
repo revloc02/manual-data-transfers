@@ -185,9 +185,13 @@ public class BlobStorageOperations {
       String filename,
       String sasTokenTarget,
       String containerNameTarget) {
-    var outputStream = blobGetSas(sasTokenSource, endpoint, containerNameSource, filename);
-    var contents = outputStream.toString(StandardCharsets.UTF_8);
-    blobPutSas(sasTokenTarget, endpoint, containerNameTarget, filename, contents);
+    blobCopy(
+        sasTokenSource,
+        endpoint,
+        containerNameSource,
+        filename,
+        sasTokenTarget,
+        containerNameTarget);
     blobDeleteSas(sasTokenSource, endpoint, containerNameSource, filename);
   }
 }
