@@ -80,14 +80,12 @@ public class StorageQueueOperations {
   }
 
   public static void asqPurge(String connectStr, String queueName) {
+    var queueClient =
+        new QueueClientBuilder().connectionString(connectStr).queueName(queueName).buildClient();
     try {
-      QueueClient queueClient = new QueueClientBuilder()
-          .connectionString(connectStr)
-          .queueName(queueName)
-          .buildClient();
       queueClient.clearMessages();
     } catch (QueueStorageException e) {
-      e.printStackTrace();
+      LOG.error("An error occurred while clearing messages: {}", e.getMessage(), e);
     }
     LOG.info("Purged {}", queueName);
   }
