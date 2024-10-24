@@ -52,20 +52,17 @@ public class StorageQueueOperations {
 
   public static QueueMessageItem asqConsume(String connectStr, String queueName) {
     QueueMessageItem message = null;
+    var queueClient =
+        new QueueClientBuilder().connectionString(connectStr).queueName(queueName).buildClient();
     try {
-      QueueClient queueClient = new QueueClientBuilder()
-          .connectionString(connectStr)
-          .queueName(queueName)
-          .buildClient();
       message = queueClient.receiveMessage();
-
       if (null != message) {
         queueClient.deleteMessage(message.getMessageId(), message.getPopReceipt());
       } else {
         LOG.warn("No visible messages in {} queue", queueName);
       }
     } catch (QueueStorageException e) {
-      e.printStackTrace();
+      LOG.error("An error occurred while receiving the message: {}", e.getMessage(), e);
     }
     return message;
   }
