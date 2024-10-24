@@ -39,16 +39,13 @@ public class StorageQueueOperations {
    */
   public static String asqPeek(String connectStr, String queueName) {
     String body = "";
+    var queueClient =
+        new QueueClientBuilder().connectionString(connectStr).queueName(queueName).buildClient();
     try {
-      QueueClient queueClient = new QueueClientBuilder()
-          .connectionString(connectStr)
-          .queueName(queueName)
-          .buildClient();
-
       PeekedMessageItem peekedMessageItem = queueClient.peekMessage();
       body = peekedMessageItem.getBody().toString();
     } catch (QueueStorageException e) {
-      e.printStackTrace();
+      LOG.error("An error occurred while peeking at the message: {}", e.getMessage(), e);
     }
     return body;
   }
