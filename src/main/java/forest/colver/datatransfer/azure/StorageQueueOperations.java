@@ -90,18 +90,16 @@ public class StorageQueueOperations {
     LOG.info("Purged {}", queueName);
   }
 
-  public static void asqSendMultipleUniqueMessages(String connectStr, String queueName,
-      List<String> payloads) {
+  public static void asqSendMultipleUniqueMessages(
+      String connectStr, String queueName, List<String> payloads) {
+    var queueClient =
+        new QueueClientBuilder().connectionString(connectStr).queueName(queueName).buildClient();
     try {
-      QueueClient queueClient = new QueueClientBuilder()
-          .connectionString(connectStr)
-          .queueName(queueName)
-          .buildClient();
       for (String payload : payloads) {
         queueClient.sendMessage(payload);
       }
     } catch (QueueStorageException e) {
-      e.printStackTrace();
+      LOG.error("An error occurred while sending messages: {}", e.getMessage(), e);
     }
   }
 
