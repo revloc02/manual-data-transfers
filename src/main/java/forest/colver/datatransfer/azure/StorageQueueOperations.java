@@ -69,14 +69,12 @@ public class StorageQueueOperations {
 
   public static int asqQueueDepth(String connectStr, String queueName) {
     int queueDepth = 0;
+    var queueClient =
+        new QueueClientBuilder().connectionString(connectStr).queueName(queueName).buildClient();
     try {
-      QueueClient queueClient = new QueueClientBuilder()
-          .connectionString(connectStr)
-          .queueName(queueName)
-          .buildClient();
       queueDepth = queueClient.getProperties().getApproximateMessagesCount();
     } catch (QueueStorageException e) {
-      e.printStackTrace();
+      LOG.error("An error occurred while getting message properties: {}", e.getMessage(), e);
     }
     return queueDepth;
   }
