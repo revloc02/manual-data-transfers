@@ -19,15 +19,12 @@ public class StorageQueueOperations {
   }
 
   public static void asqSend(String connectStr, String queueName, String messageText) {
+    var queueClient =
+        new QueueClientBuilder().connectionString(connectStr).queueName(queueName).buildClient();
     try {
-      QueueClient queueClient = new QueueClientBuilder()
-          .connectionString(connectStr)
-          .queueName(queueName)
-          .buildClient();
-
       queueClient.sendMessage(messageText);
     } catch (QueueStorageException e) {
-      e.printStackTrace();
+      LOG.error("An error occurred while sending the message: {}", e.getMessage(), e);
     }
   }
 
