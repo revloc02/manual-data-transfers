@@ -1,6 +1,5 @@
 package forest.colver.datatransfer.azure;
 
-import com.azure.storage.queue.QueueClient;
 import com.azure.storage.queue.QueueClientBuilder;
 import com.azure.storage.queue.models.PeekedMessageItem;
 import com.azure.storage.queue.models.QueueMessageItem;
@@ -123,18 +122,17 @@ public class StorageQueueOperations {
     }
   }
 
-  //todo: can I make a copyAll method?
+  // todo: can I make a copyAll method?
+  
   public static void asqCopy(String connectStr, String queue1, String queue2) {
     QueueMessageItem message;
+    var queueClient =
+        new QueueClientBuilder().connectionString(connectStr).queueName(queue1).buildClient();
     try {
-      QueueClient queueClient = new QueueClientBuilder()
-          .connectionString(connectStr)
-          .queueName(queue1)
-          .buildClient();
       message = queueClient.receiveMessage(); // default visibilityTimeout=30 seconds
       asqSend(connectStr, queue2, String.valueOf(message.getBody()));
     } catch (QueueStorageException e) {
-      e.printStackTrace();
+      LOG.error("An error occurred while copying the message: {}", e.getMessage(), e);
     }
   }
 }
