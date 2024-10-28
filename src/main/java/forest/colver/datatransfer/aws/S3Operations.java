@@ -142,7 +142,7 @@ public class S3Operations {
 
   /**
    * Yeah, so...s3Copy with AwsCreds. Copies an object. Yeah, so...this might not actually be that
-   * useful.
+   * useful, meaning I will probably just use the s3Copy with S3Client.
    */
   public static void s3Copy(
       AwsCredentialsProvider awsCp,
@@ -173,7 +173,10 @@ public class S3Operations {
 
   /**
    * Copies all objects from a given S3 and key-prefix to another S3 bucket. This implementation
-   * uses s3List which batches 1000 objects at a time.
+   * uses s3List which batches 1000 objects at a time. (The challenge with a CopyAll method is that
+   * since each object is not consumed there needs to be a way to iterate through all the objects on
+   * the S3 without copying the same one over again, in this case, using s3List with
+   * nextContinuationToken helps accomplish this.)
    *
    * @param sourceBucket Source S3.
    * @param keyPrefix aka the file path.
