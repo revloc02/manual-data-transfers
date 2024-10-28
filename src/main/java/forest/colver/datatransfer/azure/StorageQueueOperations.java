@@ -122,8 +122,11 @@ public class StorageQueueOperations {
     }
   }
 
-  // todo: can I make a copyAll method?
-  
+  // todo: can I make a copyAll method? The challenge is that since the message is not consumed,
+  // there needs to be a way to iterate through all of the message without copying the same one over
+  // again. In AWS SQS this is done with a visibility timeout. I'm not sure how to do this in Azure
+  // Storage Queues.
+
   public static void asqCopy(String connectStr, String queue1, String queue2) {
     QueueMessageItem message;
     var queueClient =
