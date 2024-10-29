@@ -33,11 +33,10 @@ public class AzureBlobStorageTests {
   public static final String SAS_TOKEN = EMX_SANDBOX_SA_FOREST_TEST_BLOB_SAS;
   public static final String SAS_TOKEN2 = EMX_SANDBOX_SA_FOREST_TEST_BLOB2_SAS;
 
-  // todo: Note to self: In the Azure Portal, I manually added my IP address
-  // to the Security+Networking Firewall settings to get this test to work. So I
-  // need to decide if that stays a manual step or if I put it into Terraform. To be clear, this is
-  // the EMX sandbox account, and I would need to add this to the
-  // emx-tf-app-azure/terraform/sandbox/main.tf file in the team Github repo code.
+  // Note to self: In the Azure Portal, I manually added my IP address to the Security+Networking
+  // Firewall settings to get this test to work. I decided to leave this a manual step so that I
+  // don't have to frequently update the emx-tf-app-azure/terraform/sandbox/main.tf file in the team
+  // GitHub repo code.
   @Test
   void testPut() {
     LOG.info("...place a file...");
