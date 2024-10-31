@@ -50,7 +50,7 @@ class SftpIntTests {
     sftpDisconnect(sftp, session);
   }
 
-  /** Runs a series of AWS SFTP authentications, both successes and failures. */
+  /** Runs a series of AWS SFTP authentication tests, both successes and failures. */
   @Test
   void testAwsSftpAuthFails()
       throws SftpException, IOException, InterruptedException, JSchException {
