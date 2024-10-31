@@ -25,12 +25,11 @@ public class SftpOperations {
 
   /**
    * Places a file on an SFTP server. This method builds a session and channel using password auth,
-   * for the one connection. If possible, use the {@link #putSftpFile putSftpFile} method that takes
-   * an sftp channel argument.
+   * for the one connection and then disconnects appropriately. If possible, use the {@link
+   * #putSftpFile putSftpFile} method that takes an sftp channel argument.
    */
-  public static void putSftpFileUsePasswordMakeSession(String host, String username, String password,
-      String path,
-      String filename, String payload)
+  public static void putSftpFileUsePasswordManageSession(
+      String host, String username, String password, String path, String filename, String payload)
       throws JSchException, SftpException, IOException {
     var session = getPwSession(host, username, password);
     var sftp = connectChannelSftp(session);
@@ -42,13 +41,13 @@ public class SftpOperations {
 
   /**
    * Retrieves and then deletes a file from the SFTP server. This method builds a session and
-   * channel using password auth, for the one connection. If possible, use the
-   * {@link #consumeSftpFile consumeSftpFile} method that takes an sftp channel argument.
+   * channel using password auth, for the one connection and then disconnects appropriately. If
+   * possible, use the {@link #consumeSftpFile consumeSftpFile} method that takes an sftp channel
+   * argument.
    */
-  public static String consumeSftpFileUsePasswordMakeSession(String host, String username,
-      String password,
-      String path,
-      String filename) throws JSchException, SftpException, IOException {
+  public static String consumeSftpFileUsePasswordManageSession(
+      String host, String username, String password, String path, String filename)
+      throws JSchException, SftpException, IOException {
     var session = getPwSession(host, username, password);
     var sftp = connectChannelSftp(session);
     var contents = consumeSftpFile(sftp, path, filename);
@@ -60,12 +59,16 @@ public class SftpOperations {
 
   /**
    * Places a file on an SFTP server. This method builds a session and channel using key auth, for
-   * the one connection. If possible, use the {@link #putSftpFile putSftpFile} method that takes an
-   * sftp channel argument.
+   * the one connection and then disconnects appropriately. If possible, use the {@link #putSftpFile
+   * putSftpFile} method that takes an sftp channel argument.
    */
-  public static void putSftpFileUseKeyMakeSession(String host, String username, String keyLocation,
+  public static void putSftpFileUseKeyManageSession(
+      String host,
+      String username,
+      String keyLocation,
       String path,
-      String filename, String payload)
+      String filename,
+      String payload)
       throws JSchException, SftpException, IOException {
     var session = getKeySession(host, username, keyLocation);
     var sftp = connectChannelSftp(session);
@@ -77,13 +80,12 @@ public class SftpOperations {
 
   /**
    * Retrieves and then deletes a file from the SFTP server. This method builds a session and
-   * channel using key auth, for the one connection. If possible, use the
-   * {@link #consumeSftpFile consumeSftpFile} method that takes an sftp channel argument.
+   * channel using key auth, for the one connection and then disconnects appropriately. If possible,
+   * use the {@link #consumeSftpFile consumeSftpFile} method that takes an sftp channel argument.
    */
-  public static String consumeSftpFileUseKeyMakeSession(String host, String username,
-      String keyLocation,
-      String path,
-      String filename) throws JSchException, SftpException, IOException {
+  public static String consumeSftpFileUseKeyManageSession(
+      String host, String username, String keyLocation, String path, String filename)
+      throws JSchException, SftpException, IOException {
     var session = getKeySession(host, username, keyLocation);
     var sftp = connectChannelSftp(session);
     var contents = consumeSftpFile(sftp, path, filename);
@@ -97,7 +99,7 @@ public class SftpOperations {
    * Places a files on the SFTP server. This method takes an SFTP channel as input.
    *
    * @param sftp An SFTP Channel (assumes a session and channel was set up using proper credentials
-   * and passed in).
+   *     and passed in).
    * @param path The path the file.
    * @param filename The name of the file.
    * @param payload The contents of the file.
@@ -114,7 +116,7 @@ public class SftpOperations {
    * input.
    *
    * @param sftp An SFTP Channel (assumes a session and channel was set up using proper credentials
-   * and passed in).
+   *     and passed in).
    * @param path The path to the file.
    * @param filename The name of the file.
    * @return The contents of the file--the payload.
