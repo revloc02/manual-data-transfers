@@ -18,6 +18,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOf
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
 import java.io.IOException;
+import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,7 +78,7 @@ class SftpIntTests {
       assertThatExceptionOfType(JSchException.class)
           .isThrownBy(
               () -> {
-                var session = getKeySession(SFTP_HOST, "revloc02a", "src/main/resources/badPrvKey");
+                var session = getKeySession(SFTP_HOST, USERNAME, "src/main/resources/badPrvKey");
                 var sftp = connectChannelSftp(session);
                 putSftpFile(sftp, PATH, "this-should-not-work.txt", PAYLOAD);
               });
@@ -101,7 +102,7 @@ class SftpIntTests {
       //      assertThat(contents).isEqualTo(PAYLOAD);
 
       Thread.sleep(2000);
-      LOG.info("========== Done with iteration: {} ==========\n", i);
+      LOG.info("========== Done with iteration: {} TIME: {} ==========\n", i, Instant.now());
     }
   }
 
