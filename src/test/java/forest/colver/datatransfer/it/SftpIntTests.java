@@ -53,8 +53,7 @@ class SftpIntTests {
 
   /** Runs a series of AWS SFTP authentication tests, both successes and failures. */
   @Test
-  void testAwsSftpAuthFails()
-      throws SftpException, IOException, InterruptedException, JSchException {
+  void testAwsSftpAuthFails() throws SftpException, IOException, JSchException {
     for (var i = 0; i < 3; i++) {
 
       LOG.info("...non-existent account password auth...");
