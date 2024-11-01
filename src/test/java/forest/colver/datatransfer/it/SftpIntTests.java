@@ -59,17 +59,18 @@ class SftpIntTests {
 
       LOG.info("...non-existent account password auth...");
       assertThatExceptionOfType(JSchException.class)
-          .isThrownBy(() -> getPwSession(SFTP_HOST, "root", "moot"));
+          .isThrownBy(() -> getPwSession(SFTP_HOST, "unknown-pw-user", "moot"));
 
       LOG.info("...non-existent account key auth...");
       assertThatExceptionOfType(JSchException.class)
-          .isThrownBy(() -> getKeySession(SFTP_HOST, "ubuntu", "src/main/resources/badPrvKey"));
+          .isThrownBy(
+              () -> getKeySession(SFTP_HOST, "unknown-key-user", "src/main/resources/badPrvKey"));
 
       LOG.info("...do an unsuccessful password auth...");
       assertThatExceptionOfType(JSchException.class)
           .isThrownBy(
               () -> {
-                var session = getPwSession(SFTP_HOST, "revloc02a", "bogus_password");
+                var session = getPwSession(SFTP_HOST, "emx-app-test", "bogus_password");
                 var sftp = connectChannelSftp(session);
                 putSftpFile(sftp, PATH, "this-should-not-work.txt", PAYLOAD);
               });
@@ -78,28 +79,26 @@ class SftpIntTests {
       assertThatExceptionOfType(JSchException.class)
           .isThrownBy(
               () -> {
-                var session = getKeySession(SFTP_HOST, USERNAME, "src/main/resources/badPrvKey");
+                var session =
+                    getKeySession(
+                        SFTP_HOST, "emx-app-test-keyauth", "src/main/resources/badPrvKey");
                 var sftp = connectChannelSftp(session);
                 putSftpFile(sftp, PATH, "this-should-not-work.txt", PAYLOAD);
               });
 
       LOG.info("...do a successful password auth...");
       putSftpFileUsePasswordManageSession(
-          SFTP_HOST, USERNAME, SFTP_PASSWORD, PATH, FILENAME, PAYLOAD);
+          SFTP_HOST, "revloc02a", SFTP_PASSWORD, PATH, FILENAME, PAYLOAD);
       var contents =
           consumeSftpFileUsePasswordManageSession(
-              SFTP_HOST, USERNAME, SFTP_PASSWORD, PATH, FILENAME);
+              SFTP_HOST, "revloc02a", SFTP_PASSWORD, PATH, FILENAME);
       assertThat(contents).isEqualTo(PAYLOAD);
 
-      // Wow, for some reason this test makes the "unsuccessful password auth" connection in the
-      // next iteration succeed, and the assertion fails. I have no idea why.
-      //      LOG.info("...do a successful key auth...");
-      //      putSftpFileUseKeyManageSession(SFTP_HOST, USERNAME, SFTP_KEY_LOC, PATH, FILENAME,
-      // PAYLOAD);
-      //      contents =
-      //          consumeSftpFileUseKeyManageSession(SFTP_HOST, USERNAME, SFTP_KEY_LOC, PATH,
-      // FILENAME);
-      //      assertThat(contents).isEqualTo(PAYLOAD);
+      LOG.info("...do a successful key auth...");
+      putSftpFileUseKeyManageSession(SFTP_HOST, "revloc02", SFTP_KEY_LOC, PATH, FILENAME, PAYLOAD);
+      contents =
+          consumeSftpFileUseKeyManageSession(SFTP_HOST, "revloc02", SFTP_KEY_LOC, PATH, FILENAME);
+      assertThat(contents).isEqualTo(PAYLOAD);
 
       Thread.sleep(2000);
       LOG.info("========== Done with iteration: {} TIME: {} ==========\n", i, Instant.now());
