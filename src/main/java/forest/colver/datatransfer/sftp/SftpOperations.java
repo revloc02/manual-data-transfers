@@ -109,6 +109,7 @@ public class SftpOperations {
     try (var file = new ByteArrayInputStream(payload.getBytes())) {
       sftp.put(file, path + "/" + filename);
     }
+    LOG.info("SFTP put {} done.", filename);
   }
 
   /**
@@ -126,9 +127,9 @@ public class SftpOperations {
     String contents;
     try (var inputStream = sftp.get(path + "/" + filename)) {
       contents = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-      LOG.info("sftp retrieve done");
       sftp.rm(path + "/" + filename);
     }
+    LOG.info("SFTP retrieve {} done.", filename);
     return contents;
   }
 }
