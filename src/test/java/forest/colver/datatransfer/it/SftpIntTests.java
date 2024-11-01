@@ -100,7 +100,6 @@ class SftpIntTests {
           consumeSftpFileUseKeyManageSession(SFTP_HOST, "revloc02", SFTP_KEY_LOC, PATH, FILENAME);
       assertThat(contents).isEqualTo(PAYLOAD);
 
-      Thread.sleep(2000);
       LOG.info("========== Done with iteration: {} TIME: {} ==========\n", i, Instant.now());
     }
   }
