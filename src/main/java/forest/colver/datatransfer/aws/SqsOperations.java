@@ -339,7 +339,12 @@ public class SqsOperations {
   /** Move a message from one SQS queue to another. */
   public static void sqsMove(AwsCredentialsProvider awsCP, String fromSqs, String toSqs) {
     var message = sqsConsumeOneMessage(awsCP, fromSqs);
-    sqsSend(awsCP, toSqs, message.body(), message.attributesAsStrings());
+    if (message != null) {
+      sqsSend(awsCP, toSqs, message.body(), message.attributesAsStrings());
+      LOG.info("Moved message from {} to {}", fromSqs, toSqs);
+    } else {
+      LOG.warn("No message to move from {}", fromSqs);
+    }
   }
 
   /**
