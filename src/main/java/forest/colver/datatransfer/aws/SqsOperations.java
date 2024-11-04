@@ -23,9 +23,7 @@ import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
-/**
- * Contains several common SQS operations for sending and receiving data from them.
- */
+/** Contains several common SQS operations for sending and receiving data from them. */
 public class SqsOperations {
 
   private SqsOperations() {
@@ -35,9 +33,7 @@ public class SqsOperations {
 
   private static final Logger LOG = LoggerFactory.getLogger(SqsOperations.class);
 
-  /**
-   * Overloaded method that sends in an empty Map of messages properties.
-   */
+  /** Overloaded method that sends in an empty Map of messages properties. */
   public static void sqsSend(AwsCredentialsProvider awsCp, String queueName, String payload) {
     Map<String, String> messageProps = Map.of();
     sqsSend(awsCp, queueName, payload, messageProps);
@@ -64,9 +60,7 @@ public class SqsOperations {
     }
   }
 
-  /**
-   * Send a message using a map of message properties to the desired SQS queue.
-   */
+  /** Send a message using a map of message properties to the desired SQS queue. */
   public static void sqsSend(
       AwsCredentialsProvider awsCp,
       String queueName,
@@ -90,8 +84,7 @@ public class SqsOperations {
    *
    * @return A Message.
    */
-  public static Message sqsConsumeOneMessage(AwsCredentialsProvider awsCP,
-      String queueName) {
+  public static Message sqsConsumeOneMessage(AwsCredentialsProvider awsCP, String queueName) {
     var msg = sqsReadOneMessage(awsCP, queueName);
     if (msg != null) {
       sqsDeleteMessage(awsCP, queueName, msg);
@@ -102,13 +95,12 @@ public class SqsOperations {
 
   /**
    * Reads one message from the SQS, and then displays the data and properties of it. My current
-   * opinion is that this method should not be generally used, rather the
-   * {@link #sqsReadMessages(AwsCredentialsProvider, String)} which returns the Response object,
-   * should be used if possible. This method has been used in a lot of unit tests, but that does not
-   * mean it is better.
+   * opinion is that this method should not be generally used, rather the {@link
+   * #sqsReadMessages(AwsCredentialsProvider, String)} which returns the Response object, should be
+   * used if possible. This method has been used in a lot of unit tests, but that does not mean it
+   * is better.
    */
-  public static Message sqsReadOneMessage(
-      AwsCredentialsProvider awsCP, String queueName) {
+  public static Message sqsReadOneMessage(AwsCredentialsProvider awsCP, String queueName) {
     try (var sqsClient = getSqsClient(awsCP)) {
       var receiveMessageRequest =
           ReceiveMessageRequest.builder()
@@ -123,7 +115,8 @@ public class SqsOperations {
       awsResponseValidation(response);
       if (response.messages().isEmpty()) {
         LOG.info("SQS_READ_ONE_MESSAGE: {} has NO messages.", queueName);
-//        throw new RuntimeException("SQS_READ_ONE_MESSAGE: " + queueName + " has NO messages.");
+        //        throw new RuntimeException("SQS_READ_ONE_MESSAGE: " + queueName + " has NO
+        // messages.");
         return null; // I'm still not sure this choice was best
       } else {
         LOG.info("SQS_READ_ONE_MESSAGE: {} has a message.", queueName);
@@ -152,7 +145,10 @@ public class SqsOperations {
               .build();
       var response = sqsClient.receiveMessage(receiveMessageRequest);
       awsResponseValidation(response);
-      LOG.info("SQSREAD: {} has messages: {}. Read {} messages.", queueName, response.hasMessages(),
+      LOG.info(
+          "SQSREAD: {} has messages: {}. Read {} messages.",
+          queueName,
+          response.hasMessages(),
           response.messages().size());
       return response;
     }
@@ -164,10 +160,10 @@ public class SqsOperations {
    * @param awsCP Credentials.
    * @param queueName The SQS to interact with.
    * @param fullyQualifiedFilename The full path and filename you would like the file to have (it
-   * will contain the SQS message body).
+   *     will contain the SQS message body).
    */
-  public static void sqsDownloadMessage(AwsCredentialsProvider awsCP, String queueName,
-      String fullyQualifiedFilename) {
+  public static void sqsDownloadMessage(
+      AwsCredentialsProvider awsCP, String queueName, String fullyQualifiedFilename) {
     try (var sqsClient = getSqsClient(awsCP)) {
       var receiveMessageRequest =
           ReceiveMessageRequest.builder()
@@ -183,9 +179,7 @@ public class SqsOperations {
     }
   }
 
-  /**
-   * Clears an SQS, using Purge, which can only happen once every 60 sec on an SQS.
-   */
+  /** Clears an SQS, using Purge, which can only happen once every 60 sec on an SQS. */
   public static void sqsPurge(AwsCredentialsProvider awsCP, String queueName) {
     try (var sqsClient = getSqsClient(awsCP)) {
       var purgeQueueRequest =
@@ -229,14 +223,14 @@ public class SqsOperations {
     } else { // depthLimit has been reached, it will take too long to consume messages one by one
       LOG.info(
           "=======Queue {} has {} messages, which is greater than the set limit {}. You should probably just use sqsPurge() instead.=======",
-          queueName, depth, depthLimit);
+          queueName,
+          depth,
+          depthLimit);
     }
     LOG.info("SQSCLEAR: The SQS {} has been cleared of {} messages.", queueName, counter);
   }
 
-  /**
-   * Displays the data and message properties of SQS messages.
-   */
+  /** Displays the data and message properties of SQS messages. */
   public static void displayMessageAttributes(ReceiveMessageResponse response) {
     for (Message message : response.messages()) {
       LOG.info("Message payload: {}", message.body());
@@ -251,9 +245,7 @@ public class SqsOperations {
     }
   }
 
-  /**
-   * Gets the attributes from the SQS.
-   */
+  /** Gets the attributes from the SQS. */
   public static GetQueueAttributesResponse sqsGetQueueAttributes(
       AwsCredentialsProvider awsCP, String queueName) {
     try (var sqsClient = getSqsClient(awsCP)) {
@@ -290,19 +282,19 @@ public class SqsOperations {
     var response = sqsGetQueueAttributes(awsCP, queueName);
     var numMsgs = 0;
     if (response.hasAttributes()) {
-      numMsgs = Integer.parseInt(
-          response.attributes().get(QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES));
+      numMsgs =
+          Integer.parseInt(
+              response.attributes().get(QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES));
     } else {
       LOG.error("ERROR: SQS queue attributes is null.");
     }
     return numMsgs;
   }
 
-  /**
-   * Goes and gets the queueUrl so that queue can be accessed for operations.
-   */
+  /** Goes and gets the queueUrl so that queue can be accessed for operations. */
   public static String qUrl(SqsClient sqsClient, String queueName) {
-    return sqsClient.getQueueUrl(GetQueueUrlRequest.builder().queueName(queueName).build())
+    return sqsClient
+        .getQueueUrl(GetQueueUrlRequest.builder().queueName(queueName).build())
         .queueUrl();
   }
 
@@ -321,9 +313,7 @@ public class SqsOperations {
     LOG.info("DELETED {} message(s).", count);
   }
 
-  /**
-   * Deletes a message from the SQS.
-   */
+  /** Deletes a message from the SQS. */
   public static void sqsDeleteMessage(
       AwsCredentialsProvider awsCP, String queueName, Message message) {
     try (var sqsClient = getSqsClient(awsCP)) {
@@ -338,9 +328,7 @@ public class SqsOperations {
     }
   }
 
-  /**
-   * Copy a message from one SQS queue to another.
-   */
+  /** Copy a message from one SQS queue to another. */
   public static void sqsCopy(AwsCredentialsProvider awsCP, String fromSqs, String toSqs) {
     var response = sqsReadMessages(awsCP, fromSqs);
     for (Message message : response.messages()) {
@@ -348,9 +336,7 @@ public class SqsOperations {
     }
   }
 
-  /**
-   * Move a message from one SQS queue to another.
-   */
+  /** Move a message from one SQS queue to another. */
   public static void sqsMove(AwsCredentialsProvider awsCP, String fromSqs, String toSqs) {
     var message = sqsConsumeOneMessage(awsCP, fromSqs);
     sqsSend(awsCP, toSqs, message.body(), message.attributesAsStrings());
@@ -415,8 +401,11 @@ public class SqsOperations {
       LOG.info("Copied {} messages", counter);
     } else {
       counter = -1;
-      LOG.info("Queue {} is too deep ({}), for an SQS copy all, max depth is currently {}.",
-          fromSqs, depth, maxDepth);
+      LOG.info(
+          "Queue {} is too deep ({}), for an SQS copy all, max depth is currently {}.",
+          fromSqs,
+          depth,
+          maxDepth);
     }
     return counter;
   }
@@ -447,8 +436,8 @@ public class SqsOperations {
 
   /**
    * Move all messages from one SQS to another, with less log verbosity. I was also attempting to
-   * make this method faster, but it is only about twice as fast as
-   * {@link #sqsMoveAllVerbose(AwsCredentialsProvider, String, String) sqsMoveAllVerbose}.
+   * make this method faster, but it is only about twice as fast as {@link
+   * #sqsMoveAllVerbose(AwsCredentialsProvider, String, String) sqsMoveAllVerbose}.
    */
   public static void sqsMoveAll(AwsCredentialsProvider awsCP, String fromSqs, String toSqs) {
     var counter = 0;
@@ -491,12 +480,16 @@ public class SqsOperations {
    * over, making messages already checked available again. SQS Visibility Timeout: Default= 30
    * seconds, Max= 43,200 seconds (12 hours).
    */
-  public static int sqsMoveMessagesWithSelectedAttribute(AwsCredentialsProvider awsCP,
+  public static int sqsMoveMessagesWithSelectedAttribute(
+      AwsCredentialsProvider awsCP,
       String fromSqs,
-      String selectKey, String selectValue, String toSqs) {
+      String selectKey,
+      String selectValue,
+      String toSqs) {
     // check queue depth, if it is too deep just stop
     var depth = sqsDepth(awsCP, fromSqs);
-    var maxDepth = 100; // This could probably go as high as 40k, or 50k if the vt calculation is changed
+    var maxDepth =
+        100; // This could probably go as high as 40k, or 50k if the vt calculation is changed
     var counter = 0;
     if (depth < maxDepth) {
       // from queue depth calculate visibility timeout
@@ -520,7 +513,10 @@ public class SqsOperations {
               // check each one for selector stuff
               if (message.hasAttributes()) {
                 if (message.messageAttributes().get(selectKey) != null) {
-                  if (message.messageAttributes().get(selectKey).stringValue()
+                  if (message
+                      .messageAttributes()
+                      .get(selectKey)
+                      .stringValue()
                       .equals(selectValue)) {
                     sqsMoveMessage(sqsClient, fromSqs, toSqs, message);
                     counter++;
@@ -547,13 +543,14 @@ public class SqsOperations {
       LOG.info(
           "Queue {} is too deep ({}), for selective message moving, max depth is currently {}.",
           fromSqs,
-          depth, maxDepth);
+          depth,
+          maxDepth);
     }
     return counter;
   }
 
-  public static int sqsMoveMessagesWithPayloadLike(AwsCredentialsProvider awsCP, String fromSqs,
-      String payloadLike, String toSqs) {
+  public static int sqsMoveMessagesWithPayloadLike(
+      AwsCredentialsProvider awsCP, String fromSqs, String payloadLike, String toSqs) {
     // check queue depth, if it is too deep just stop
     var depth = sqsDepth(awsCP, fromSqs);
     var maxDepth = 500; // This could probably go as high as 40k
@@ -598,7 +595,8 @@ public class SqsOperations {
       LOG.info(
           "Queue {} is too deep ({}) for selective message moving, max depth is currently set to {}.",
           fromSqs,
-          depth, maxDepth);
+          depth,
+          maxDepth);
     }
     return counter;
   }
@@ -612,8 +610,8 @@ public class SqsOperations {
    * @param toSqs Target SQS.
    * @param message SQS {@link software.amazon.awssdk.services.sqs.model.Message Message}.
    */
-  private static void sqsMoveMessage(SqsClient sqsClient, String fromSqs, String toSqs,
-      Message message) {
+  private static void sqsMoveMessage(
+      SqsClient sqsClient, String fromSqs, String toSqs, Message message) {
     var sendMessageRequest =
         SendMessageRequest.builder()
             .messageBody(message.body())
@@ -629,8 +627,8 @@ public class SqsOperations {
     sqsClient.deleteMessage(deleteMessageRequest);
   }
 
-  public static int sqsDeleteMessagesWithPayloadLike(AwsCredentialsProvider awsCP, String sqs,
-      String payloadLike) {
+  public static int sqsDeleteMessagesWithPayloadLike(
+      AwsCredentialsProvider awsCP, String sqs, String payloadLike) {
     // check queue depth, if it is too deep just stop (see sqsCalcVisTimeout() JavaDoc)
     var depth = sqsDepth(awsCP, sqs);
     var maxDepth = 500; // This could probably go as high as 40k
@@ -674,7 +672,8 @@ public class SqsOperations {
       LOG.info(
           "Queue {} is too deep ({}) for selective message moving, max depth is currently set to {}.",
           sqs,
-          depth, maxDepth);
+          depth,
+          maxDepth);
     }
     return counter;
   }
