@@ -115,8 +115,7 @@ public class SqsOperations {
       awsResponseValidation(response);
       if (response.messages().isEmpty()) {
         LOG.info("SQS_READ_ONE_MESSAGE: {} has NO messages.", queueName);
-        //        throw new RuntimeException("SQS_READ_ONE_MESSAGE: " + queueName + " has NO
-        // messages.");
+        // another option: throw new RuntimeException with same log message
         return null; // I'm still not sure this choice was best
       } else {
         LOG.info("SQS_READ_ONE_MESSAGE: {} has a message.", queueName);
@@ -578,16 +577,9 @@ public class SqsOperations {
                   .build();
           var response = sqsClient.receiveMessage(receiveMessageRequest);
           if (response.hasMessages()) {
-            for (var message : response.messages()) {
-              // check each one for selector stuff
-              if (message.body().contains(payloadLike)) {
-                sqsMoveMessage(sqsClient, fromSqs, toSqs, message);
-                counter++;
-                LOG.info("Moved message #{}", counter);
-              } else {
-                LOG.info("Message does not have contents containing criteria, bypassing it.");
-              }
-            }
+            counter =
+                movingMessagesWithSpecificPayload(
+                    fromSqs, payloadLike, toSqs, response, sqsClient, counter);
           } else {
             moreMessages = false;
           }
@@ -602,6 +594,26 @@ public class SqsOperations {
           fromSqs,
           depth,
           maxDepth);
+    }
+    return counter;
+  }
+
+  private static int movingMessagesWithSpecificPayload(
+      String fromSqs,
+      String payloadLike,
+      String toSqs,
+      ReceiveMessageResponse response,
+      SqsClient sqsClient,
+      int counter) {
+    for (var message : response.messages()) {
+      // check each one for selector stuff
+      if (message.body().contains(payloadLike)) {
+        sqsMoveMessage(sqsClient, fromSqs, toSqs, message);
+        counter++;
+        LOG.info("Moved message #{}", counter);
+      } else {
+        LOG.info("Message does not have contents containing criteria, bypassing it.");
+      }
     }
     return counter;
   }
