@@ -513,28 +513,9 @@ public class SqsOperations {
                   .build();
           var response = sqsClient.receiveMessage(receiveMessageRequest);
           if (response.hasMessages()) {
-            for (var message : response.messages()) {
-              // check each one for selector stuff
-              if (message.hasAttributes()) {
-                if (message.messageAttributes().get(selectKey) != null) {
-                  if (message
-                      .messageAttributes()
-                      .get(selectKey)
-                      .stringValue()
-                      .equals(selectValue)) {
-                    sqsMoveMessage(sqsClient, fromSqs, toSqs, message);
-                    counter++;
-                    LOG.info("Moved message #{}", counter);
-                  } else {
-                    LOG.info("This message doesn't have any matching attributes, bypassing it.");
-                  }
-                } else {
-                  LOG.info("Message does not have desired attribute key, bypassing it.");
-                }
-              } else {
-                LOG.info("Message does not have any attributes, bypassing it.");
-              }
-            }
+            counter =
+                movingMessagesWithSpecificAttribute(
+                    fromSqs, selectKey, selectValue, toSqs, response, sqsClient, counter);
           } else {
             moreMessages = false;
           }
@@ -549,6 +530,39 @@ public class SqsOperations {
           fromSqs,
           depth,
           maxDepth);
+    }
+    return counter;
+  }
+
+  /**
+   * Basically this is just an extracted method that helps sqsMoveMessagesWithSelectedAttribute() to
+   * satisfy Sonarqube complaining about Cognitive Complexity.
+   */
+  private static int movingMessagesWithSpecificAttribute(
+      String fromSqs,
+      String selectKey,
+      String selectValue,
+      String toSqs,
+      ReceiveMessageResponse response,
+      SqsClient sqsClient,
+      int counter) {
+    for (var message : response.messages()) {
+      // check each one for selector stuff
+      if (message.hasAttributes()) {
+        if (message.messageAttributes().get(selectKey) != null) {
+          if (message.messageAttributes().get(selectKey).stringValue().equals(selectValue)) {
+            sqsMoveMessage(sqsClient, fromSqs, toSqs, message);
+            counter++;
+            LOG.info("Moved message #{}", counter);
+          } else {
+            LOG.info("This message doesn't have any matching attributes, bypassing it.");
+          }
+        } else {
+          LOG.info("Message does not have desired attribute key, bypassing it.");
+        }
+      } else {
+        LOG.info("Message does not have any attributes, bypassing it.");
+      }
     }
     return counter;
   }
@@ -598,6 +612,10 @@ public class SqsOperations {
     return counter;
   }
 
+  /**
+   * Basically this is an extracted method that helps sqsMoveMessagesWithPayloadLike() to satisfy
+   * Sonarqube complaining about Cognitive Complexity.
+   */
   private static int movingMessagesWithSpecificPayload(
       String fromSqs,
       String payloadLike,
