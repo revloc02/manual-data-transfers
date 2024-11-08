@@ -535,8 +535,8 @@ public class SqsOperations {
   }
 
   /**
-   * Basically this is just an extracted method that helps sqsMoveMessagesWithSelectedAttribute() to
-   * satisfy Sonarqube complaining about Cognitive Complexity.
+   * An extracted method that helps sqsMoveMessagesWithSelectedAttribute() to satisfy Sonarqube
+   * complaining about Cognitive Complexity.
    */
   private static int movingMessagesWithSpecificAttribute(
       String fromSqs,
@@ -613,8 +613,8 @@ public class SqsOperations {
   }
 
   /**
-   * Basically this is an extracted method that helps sqsMoveMessagesWithPayloadLike() to satisfy
-   * Sonarqube complaining about Cognitive Complexity.
+   * An extracted method that helps sqsMoveMessagesWithPayloadLike() to satisfy Sonarqube
+   * complaining about Cognitive Complexity.
    */
   private static int movingMessagesWithSpecificPayload(
       String fromSqs,
@@ -685,16 +685,8 @@ public class SqsOperations {
                   .build();
           var response = sqsClient.receiveMessage(receiveMessageRequest);
           if (response.hasMessages()) {
-            for (var message : response.messages()) {
-              // check each one for selector stuff
-              if (message.body().contains(payloadLike)) {
-                sqsDeleteMessage(awsCP, sqs, message);
-                counter++;
-                LOG.info("Deleted message #{}", counter);
-              } else {
-                LOG.info("Message does not have contents containing criteria, bypassing it.");
-              }
-            }
+            counter =
+                deletingMessagesWithSpecificPayload(awsCP, sqs, payloadLike, response, counter);
           } else {
             moreMessages = false;
           }
@@ -709,6 +701,29 @@ public class SqsOperations {
           sqs,
           depth,
           maxDepth);
+    }
+    return counter;
+  }
+
+  /**
+   * An extracted method that helps sqsDeleteMessagesWithPayloadLike() to satisfy Sonarqube
+   * complaining about Cognitive Complexity.
+   */
+  private static int deletingMessagesWithSpecificPayload(
+      AwsCredentialsProvider awsCP,
+      String sqs,
+      String payloadLike,
+      ReceiveMessageResponse response,
+      int counter) {
+    for (var message : response.messages()) {
+      // check each one for selector stuff
+      if (message.body().contains(payloadLike)) {
+        sqsDeleteMessage(awsCP, sqs, message);
+        counter++;
+        LOG.info("Deleted message #{}", counter);
+      } else {
+        LOG.info("Message does not have contents containing criteria, bypassing it.");
+      }
     }
     return counter;
   }
