@@ -15,6 +15,11 @@ import org.slf4j.LoggerFactory;
 
 public class ServiceBusQueueOperations {
 
+  private ServiceBusQueueOperations() {
+    // https://rules.sonarsource.com/java/RSPEC-1118/
+    throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
+  }
+
   private static final Logger LOG = LoggerFactory.getLogger(ServiceBusQueueOperations.class);
 
   /**
@@ -25,8 +30,8 @@ public class ServiceBusQueueOperations {
    */
   public static void asbSend(ConnectionStringBuilder connectionStringBuilder, IMessage message) {
     try {
-      IMessageSender iMessageSender = ClientFactory.createMessageSenderFromConnectionStringBuilder(
-          connectionStringBuilder);
+      IMessageSender iMessageSender =
+          ClientFactory.createMessageSenderFromConnectionStringBuilder(connectionStringBuilder);
       iMessageSender.send(message);
     } catch (InterruptedException | ServiceBusException e) {
       e.printStackTrace();
@@ -45,8 +50,10 @@ public class ServiceBusQueueOperations {
   }
 
   // todo: okay, okay...I have some things to learn about receiving messages.
-  // todo: Should I be using PEEKLOCK with .abandon immediately afterwards? Hypothesis: without .abandon() you can't get the message payload.
-  // todo: How do I create a message retriever that makes the message unavailable for the default 60 sec
+  // todo: Should I be using PEEKLOCK with .abandon immediately afterwards? Hypothesis: without
+  // .abandon() you can't get the message payload.
+  // todo: How do I create a message retriever that makes the message unavailable for the default 60
+  // sec
 
   /**
    * This method reads a message off of the queue, and then immediately abandons the lock on the
@@ -55,8 +62,9 @@ public class ServiceBusQueueOperations {
   public static IMessage asbRead(ConnectionStringBuilder connectionStringBuilder) {
     IMessage message = null;
     try {
-      IMessageReceiver iMessageReceiver = ClientFactory.createMessageReceiverFromConnectionStringBuilder(
-          connectionStringBuilder, ReceiveMode.PEEKLOCK);
+      IMessageReceiver iMessageReceiver =
+          ClientFactory.createMessageReceiverFromConnectionStringBuilder(
+              connectionStringBuilder, ReceiveMode.PEEKLOCK);
       message = iMessageReceiver.receive(Duration.ofSeconds(1));
       iMessageReceiver.abandon(
           message.getLockToken()); // make message available for other consumers
@@ -66,7 +74,8 @@ public class ServiceBusQueueOperations {
     return message;
   }
 
-  // todo: I tried this version of asbRead and got a null when I tried to get the message body, so what gives? Works with RECEIVEANDDELETE, Azure is stupid.
+  // todo: I tried this version of asbRead and got a null when I tried to get the message body, so
+  // what gives? Works with RECEIVEANDDELETE, Azure is stupid.
 
   /**
    * This method will read a message, and then it will not be available for any other consumers for
@@ -75,8 +84,9 @@ public class ServiceBusQueueOperations {
   public static IMessage asbReadWithPeeklock(ConnectionStringBuilder connectionStringBuilder) {
     IMessage message = null;
     try {
-      IMessageReceiver iMessageReceiver = ClientFactory.createMessageReceiverFromConnectionStringBuilder(
-          connectionStringBuilder, ReceiveMode.PEEKLOCK);
+      IMessageReceiver iMessageReceiver =
+          ClientFactory.createMessageReceiverFromConnectionStringBuilder(
+              connectionStringBuilder, ReceiveMode.PEEKLOCK);
       message = iMessageReceiver.receive(Duration.ofSeconds(1));
     } catch (ServiceBusException | InterruptedException e) {
       e.printStackTrace();
@@ -92,8 +102,9 @@ public class ServiceBusQueueOperations {
   public static IMessage asbConsume(ConnectionStringBuilder connectionStringBuilder) {
     IMessage message = null;
     try {
-      IMessageReceiver iMessageReceiver = ClientFactory.createMessageReceiverFromConnectionStringBuilder(
-          connectionStringBuilder, ReceiveMode.RECEIVEANDDELETE);
+      IMessageReceiver iMessageReceiver =
+          ClientFactory.createMessageReceiverFromConnectionStringBuilder(
+              connectionStringBuilder, ReceiveMode.RECEIVEANDDELETE);
       message = iMessageReceiver.receive(Duration.ofSeconds(1));
     } catch (InterruptedException | ServiceBusException e) {
       e.printStackTrace();
@@ -109,8 +120,9 @@ public class ServiceBusQueueOperations {
    */
   public static void asbDlq(ConnectionStringBuilder connectionStringBuilder) {
     try {
-      IMessageReceiver iMessageReceiver = ClientFactory.createMessageReceiverFromConnectionStringBuilder(
-          connectionStringBuilder, ReceiveMode.PEEKLOCK);
+      IMessageReceiver iMessageReceiver =
+          ClientFactory.createMessageReceiverFromConnectionStringBuilder(
+              connectionStringBuilder, ReceiveMode.PEEKLOCK);
       var message = iMessageReceiver.receive(Duration.ofSeconds(1));
       iMessageReceiver.deadLetterAsync(message.getLockToken());
     } catch (InterruptedException | ServiceBusException e) {
@@ -148,9 +160,10 @@ public class ServiceBusQueueOperations {
    * Copy all messages from one queue to another. The challenge here is if the queue is too deep,
    * messages that were copied early will become available on the queue before the copyAll process
    * is complete, and then those messages will get copied again. So this code employs this strategy:
-   * 1) Check the queue message count, if it is deeper than 1000 messages, abort. 2) Currently this code
-   * relies on ReceiveMode.PEEKLOCK which has a 60 sec timeout before making the message available
-   * again. 3) Retrieve each message from the queue. 4) Copy the message to the other queue.
+   * 1) Check the queue message count, if it is deeper than 1000 messages, abort. 2) Currently this
+   * code relies on ReceiveMode.PEEKLOCK which has a 60 sec timeout before making the message
+   * available again. 3) Retrieve each message from the queue. 4) Copy the message to the other
+   * queue.
    */
   public static void asbCopyAll(ConnectionStringBuilder fromCsb, ConnectionStringBuilder toCsb) {
     // check the queue depth, if it is beyond a certain size, abort
@@ -160,21 +173,23 @@ public class ServiceBusQueueOperations {
       while (depth > 0) {
         LOG.info("depth={}", depth);
         var message = asbReadWithPeeklock(fromCsb);
-        if (message != null){
+        if (message != null) {
           asbSend(toCsb, asbReadWithPeeklock(fromCsb));
         }
         depth = messageCount(fromCsb);
       }
     } else {
-      LOG.info("Queue is too deep ({}), for a copy all, max depth is currently {}.", depth, maxDepth);
+      LOG.info(
+          "Queue is too deep ({}), for a copy all, max depth is currently {}.", depth, maxDepth);
     }
   }
 
   public static int asbPurge(ConnectionStringBuilder connectionStringBuilder) {
     var counter = 0;
     try {
-      IMessageReceiver iMessageReceiver = ClientFactory.createMessageReceiverFromConnectionStringBuilder(
-          connectionStringBuilder, ReceiveMode.RECEIVEANDDELETE);
+      IMessageReceiver iMessageReceiver =
+          ClientFactory.createMessageReceiverFromConnectionStringBuilder(
+              connectionStringBuilder, ReceiveMode.RECEIVEANDDELETE);
       while (iMessageReceiver.peek() != null) {
         var messages = iMessageReceiver.receiveBatch(1);
         LOG.info("asbPurge received {} messages, purging...", messages.size());
@@ -197,13 +212,17 @@ public class ServiceBusQueueOperations {
     ManagementClient client = new ManagementClient(connectionStringBuilder);
     long messageCount = -1;
     try {
-      var mcd = client.getQueueRuntimeInfo(connectionStringBuilder.getEntityPath())
-          .getMessageCountDetails();
+      var mcd =
+          client
+              .getQueueRuntimeInfo(connectionStringBuilder.getEntityPath())
+              .getMessageCountDetails();
       messageCount = mcd.getActiveMessageCount();
       LOG.info(
           "Message Count Details:\n  ActiveMessageCount={}\n  DeadLetterMessageCount={}\n  ScheduledMessageCount={}\n  TransferMessageCount={}\n  TransferDeadLetterMessageCount={}\n",
-          mcd.getActiveMessageCount(), mcd.getDeadLetterMessageCount(),
-          mcd.getScheduledMessageCount(), mcd.getTransferMessageCount(),
+          mcd.getActiveMessageCount(),
+          mcd.getDeadLetterMessageCount(),
+          mcd.getScheduledMessageCount(),
+          mcd.getTransferMessageCount(),
           mcd.getTransferDeadLetterMessageCount());
     } catch (ServiceBusException | InterruptedException e) {
       e.printStackTrace();
@@ -211,8 +230,8 @@ public class ServiceBusQueueOperations {
     return messageCount;
   }
 
-  public static ConnectionStringBuilder connectAsbQ(URI endPoint, String entityPath,
-      String sharedAccessKeyName, String sharedAccessKey) {
+  public static ConnectionStringBuilder connectAsbQ(
+      URI endPoint, String entityPath, String sharedAccessKeyName, String sharedAccessKey) {
     return new ConnectionStringBuilder(endPoint, entityPath, sharedAccessKeyName, sharedAccessKey);
   }
 }

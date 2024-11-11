@@ -28,13 +28,13 @@ import software.amazon.awssdk.services.s3.model.S3Object;
 /** Operation for connecting to S3 buckets. */
 public class S3Operations {
 
-  private static final Logger LOG = LoggerFactory.getLogger(S3Operations.class);
-  private static final String PUT_SUCCESS = "S3PUT: The object {} was put on the {} bucket.";
-
   private S3Operations() {
     // https://rules.sonarsource.com/java/RSPEC-1118/
     throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
   }
+
+  private static final Logger LOG = LoggerFactory.getLogger(S3Operations.class);
+  private static final String PUT_SUCCESS = "S3PUT: The object {} was put on the {} bucket.";
 
   /**
    * s3Put with AwsCreds. Put an object on a desired S3 bucket. Creates an S3Client--good to use
