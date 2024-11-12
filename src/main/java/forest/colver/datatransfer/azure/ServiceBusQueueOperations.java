@@ -112,8 +112,11 @@ public class ServiceBusQueueOperations {
           ClientFactory.createMessageReceiverFromConnectionStringBuilder(
               connectionStringBuilder, ReceiveMode.RECEIVEANDDELETE);
       message = iMessageReceiver.receive(Duration.ofSeconds(1));
-    } catch (InterruptedException | ServiceBusException e) {
-      e.printStackTrace();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      LOG.error("An error occurred in asbConsume: {}", e.getMessage(), e);
+    } catch (ServiceBusException e) {
+      LOG.error("An error occurred in asbConsume: {}", e.getMessage(), e);
     }
     LOG.info("=====Consumed message from ASB queue: {}", connectionStringBuilder.getEntityPath());
     return message;
@@ -131,8 +134,11 @@ public class ServiceBusQueueOperations {
               connectionStringBuilder, ReceiveMode.PEEKLOCK);
       var message = iMessageReceiver.receive(Duration.ofSeconds(1));
       iMessageReceiver.deadLetterAsync(message.getLockToken());
-    } catch (InterruptedException | ServiceBusException e) {
-      e.printStackTrace();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      LOG.error("An error occurred in asbDlq: {}", e.getMessage(), e);
+    } catch (ServiceBusException e) {
+      LOG.error("An error occurred in asbDlq: {}", e.getMessage(), e);
     }
   }
 
