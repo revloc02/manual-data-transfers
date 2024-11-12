@@ -33,8 +33,11 @@ public class ServiceBusQueueOperations {
       IMessageSender iMessageSender =
           ClientFactory.createMessageSenderFromConnectionStringBuilder(connectionStringBuilder);
       iMessageSender.send(message);
-    } catch (InterruptedException | ServiceBusException e) {
-      e.printStackTrace();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      LOG.error("An error occurred in asbSend: {}", e.getMessage(), e);
+    } catch (ServiceBusException e) {
+      LOG.error("An error occurred in asbSend: {}", e.getMessage(), e);
     }
   }
 
@@ -68,8 +71,11 @@ public class ServiceBusQueueOperations {
       message = iMessageReceiver.receive(Duration.ofSeconds(1));
       iMessageReceiver.abandon(
           message.getLockToken()); // make message available for other consumers
-    } catch (InterruptedException | ServiceBusException e) {
-      e.printStackTrace();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      LOG.error("An error occurred in asbRead: {}", e.getMessage(), e);
+    } catch (ServiceBusException e) {
+      LOG.error("An error occurred in asbRead: {}", e.getMessage(), e);
     }
     return message;
   }
