@@ -94,8 +94,11 @@ public class ServiceBusQueueOperations {
           ClientFactory.createMessageReceiverFromConnectionStringBuilder(
               connectionStringBuilder, ReceiveMode.PEEKLOCK);
       message = iMessageReceiver.receive(Duration.ofSeconds(1));
-    } catch (ServiceBusException | InterruptedException e) {
-      e.printStackTrace();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      LOG.error("An error occurred in asbReadWithPeeklock: {}", e.getMessage(), e);
+    } catch (ServiceBusException e) {
+      LOG.error("An error occurred in asbReadWithPeeklock: {}", e.getMessage(), e);
     }
     return message;
   }
