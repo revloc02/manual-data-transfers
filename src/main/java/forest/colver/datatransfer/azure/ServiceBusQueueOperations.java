@@ -207,8 +207,11 @@ public class ServiceBusQueueOperations {
         LOG.info("asbPurge received {} messages, purging...", messages.size());
         counter += messages.size();
       }
-    } catch (ServiceBusException | InterruptedException e) {
-      e.printStackTrace();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      LOG.error("An error occurred in asbPurge: {}", e.getMessage(), e);
+    } catch (ServiceBusException e) {
+      LOG.error("An error occurred in asbPurge: {}", e.getMessage(), e);
     }
     LOG.info("Purged {} messages.", counter);
     return counter;
