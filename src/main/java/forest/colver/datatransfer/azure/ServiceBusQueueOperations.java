@@ -239,8 +239,11 @@ public class ServiceBusQueueOperations {
           mcd.getScheduledMessageCount(),
           mcd.getTransferMessageCount(),
           mcd.getTransferDeadLetterMessageCount());
-    } catch (ServiceBusException | InterruptedException e) {
-      e.printStackTrace();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      LOG.error("An error occurred in messageCount: {}", e.getMessage(), e);
+    } catch (ServiceBusException e) {
+      LOG.error("An error occurred in messageCount: {}", e.getMessage(), e);
     }
     return messageCount;
   }
