@@ -147,17 +147,19 @@ public class ServiceBusQueueOperations {
 
   public static void asbMove(ConnectionStringBuilder fromCsb, ConnectionStringBuilder toCsb) {
     var receiver = getReceiver(fromCsb);
-    IMessage message;
     try {
-      message = receiver.receive(Duration.ofSeconds(1));
-    } catch (InterruptedException e) {
+      var message = receiver.receive(Duration.ofSeconds(1));
+      if (message != null) {
+        asbSend(toCsb, message);
+        receiver.completeAsync(message.getLockToken()); // delete the message
+        LOG.info("Message moved from {} to {}", fromCsb.getEntityPath(), toCsb.getEntityPath());
+      } else {
+        LOG.warn("No message to move from {}", fromCsb.getEntityPath());
+      }
+    } catch (InterruptedException | ServiceBusException e) {
       Thread.currentThread().interrupt();
-      throw new RuntimeException(e);
-    } catch (ServiceBusException e) {
-      throw new RuntimeException(e);
+      LOG.error("An error occurred in asbMove: {}", e.getMessage(), e);
     }
-    asbSend(toCsb, message);
-    receiver.completeAsync(message.getLockToken()); // delete the message
   }
 
   public static void asbMoveAll(ConnectionStringBuilder fromCsb, ConnectionStringBuilder toCsb) {
