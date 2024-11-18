@@ -45,11 +45,11 @@ public class ServiceBusQueueOperations {
     try {
       return ClientFactory.createMessageReceiverFromConnectionStringBuilder(
           connectionStringBuilder, ReceiveMode.PEEKLOCK);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    } catch (ServiceBusException e) {
-      throw new RuntimeException(e);
+    } catch (InterruptedException | ServiceBusException e) {
+      Thread.currentThread().interrupt();
+      LOG.error("An error occurred in getReceiver: {}", e.getMessage(), e);
     }
+    return null;
   }
 
   // todo: okay, okay...I have some things to learn about receiving messages.
