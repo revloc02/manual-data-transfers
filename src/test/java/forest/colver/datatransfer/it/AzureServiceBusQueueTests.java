@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 class AzureServiceBusQueueTests {
 
   private static final Logger LOG = LoggerFactory.getLogger(AzureServiceBusQueueTests.class);
-  private final ConnectionStringBuilder CREDS =
+  private static final ConnectionStringBuilder CREDS =
       connectAsbQ(
           EMX_SANDBOX_NAMESPACE,
           EMX_SANDBOX_FOREST_QUEUE,
