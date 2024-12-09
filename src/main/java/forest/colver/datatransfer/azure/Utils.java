@@ -55,6 +55,8 @@ public class Utils {
       userCreds.getProperty("azure-emx-sandbox-emxsandbox-sa-forest-test-blob-sas-token");
   public static final String EMX_SANDBOX_SA_FOREST_TEST_BLOB2_SAS =
       userCreds.getProperty("azure-emx-sandbox-emxsandbox-sa-forest-test-blob2-sas-token");
+  public static final String EMX_SANDBOX_ASB_FOREST_TEST_QUEUE_CONN_STR =
+      userCreds.getProperty("azure-emx-sandbox-forest-test-servicebus-queue-conn-str");
 
   public static IMessage createIMessage(
       String payload, String label, String id, Map<String, Object> properties) {
