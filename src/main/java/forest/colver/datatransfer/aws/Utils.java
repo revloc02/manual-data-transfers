@@ -51,7 +51,7 @@ public class Utils {
   public static final String PERSONAL_SANDBOX_SQS_SUB_SNS = "sub_demo_adv_queue";
 
   public static AwsCredentialsProvider getEmxNpCreds() {
-    return ProfileCredentialsProvider.create("enterprise-np");
+    return ProfileCredentialsProvider.create("aws-cloud-developer-463420020431");
   }
 
   public static AwsCredentialsProvider getEmxSbCreds() { // enterprise sandbox
@@ -60,7 +60,7 @@ public class Utils {
   }
 
   public static AwsCredentialsProvider getEmxProdCreds() {
-    return ProfileCredentialsProvider.create("enterprise-prod");
+    return ProfileCredentialsProvider.create("aws-cloud-developer-616609670685");
   }
 
   public static AwsCredentialsProvider getPersonalSbCreds() {
