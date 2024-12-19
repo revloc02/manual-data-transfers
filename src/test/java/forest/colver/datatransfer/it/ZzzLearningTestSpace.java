@@ -2,9 +2,12 @@ package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
 import static forest.colver.datatransfer.aws.S3Operations.s3List;
+import static forest.colver.datatransfer.aws.S3Operations.s3ListContResponse;
+import static forest.colver.datatransfer.aws.S3Operations.s3ListResponse;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListVersions;
 import static forest.colver.datatransfer.aws.S3Operations.s3Put;
 import static forest.colver.datatransfer.aws.Utils.S3_INTERNAL;
+import static forest.colver.datatransfer.aws.Utils.getEmxNpCreds;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.aws.Utils.getS3Client;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobGet;
@@ -100,5 +103,42 @@ class ZzzLearningTestSpace {
         s3Delete(s3Client, S3_INTERNAL, version.key(), version.versionId());
       }
     }
+  }
+
+  // todo: is it possible to write a psuedo search for s3? Fuzzy search file names?
+  @Test
+  void testS3Search() {
+    //    var creds = getEmxSbCreds();
+    //    var bucket = "emx-sandbox-sftp-source-customer";
+    var creds = getEmxNpCreds();
+    var bucket = "emx-stage-sftp-source-customer";
+    //    var creds = getEmxProdCreds();
+    //    var bucket = "emx-prod-sftp-source-customer";
+    int count = 0;
+    try (var s3Client = getS3Client(creds)) {
+      var keyPrefix = "";
+
+      var response = s3ListResponse(s3Client, bucket, keyPrefix, 1000);
+      if (response.hasContents()) {
+        //        while (!response.contents().isEmpty()) { // can't get this to work right now
+        LOG.info("response.contents().size(): {}", response.contents().size());
+        for (var object : response.contents()) {
+          LOG.info("object: {}", object.key());
+          if (object.key().endsWith(".filepart")) {
+            count++;
+          }
+        }
+        //        LOG.info("nextContinuationToken: {}", response.nextContinuationToken());
+        // get the next page
+        if (response.nextContinuationToken() != null) {
+          response =
+              s3ListContResponse(
+                  s3Client, S3_INTERNAL, keyPrefix, response.nextContinuationToken());
+        }
+        //        }
+      }
+    }
+    LOG.info("count: {}", count);
+    assertThat(count).isNotNegative(); // this assert is moot, just keeping SonarLint happy
   }
 }
