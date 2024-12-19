@@ -3,6 +3,7 @@ package forest.colver.datatransfer.azure;
 import static forest.colver.datatransfer.config.Utils.userCreds;
 
 import com.azure.core.util.BinaryData;
+import com.azure.messaging.servicebus.ServiceBusMessage;
 import com.microsoft.azure.servicebus.IMessage;
 import com.microsoft.azure.servicebus.Message;
 import com.microsoft.azure.servicebus.MessageBodyType;
@@ -75,6 +76,14 @@ public class Utils {
 
   public static IMessage createIMessage(String payload) {
     return createIMessage(payload, Collections.emptyMap());
+  }
+
+  public static ServiceBusMessage createServiceBusMessage(
+      String body, Map<String, Object> properties) {
+    var serviceBusMessage = new ServiceBusMessage(body);
+    properties.forEach(
+        (key, value) -> serviceBusMessage.getApplicationProperties().put(key, value));
+    return serviceBusMessage;
   }
 
   public static void displayIMessage(IMessage msg) {
