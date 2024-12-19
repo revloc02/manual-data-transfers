@@ -201,22 +201,32 @@ public class ServiceBusQueueOperations {
     }
   }
 
+  // todo: can I write a Purge that uses ServiceBusMessage and a try-with-resources block?
   public static int asbPurge(ConnectionStringBuilder connectionStringBuilder) {
-    var counter = 0;
+    int counter = 0;
+    IMessageReceiver iMessageReceiver = null;
     try {
-      IMessageReceiver iMessageReceiver =
+      iMessageReceiver =
           ClientFactory.createMessageReceiverFromConnectionStringBuilder(
               connectionStringBuilder, ReceiveMode.RECEIVEANDDELETE);
       while (iMessageReceiver.peek() != null) {
-        var messages = iMessageReceiver.receiveBatch(1);
-        LOG.info("asbPurge received {} messages, purging...", messages.size());
-        counter += messages.size();
+        var messages = iMessageReceiver.receiveBatch(10);
+        if (messages != null && !messages.isEmpty()) {
+          LOG.info("asbPurge received {} messages, purging...", messages.size());
+          counter += messages.size();
+        }
       }
-    } catch (InterruptedException e) {
+    } catch (InterruptedException | ServiceBusException e) {
       Thread.currentThread().interrupt();
       LOG.error("An error occurred in asbPurge: {}", e.getMessage(), e);
-    } catch (ServiceBusException e) {
-      LOG.error("An error occurred in asbPurge: {}", e.getMessage(), e);
+    } finally {
+      if (iMessageReceiver != null) {
+        try {
+          iMessageReceiver.close();
+        } catch (ServiceBusException e) {
+          LOG.error("Failed to close IMessageReceiver: {}", e.getMessage(), e);
+        }
+      }
     }
     LOG.info("Purged {} messages.", counter);
     return counter;
