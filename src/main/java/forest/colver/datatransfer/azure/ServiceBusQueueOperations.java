@@ -201,7 +201,6 @@ public class ServiceBusQueueOperations {
     }
   }
 
-  // todo: can I write a Purge that uses ServiceBusMessage and a try-with-resources block?
   public static int asbPurge(ConnectionStringBuilder connectionStringBuilder) {
     int counter = 0;
     IMessageReceiver iMessageReceiver = null;
