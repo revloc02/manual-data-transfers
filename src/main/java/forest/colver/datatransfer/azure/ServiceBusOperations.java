@@ -55,4 +55,26 @@ public class ServiceBusOperations {
       return message.orElse(null);
     }
   }
+
+  public static long asbPurge(String connectionString, String queueName) {
+    long counter = 0;
+    try (ServiceBusReceiverClient receiver =
+        new ServiceBusClientBuilder()
+            .connectionString(connectionString)
+            .receiver()
+            .queueName(queueName)
+            .receiveMode(ServiceBusReceiveMode.RECEIVE_AND_DELETE)
+            .buildClient()) {
+      while (receiver.peekMessage() != null) {
+        var messages = receiver.receiveMessages(10, Duration.ofSeconds(1));
+        if (messages != null && messages.stream().findAny().isPresent()) {
+          long messageCount = messages.stream().count();
+          LOG.info("asbPurge received {} messages, purging...", messageCount);
+          counter += messageCount;
+        }
+      }
+    }
+    LOG.info("asbPurge purged {} messages from queue: {}", counter, queueName);
+    return counter;
+  }
 }
