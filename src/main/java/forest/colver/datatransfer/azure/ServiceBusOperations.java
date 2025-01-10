@@ -42,7 +42,8 @@ public class ServiceBusOperations {
    * @param queueName The name of the queue.
    * @return The message, or null if no message is available.
    */
-  public static ServiceBusReceivedMessage asbGetMessage(String connectionString, String queueName) {
+  public static ServiceBusReceivedMessage asbReadMessage(
+      String connectionString, String queueName) {
     try (ServiceBusReceiverClient receiver =
         new ServiceBusClientBuilder()
             .connectionString(connectionString)
