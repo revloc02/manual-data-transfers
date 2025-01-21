@@ -8,6 +8,7 @@ import com.microsoft.azure.servicebus.ReceiveMode;
 import com.microsoft.azure.servicebus.management.ManagementClient;
 import com.microsoft.azure.servicebus.primitives.ConnectionStringBuilder;
 import com.microsoft.azure.servicebus.primitives.ServiceBusException;
+import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
 import org.slf4j.Logger;
@@ -258,6 +259,12 @@ public class ServiceBusQueueOperations {
       LOG.error("An error occurred in messageCount: {}", e.getMessage(), e);
     } catch (ServiceBusException e) {
       LOG.error("An error occurred in messageCount: {}", e.getMessage(), e);
+    } finally {
+      try {
+        client.close();
+      } catch (IOException e) {
+        LOG.error("Failed to close ManagementClient: {}", e.getMessage(), e);
+      }
     }
     return messageCount;
   }
