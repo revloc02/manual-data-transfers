@@ -202,7 +202,7 @@ public class ServiceBusQueueOperations {
     }
   }
 
-  public static int asbPurge(ConnectionStringBuilder connectionStringBuilder) {
+  public static int asbQueuePurge(ConnectionStringBuilder connectionStringBuilder) {
     int counter = 0;
     IMessageReceiver iMessageReceiver = null;
     try {
@@ -212,13 +212,13 @@ public class ServiceBusQueueOperations {
       while (iMessageReceiver.peek() != null) {
         var messages = iMessageReceiver.receiveBatch(10);
         if (messages != null && !messages.isEmpty()) {
-          LOG.info("asbPurge received {} messages, purging...", messages.size());
+          LOG.info("asbQueuePurge received {} messages, purging...", messages.size());
           counter += messages.size();
         }
       }
     } catch (InterruptedException | ServiceBusException e) {
       Thread.currentThread().interrupt();
-      LOG.error("An error occurred in asbPurge: {}", e.getMessage(), e);
+      LOG.error("An error occurred in asbQueuePurge: {}", e.getMessage(), e);
     } finally {
       if (iMessageReceiver != null) {
         try {
@@ -228,7 +228,7 @@ public class ServiceBusQueueOperations {
         }
       }
     }
-    LOG.info("Purged {} messages.", counter);
+    LOG.info("asbQueuePurge purged {} messages.", counter);
     return counter;
   }
 

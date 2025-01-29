@@ -8,7 +8,7 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsume;
-import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbPurge;
+import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbQueuePurge;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbRead;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbSend;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.connectAsbQ;
@@ -131,7 +131,7 @@ class HybridSqsAndAsbQueueIntTests {
         .untilAsserted(() -> assertThat(messageCount(asbCreds)).isEqualTo(numMsgs));
 
     // cleanup
-    asbPurge(asbCreds);
+    asbQueuePurge(asbCreds);
   }
 
   /**
@@ -254,7 +254,7 @@ class HybridSqsAndAsbQueueIntTests {
         .untilAsserted(() -> assertThat(sqsDepth(awsCreds, SQS1)).isEqualTo(numMsgs));
 
     // cleanup
-    asbPurge(asbCreds);
+    asbQueuePurge(asbCreds);
     sqsPurge(awsCreds, SQS1);
   }
 }

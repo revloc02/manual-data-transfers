@@ -6,7 +6,7 @@ import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbCopy
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbDlq;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbMove;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbMoveAll;
-import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbPurge;
+import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbQueuePurge;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbRead;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbSend;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.connectAsbQ;
@@ -51,8 +51,8 @@ class AzureServiceBusQueueTests {
             EMX_SANDBOX_FOREST_QUEUE2,
             EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
             EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
-    asbPurge(CREDS);
-    asbPurge(creds2);
+    asbQueuePurge(CREDS);
+    asbQueuePurge(creds2);
   }
 
   @Test
@@ -118,7 +118,7 @@ class AzureServiceBusQueueTests {
         .untilAsserted(() -> assertThat(messageCount(CREDS)).isZero());
 
     LOG.info("...cleanup...");
-    asbPurge(toCreds);
+    asbQueuePurge(toCreds);
   }
 
   @Test
@@ -159,7 +159,7 @@ class AzureServiceBusQueueTests {
         .untilAsserted(() -> assertThat(messageCount(CREDS)).isGreaterThanOrEqualTo(num));
 
     LOG.info("...now purge the queue...");
-    assertThat(asbPurge(CREDS)).isGreaterThanOrEqualTo(num);
+    assertThat(asbQueuePurge(CREDS)).isGreaterThanOrEqualTo(num);
     LOG.info("...and check that it was purged...");
     assertThat(messageCount(CREDS)).isZero();
   }
@@ -208,8 +208,8 @@ class AzureServiceBusQueueTests {
     assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
 
     LOG.info("...cleanup the queue and the DLQ...");
-    asbPurge(credsQwDlq);
-    asbPurge(credsQwDlq_Dlq);
+    asbQueuePurge(credsQwDlq);
+    asbQueuePurge(credsQwDlq_Dlq);
   }
 
   /**
@@ -261,8 +261,8 @@ class AzureServiceBusQueueTests {
     assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
 
     LOG.info("...cleanup the queue and the DLQ...");
-    asbPurge(credsTtlQueue);
-    asbPurge(credsTtlQueueDlq);
+    asbQueuePurge(credsTtlQueue);
+    asbQueuePurge(credsTtlQueueDlq);
   }
 
   @Test
@@ -331,7 +331,7 @@ class AzureServiceBusQueueTests {
         .untilAsserted(() -> assertThat(messageCount(toCreds)).isEqualTo(numMsgs));
 
     LOG.info("...cleanup...");
-    asbPurge(toCreds);
+    asbQueuePurge(toCreds);
   }
 
   @Test
@@ -373,8 +373,8 @@ class AzureServiceBusQueueTests {
         .untilAsserted(() -> assertThat(messageCount(CREDS)).isEqualTo(1));
 
     LOG.info("...cleanup...");
-    asbPurge(toCreds);
-    asbPurge(CREDS);
+    asbQueuePurge(toCreds);
+    asbQueuePurge(CREDS);
   }
 
   // todo: this is not working yet, I haven't found a strategy to apply the equivalent of a
@@ -414,7 +414,7 @@ class AzureServiceBusQueueTests {
         .untilAsserted(() -> assertThat(messageCount(CREDS)).isEqualTo(numMsgs));
 
     LOG.info("...cleanup...");
-    asbPurge(toCreds);
-    asbPurge(CREDS);
+    asbQueuePurge(toCreds);
+    asbQueuePurge(CREDS);
   }
 }
