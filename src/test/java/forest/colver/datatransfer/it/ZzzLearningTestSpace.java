@@ -6,9 +6,14 @@ import static forest.colver.datatransfer.aws.S3Operations.s3ListContResponse;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListResponse;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListVersions;
 import static forest.colver.datatransfer.aws.S3Operations.s3Put;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessage;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.S3_INTERNAL;
 import static forest.colver.datatransfer.aws.Utils.getEmxNpCreds;
+import static forest.colver.datatransfer.aws.Utils.getEmxProdCreds;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
+import static forest.colver.datatransfer.aws.Utils.getPersonalSbCreds;
 import static forest.colver.datatransfer.aws.Utils.getS3Client;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobGet;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobPut;
@@ -19,7 +24,9 @@ import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,6 +115,9 @@ class ZzzLearningTestSpace {
   // todo: is it possible to write a psuedo search for s3? Fuzzy search file names?
   @Test
   void testS3Search() {
+    // todo: write a uniquely named file to search for
+    // todo: eventually, when this is done, I want to look for .filepart files on SFTP S3s
+
     //    var creds = getEmxSbCreds();
     //    var bucket = "emx-sandbox-sftp-source-customer";
     var creds = getEmxNpCreds();
@@ -140,5 +150,77 @@ class ZzzLearningTestSpace {
     }
     LOG.info("count: {}", count);
     assertThat(count).isNotNegative(); // this assert is moot, just keeping SonarLint happy
+  }
+
+  // check for directory object expiration on Target Customer S3
+  // get creds first using `aws configure sso`
+  @Test
+  void checkSftpTargetCustomerDirectoriesThatExpired() {
+    var creds = getEmxProdCreds();
+    var bucket = "emx-prod-sftp-target-customer";
+    int count = 0;
+    Map<String, Integer> emxKnownSystems =
+        new HashMap<>(
+            Map.of(
+                "dw-family-history",
+                0,
+                "emx-health-check",
+                0,
+                "ext-deseret-book",
+                0,
+                "ext-ensign-college-workday",
+                0,
+                "ext-nomentia",
+                0,
+                "ext-riskonnect",
+                0));
+    try (var s3Client = getS3Client(creds)) {
+      var keyPrefix = "";
+      var response = s3ListResponse(s3Client, bucket, keyPrefix, 1000);
+      if (response.hasContents()) {
+        LOG.info("response.contents().size(): {}", response.contents().size());
+        for (var object : response.contents()) {
+          LOG.info("object: {}", object.key());
+          count++;
+          for (var system : emxKnownSystems.keySet()) {
+            if (object.key().contains(system)) {
+              emxKnownSystems.compute(system, (k, currentCount) -> currentCount + 1);
+            }
+          }
+        }
+      }
+    }
+    LOG.info("count: {}", count);
+    for (var system : emxKnownSystems.keySet()) {
+      LOG.info("{}: {}", system, emxKnownSystems.get(system));
+      // if this breaks, I will know that a directory object expired
+      assertThat(emxKnownSystems.get(system)).isNotZero();
+    }
+  }
+
+  // Just a quick SQS message test for various KMS policies I am trying
+  @Test
+  void testKmsTestSqs() {
+    var sqs = "kms_test_queue";
+    LOG.info("Interacting with: sqs={}", sqs);
+    // send a message
+    var creds = getPersonalSbCreds();
+    var payload = "message with payload only, no MessageAttributes";
+    sqsSend(creds, sqs, payload);
+    // check that it arrived
+    var msg = sqsReadOneMessage(creds, sqs);
+    assert msg != null;
+    assertThat(msg.body()).isEqualTo(payload);
+    // cleanup
+    sqsDeleteMessage(creds, sqs, msg);
+  }
+
+  // Gets a UUID and then logs the String hashCode of it, so I know what it looks like
+  @Test
+  void testHashCodeOfUuid() {
+    for (int i = 0; i < 10; i++) {
+      var uuid = java.util.UUID.randomUUID();
+      LOG.info("uuid: {}. uuid.hashCode(): {}", uuid, uuid.hashCode());
+    }
   }
 }
