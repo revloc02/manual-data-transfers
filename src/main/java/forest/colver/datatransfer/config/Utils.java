@@ -15,9 +15,7 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * General utils
- */
+/** General utils */
 public class Utils {
 
   private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
@@ -25,6 +23,8 @@ public class Utils {
   public static final long TIMESTAMP = Instant.now().toEpochMilli();
   public static final String TIME_STAMP_FORMATTED =
       new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss.SSS").format(new Date());
+  public static final String TIME_STAMP_FILENAME =
+      new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
   public static String defaultPayload = "Default Payload: " + TIME_STAMP_FORMATTED;
 
   static final long DEFAULT_TTL = 60_000L; // time to live in milliseconds
@@ -62,8 +62,7 @@ public class Utils {
   }
 
   /**
-   * Used to write a file to disk, most useful when a message payload is too big to peruse in a
-   * log.
+   * Used to write a file to disk, most useful when a message payload is too big to peruse in a log.
    *
    * @param fullyQualifiedFilePath The path to the intended location of the written file.
    * @param contents The contents to be written to the file.
@@ -140,11 +139,21 @@ public class Utils {
     return getCredentials(fullPath);
   }
 
-  public static String getDefaultPayload() { return defaultPayload; }
+  public static String getDefaultPayload() {
+    return defaultPayload;
+  }
 
-  public static String getTimeStampFormatted() { return TIME_STAMP_FORMATTED; }
+  public static String getTimeStampFormatted() {
+    return TIME_STAMP_FORMATTED;
+  }
 
-  public static long getTimeStamp() { return TIMESTAMP; }
+  public static String getTimeStampFilename() {
+    return TIME_STAMP_FILENAME;
+  }
+
+  public static long getTimeStamp() {
+    return TIMESTAMP;
+  }
 
   public static String getUsername() {
     return username;
