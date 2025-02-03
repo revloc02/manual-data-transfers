@@ -3,6 +3,7 @@ package forest.colver.datatransfer.it;
 import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
 import static forest.colver.datatransfer.aws.S3Operations.s3List;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListContResponse;
+import static forest.colver.datatransfer.aws.S3Operations.s3ListDeleteMarkers;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListResponse;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListVersions;
 import static forest.colver.datatransfer.aws.S3Operations.s3Put;
@@ -21,6 +22,7 @@ import static forest.colver.datatransfer.azure.BlobStorageOperations.blobPutSas;
 import static forest.colver.datatransfer.azure.Utils.EMX_EXTEMCORNP_SA_EXT_EMCOR_NP_SAS_TOKEN;
 import static forest.colver.datatransfer.azure.Utils.EMX_PROD_EXT_EMCOR_PROD_SA_CONN_STR;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
+import static forest.colver.datatransfer.config.Utils.getTimeStampFilename;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
@@ -86,29 +88,79 @@ class ZzzLearningTestSpace {
     //    blobDelete(connectionStr, endpoint, containerName, filename);
   }
 
+  // deletes file and then deletes the versioned file, but currently the Delete Marker remains
+  // get creds first using `aws configure sso`
   @Test
   void testLearnS3Versioning() {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
-      var objectKey = "revloc02/target/test/file-with-versions.txt";
+      var keyPrefix = "revloc02/target/versions-removed";
+      var objectKey = keyPrefix + "/removed" + getTimeStampFilename() + ".txt";
       LOG.info("...place a file...");
       s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
 
-      LOG.info("...check the file...");
-      var objects = s3List(creds, S3_INTERNAL, "revloc02/target/test");
+      LOG.info("...check the file arrived...");
+      var objects = s3List(creds, S3_INTERNAL, keyPrefix);
       assertThat(objects).hasSizeGreaterThanOrEqualTo(1);
-      assertThat(objects.get(0).size()).isEqualTo(40L);
+
+      LOG.info("...delete the file...");
+      s3Delete(creds, S3_INTERNAL, objectKey);
+
+      LOG.info("...check for versions, can the delete marker be seen? No...");
+      var versions = s3ListVersions(s3Client, S3_INTERNAL, keyPrefix);
+
+      LOG.info("...cleanup and delete the file versions...");
+      for (var version : versions) {
+        s3Delete(s3Client, S3_INTERNAL, version.key(), version.versionId());
+      }
+
+      LOG.info("...check for delete markers, can the delete marker be seen? Yes...");
+      var deleteMarkers = s3ListDeleteMarkers(s3Client, S3_INTERNAL, keyPrefix);
+
+      LOG.info("...cleanup and delete the file delete markers...");
+      for (var deleteMarker : deleteMarkers) {
+        s3Delete(s3Client, S3_INTERNAL, deleteMarker.key(), deleteMarker.versionId());
+      }
+    }
+  }
+
+  // places a file and then deletes it, but leaves the version
+  // get creds first using `aws configure sso`
+  @Test
+  void testS3DeleteButLeaveVersion() {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      var keyPrefix = "revloc02/target/versions-remain";
+      var objectKey = keyPrefix + "/remain" + getTimeStampFilename() + ".txt";
+      LOG.info("...place a file...");
+      s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
+
+      LOG.info("...check the file arrived...");
+      var objects = s3List(creds, S3_INTERNAL, keyPrefix);
+      assertThat(objects).hasSizeGreaterThanOrEqualTo(1); // this actually isn't a good check
 
       LOG.info("...delete the file...");
       s3Delete(creds, S3_INTERNAL, objectKey);
 
       LOG.info("...check for versions, can the delete marker be seen?...");
-      var versions = s3ListVersions(s3Client, S3_INTERNAL, "revloc02/target/test");
+      s3ListVersions(s3Client, S3_INTERNAL, keyPrefix);
+    }
+  }
 
-      LOG.info("...cleanup and delete the file and its versions...");
-      for (var version : versions) {
-        s3Delete(s3Client, S3_INTERNAL, version.key(), version.versionId());
-      }
+  // places a file with the same name
+  // get creds first using `aws configure sso`
+  @Test
+  void testS3MultipleVersions() {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      var keyPrefix = "revloc02/target/same-name";
+      var objectKey = keyPrefix + "/text.txt";
+      LOG.info("...place a file...");
+      s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
+
+      LOG.info("...check the file arrived...");
+      var objects = s3List(creds, S3_INTERNAL, keyPrefix);
+      assertThat(objects).hasSizeGreaterThanOrEqualTo(1); // this actually isn't a good check
     }
   }
 

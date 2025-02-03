@@ -13,6 +13,7 @@ import software.amazon.awssdk.core.pagination.sync.SdkIterable;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
+import software.amazon.awssdk.services.s3.model.DeleteMarkerEntry;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
@@ -322,7 +323,7 @@ public class S3Operations {
 
   /**
    * Lists the versions of objects in an S3 bucket. A version could be multiple files of the same
-   * name, or a file that has been deleted, which is still stored as a delete marker.
+   * name, or a file that has been deleted, which is still stored under a "Delete marker."
    */
   public static List<ObjectVersion> s3ListVersions(
       S3Client s3Client, String bucket, String keyPrefix) {
@@ -335,6 +336,25 @@ public class S3Operations {
     }
     LOG.info("{} versions listed.", listResponse.versions().size());
     return versions;
+  }
+
+  /**
+   * Lists the deleteMarkers of objects in an S3 bucket. A Delete Marker is a versioned object that
+   * got deleted, but still exists as a version on the S3 and is marked with the delete marker. If
+   * you delete a Delete Marker and versions still exist, the latest version of the object becomes
+   * available again.
+   */
+  public static List<DeleteMarkerEntry> s3ListDeleteMarkers(
+      S3Client s3Client, String bucket, String keyPrefix) {
+    var listRequest = ListObjectVersionsRequest.builder().bucket(bucket).prefix(keyPrefix).build();
+    var listResponse = s3Client.listObjectVersions(listRequest);
+    awsResponseValidation(listResponse);
+    var deleteMarkers = listResponse.deleteMarkers();
+    for (var deleteMarker : deleteMarkers) {
+      LOG.info("S3LISTDELETEMARKERS: The object {} is on the {} bucket.", deleteMarker, bucket);
+    }
+    LOG.info("{} delete markers listed.", listResponse.deleteMarkers().size());
+    return deleteMarkers;
   }
 
   /**
