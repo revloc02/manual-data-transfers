@@ -91,7 +91,7 @@ class ZzzLearningTestSpace {
   // deletes file and then deletes the versioned file, but currently the Delete Marker remains
   // get creds first using `aws configure sso`
   @Test
-  void testLearnS3Versioning() {
+  void testS3DeleteVersionsRemoved() { // earliest delete-marker observed on console is: 4 Feb 2025
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
       var keyPrefix = "revloc02/target/versions-removed";
@@ -117,17 +117,18 @@ class ZzzLearningTestSpace {
       LOG.info("...check for delete markers, can the delete marker be seen? Yes...");
       var deleteMarkers = s3ListDeleteMarkers(s3Client, S3_INTERNAL, keyPrefix);
 
-      LOG.info("...cleanup and delete the file delete markers...");
-      for (var deleteMarker : deleteMarkers) {
-        s3Delete(s3Client, S3_INTERNAL, deleteMarker.key(), deleteMarker.versionId());
-      }
+      // todo: turning off delete-marker-cleanup as an experiment
+      //      LOG.info("...cleanup and delete the file delete markers...");
+      //      for (var deleteMarker : deleteMarkers) {
+      //        s3Delete(s3Client, S3_INTERNAL, deleteMarker.key(), deleteMarker.versionId());
+      //      }
     }
   }
 
   // places a file and then deletes it, but leaves the version
   // get creds first using `aws configure sso`
   @Test
-  void testS3DeleteButLeaveVersion() {
+  void testS3DeleteButVersionsRemain() { // earliest version observed on console is: 3 Feb 2025
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
       var keyPrefix = "revloc02/target/versions-remain";
@@ -150,7 +151,7 @@ class ZzzLearningTestSpace {
   // places a file with the same name
   // get creds first using `aws configure sso`
   @Test
-  void testS3MultipleVersions() {
+  void testS3MultipleVersionsSameName() { // earliest version observed on console is: 3 Feb 2025
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
       var keyPrefix = "revloc02/target/same-name";
