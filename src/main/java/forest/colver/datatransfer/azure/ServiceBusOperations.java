@@ -57,6 +57,23 @@ public class ServiceBusOperations {
     }
   }
 
+  /**
+   * Delete a message. A message received using PEEK_LOCK must be completed to remove it from the
+   * queue.
+   */
+  public static void asbReceiveMessageComplete(
+      String connectionString, String queueName, ServiceBusReceivedMessage message) {
+    try (ServiceBusReceiverClient receiver =
+        new ServiceBusClientBuilder()
+            .connectionString(connectionString)
+            .receiver()
+            .queueName(queueName)
+            .buildClient()) {
+      receiver.complete(message);
+      LOG.info("Message {} removed from queue: {}", message.getMessageId(), queueName);
+    }
+  }
+
   public static long asbPurge(String connectionString, String queueName) {
     long counter = 0;
     try (ServiceBusReceiverClient receiver =
