@@ -74,6 +74,10 @@ public class ServiceBusOperations {
     }
   }
 
+  /**
+   * Use asbReceiveMessageComplete to delete messages if possible as this method will not target
+   * messages that have been locked by PEEK_LOCK.
+   */
   public static long asbPurge(String connectionString, String queueName) {
     long counter = 0;
     try (ServiceBusReceiverClient receiver =
