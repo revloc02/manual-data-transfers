@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Operations to interact with Azure Service Bus, both queue and topic. Currently, this is an
- * experiment.
+ * experiment, but I think this will end up being the better way to interact with Azure Service Bus.
  */
 public class ServiceBusOperations {
   private ServiceBusOperations() {
