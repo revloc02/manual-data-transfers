@@ -1,6 +1,7 @@
 package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
+import static forest.colver.datatransfer.aws.S3Operations.s3DeleteAll;
 import static forest.colver.datatransfer.aws.S3Operations.s3List;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListContResponse;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListDeleteMarkers;
@@ -165,9 +166,48 @@ class ZzzLearningTestSpace {
     }
   }
 
+  @Test
+  void testS3WildcardSearch() {
+    var creds = getEmxSbCreds();
+    List<String> filenameList =
+        List.of(
+            "test1.txt", "test2.txt", "test3.txt", "test4.txt", "wildcard.txt", "testwildcard.txt");
+    var count = 0;
+    try (var s3Client = getS3Client(creds)) {
+      var keyPrefix = "revloc02/target/test";
+
+      LOG.info("...place files...");
+      for (var filename : filenameList) {
+        var objectKey = keyPrefix + "/" + filename;
+        s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
+      }
+
+      LOG.info("...check the files arrived...");
+      var objects = s3List(creds, S3_INTERNAL, keyPrefix);
+      assertThat(objects).hasSizeGreaterThanOrEqualTo(6);
+
+      LOG.info("...find the files with 'wildcard' in the name...");
+      var response = s3ListResponse(s3Client, S3_INTERNAL, keyPrefix, 1000);
+      if (response.hasContents()) {
+        LOG.info("response.contents().size(): {}", response.contents().size());
+        for (var object : response.contents()) {
+          if (object.key().contains("wildcard")) {
+            LOG.info("object: {}", object.key());
+            count++;
+          }
+        }
+      }
+      assertThat(count).isEqualTo(2);
+
+      LOG.info("...cleanup...");
+      s3DeleteAll(s3Client, S3_INTERNAL, keyPrefix);
+    }
+    LOG.info("count: {}", count);
+  }
+
   // todo: is it possible to write a psuedo search for s3? Fuzzy search file names?
   @Test
-  void testS3Search() {
+  void testS3FilepartSearch() {
     // todo: write a uniquely named file to search for
     // todo: eventually, when this is done, I want to look for .filepart files on SFTP S3s
 
@@ -204,6 +244,9 @@ class ZzzLearningTestSpace {
     LOG.info("count: {}", count);
     assertThat(count).isNotNegative(); // this assert is moot, just keeping SonarLint happy
   }
+
+  // todo: here's another idea, list only objects not directories. Used for SFTP source customer
+  // bucket, which should only have directories
 
   // check for directory object expiration on Target Customer S3
   // get creds first using `aws configure sso`
