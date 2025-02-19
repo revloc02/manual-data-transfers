@@ -245,8 +245,30 @@ class ZzzLearningTestSpace {
     assertThat(count).isNotNegative(); // this assert is moot, just keeping SonarLint happy
   }
 
-  // todo: here's another idea, list only objects not directories. Used for SFTP source customer
-  // bucket, which should only have directories
+  /**
+   * List only objects that are not directories. Can be used for SFTP source customer bucket, which
+   * should only have directories.
+   */
+  @Test
+  void listS3ObjectsOnly() {
+    var creds = getEmxSbCreds();
+    var count = 0;
+    var bucket = "emx-sandbox-sftp-source-customer"; // also use S3_INTERNAL
+    var keyPrefix = "";
+    try (var s3Client = getS3Client(creds)) {
+      var response = s3ListResponse(s3Client, bucket, keyPrefix, 1000);
+      if (response.hasContents()) {
+        LOG.info("response.contents().size(): {}", response.contents().size());
+        for (var object : response.contents()) {
+          if (!object.key().endsWith("/")) {
+            LOG.info("object: {}", object.key());
+            count++;
+          }
+        }
+      }
+    }
+    LOG.info("count: {}", count);
+  }
 
   // check for directory object expiration on Target Customer S3
   // get creds first using `aws configure sso`
