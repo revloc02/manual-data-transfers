@@ -89,8 +89,11 @@ class ZzzLearningTestSpace {
     //    blobDelete(connectionStr, endpoint, containerName, filename);
   }
 
-  // deletes file and then deletes the versioned file, but currently the Delete Marker remains
-  // get creds first using `aws configure sso`
+  /**
+   * S3 versions research. This test interacts with an S3 that has versioning enabled. It then
+   * places a file, deletes it, then deletes the versioned file, and finally deletes the delete
+   * marker. (Remember to get creds first using `aws configure sso`.)
+   */
   @Test
   void testS3DeleteVersionsRemoved() { // earliest delete-marker observed on console is: 4 Feb 2025
     var creds = getEmxSbCreds();
@@ -118,16 +121,18 @@ class ZzzLearningTestSpace {
       LOG.info("...check for delete markers, can the delete marker be seen? Yes...");
       var deleteMarkers = s3ListDeleteMarkers(s3Client, S3_INTERNAL, keyPrefix);
 
-      // todo: turning off delete-marker-cleanup as an experiment
-      //      LOG.info("...cleanup and delete the file delete markers...");
-      //      for (var deleteMarker : deleteMarkers) {
-      //        s3Delete(s3Client, S3_INTERNAL, deleteMarker.key(), deleteMarker.versionId());
-      //      }
+      LOG.info("...cleanup and delete the file delete markers...");
+      for (var deleteMarker : deleteMarkers) {
+        s3Delete(s3Client, S3_INTERNAL, deleteMarker.key(), deleteMarker.versionId());
+      }
     }
   }
 
-  // places a file and then deletes it, but leaves the version
-  // get creds first using `aws configure sso`
+  /**
+   * S3 versions research. This interacts with an S3 that has versioning enabled. It places a file,
+   * deletes it, and then checks if the versions can be seen. (Remember to get creds first using
+   * `aws configure sso`.)
+   */
   @Test
   void testS3DeleteButVersionsRemain() { // earliest version observed on console is: 3 Feb 2025
     var creds = getEmxSbCreds();
@@ -144,13 +149,16 @@ class ZzzLearningTestSpace {
       LOG.info("...delete the file...");
       s3Delete(creds, S3_INTERNAL, objectKey);
 
-      LOG.info("...check for versions, can the delete marker be seen?...");
+      LOG.info("...check for versions, can the versions be seen? Yes...");
       s3ListVersions(s3Client, S3_INTERNAL, keyPrefix);
     }
   }
 
-  // places a file with the same name
-  // get creds first using `aws configure sso`
+  /**
+   * S3 versions research. This test places a file with the same filename on an S3 that has
+   * versioning enabled and leaves the versions in place. (Remember to get creds first using `aws
+   * configure sso`.)
+   */
   @Test
   void testS3MultipleVersionsSameName() { // earliest version observed on console is: 3 Feb 2025
     var creds = getEmxSbCreds();
@@ -205,12 +213,9 @@ class ZzzLearningTestSpace {
     LOG.info("count: {}", count);
   }
 
-  // todo: is it possible to write a psuedo search for s3? Fuzzy search file names?
   @Test
   void testS3FilepartSearch() {
-    // todo: write a uniquely named file to search for
-    // todo: eventually, when this is done, I want to look for .filepart files on SFTP S3s
-
+    // todo: this test is not working as expected
     //    var creds = getEmxSbCreds();
     //    var bucket = "emx-sandbox-sftp-source-customer";
     var creds = getEmxNpCreds();
