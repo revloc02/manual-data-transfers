@@ -235,9 +235,12 @@ public class ServiceBusQueueOperations {
   /**
    * Returns the ActiveMessageCount for the queue.
    *
-   * @param connectionStringBuilder Credentials.
    * @return The number of Active messages on the queue.
    */
+  public static long messageCount(String connectionString) {
+    return messageCount(new ConnectionStringBuilder(connectionString));
+  }
+
   public static long messageCount(ConnectionStringBuilder connectionStringBuilder) {
     ManagementClient client = new ManagementClient(connectionStringBuilder);
     long messageCount = -1;

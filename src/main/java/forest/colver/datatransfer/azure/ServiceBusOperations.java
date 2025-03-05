@@ -22,7 +22,7 @@ public class ServiceBusOperations {
 
   private static final Logger LOG = LoggerFactory.getLogger(ServiceBusOperations.class);
 
-  public static void asbSendMessage(
+  public static void asbSendMessageToQueue(
       String connectionString, String queueName, ServiceBusMessage message) {
     try (ServiceBusSenderClient sender =
         new ServiceBusClientBuilder()
@@ -33,6 +33,23 @@ public class ServiceBusOperations {
       sender.sendMessage(message);
     }
     LOG.info("Message sent to queue: {}", queueName);
+  }
+
+  /**
+   * Send a message to a Service Bus topic. (I've noticed that this can be used to send messages to
+   * a queue as well, if you send in the correct connection string and queue name.)
+   */
+  public static void asbSendMessageToTopic(
+      String connectionString, String topicName, ServiceBusMessage message) {
+    try (ServiceBusSenderClient sender =
+        new ServiceBusClientBuilder()
+            .connectionString(connectionString)
+            .sender()
+            .topicName(topicName)
+            .buildClient()) {
+      sender.sendMessage(message);
+    }
+    LOG.info("Message sent to topic: {}", topicName);
   }
 
   /**
