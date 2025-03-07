@@ -715,7 +715,7 @@ class AwsS3IntTests {
   void testS3CopyAllThousands() {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
-      LOG.info("...place several files...");
+      LOG.info("...place more than 1000 files...");
       var numFiles = 1100;
       var keyPrefix = "revloc02/source/test/";
       for (var i = 0; i < numFiles; i++) {
