@@ -25,8 +25,10 @@ import static forest.colver.datatransfer.azure.Utils.EMX_PROD_EXT_EMCOR_PROD_SA_
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFilename;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -174,12 +176,21 @@ class ZzzLearningTestSpace {
     }
   }
 
+  /**
+   * S3 wildcard search. Demonstrating that we can do a search on s3 for partial filenames.
+   * (Remember to get creds first using `aws configure sso`.)
+   */
   @Test
   void testS3WildcardSearch() {
     var creds = getEmxSbCreds();
     List<String> filenameList =
         List.of(
-            "test1.txt", "test2.txt", "test3.txt", "test4.txt", "wildcard.txt", "testwildcard.txt");
+            "test1.txt",
+            "test2.txt",
+            "test3.txt",
+            "test4.txt",
+            "wildcard5.txt",
+            "testwildcard6.txt");
     var count = 0;
     try (var s3Client = getS3Client(creds)) {
       var keyPrefix = "revloc02/target/test";
@@ -191,8 +202,13 @@ class ZzzLearningTestSpace {
       }
 
       LOG.info("...check the files arrived...");
-      var objects = s3List(creds, S3_INTERNAL, keyPrefix);
-      assertThat(objects).hasSizeGreaterThanOrEqualTo(6);
+      await()
+          .pollInterval(Duration.ofSeconds(3))
+          .atMost(Duration.ofSeconds(60))
+          .untilAsserted(
+              () ->
+                  assertThat(s3List(s3Client, S3_INTERNAL, keyPrefix, 10))
+                      .hasSizeGreaterThanOrEqualTo(filenameList.size()));
 
       LOG.info("...find the files with 'wildcard' in the name...");
       var response = s3ListResponse(s3Client, S3_INTERNAL, keyPrefix, 1000);
@@ -210,7 +226,7 @@ class ZzzLearningTestSpace {
       LOG.info("...cleanup...");
       s3DeleteAll(s3Client, S3_INTERNAL, keyPrefix);
     }
-    LOG.info("count: {}", count);
+    LOG.info("There was {} file with 'wildcard' in the name.", count);
   }
 
   @Test
