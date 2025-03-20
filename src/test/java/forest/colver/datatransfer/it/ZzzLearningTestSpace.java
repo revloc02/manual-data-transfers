@@ -229,41 +229,42 @@ class ZzzLearningTestSpace {
     LOG.info("There was {} file with 'wildcard' in the name.", count);
   }
 
+  /**
+   * S3 partial filename search when there are over 1000 objects. (Remember to get creds first using
+   * `aws configure sso`.)
+   */
   @Test
-  void testS3FilepartSearch() {
-    // todo: this test is not working as expected
-    //    var creds = getEmxSbCreds();
-    //    var bucket = "emx-sandbox-sftp-source-customer";
-    var creds = getEmxNpCreds();
-    var bucket = "emx-stage-sftp-source-customer";
-    //    var creds = getEmxProdCreds();
-    //    var bucket = "emx-prod-sftp-source-customer";
-    int count = 0;
+  void testS3PartialFilenameSearchOver1000() {
+    var creds = getEmxProdCreds();
+    var bucket = "emx-prod-sftp-source-cache";
+    int totalCount = 0;
+    int foundCount = 0;
     try (var s3Client = getS3Client(creds)) {
       var keyPrefix = "";
-
       var response = s3ListResponse(s3Client, bucket, keyPrefix, 1000);
       if (response.hasContents()) {
-        //        while (!response.contents().isEmpty()) { // can't get this to work right now
-        LOG.info("response.contents().size(): {}", response.contents().size());
-        for (var object : response.contents()) {
-          LOG.info("object: {}", object.key());
-          if (object.key().endsWith(".filepart")) {
-            count++;
+        do {
+          if (response.nextContinuationToken() != null && totalCount > 0) {
+            // get the next page
+            response =
+                s3ListContResponse(s3Client, bucket, keyPrefix, response.nextContinuationToken());
           }
-        }
-        //        LOG.info("nextContinuationToken: {}", response.nextContinuationToken());
-        // get the next page
-        if (response.nextContinuationToken() != null) {
-          response =
-              s3ListContResponse(
-                  s3Client, S3_INTERNAL, keyPrefix, response.nextContinuationToken());
-        }
-        //        }
+          LOG.info(
+              "===================================== response.contents().size()={}; Total Count={}",
+              response.contents().size(),
+              totalCount);
+          for (var object : response.contents()) {
+            totalCount++;
+            if (object.key().contains("LDS_FINSTMT_PRD")) { // ext-standard-bank-saf
+              LOG.info("object: {}", object.key());
+              foundCount++;
+            }
+          }
+        } while (response.nextContinuationToken() != null);
       }
     }
-    LOG.info("count: {}", count);
-    assertThat(count).isNotNegative(); // this assert is moot, just keeping SonarLint happy
+    assertThat(foundCount).isNotNegative(); // this assert is moot, just keeping SonarLint happy
+    LOG.info("Total count={}; Found count={}", totalCount, foundCount);
   }
 
   /**
@@ -289,6 +290,34 @@ class ZzzLearningTestSpace {
       }
     }
     LOG.info("count: {}", count);
+  }
+
+  /** Non-prod internal bucket list of objects and versioned objects. */
+  @Test
+  void listS3ObjectsNonprodInternal() {
+    var creds = getEmxNpCreds();
+    var count = 0;
+    var bucket = "emx-stage-sftp-internal";
+    var keyPrefix = "";
+    try (var s3Client = getS3Client(creds)) {
+      var response = s3ListResponse(s3Client, bucket, keyPrefix, 1000);
+      if (response.hasContents()) {
+        LOG.info("response.contents().size(): {}", response.contents().size());
+        for (var object : response.contents()) {
+          LOG.info("object: {}", object.key());
+          count++;
+        }
+      }
+      LOG.info("count: {}", count);
+
+      var versions = s3ListVersions(s3Client, bucket, keyPrefix);
+      if (!versions.isEmpty()) {
+        LOG.info("versions.size(): {}", versions.size());
+        for (var version : versions) {
+          LOG.info("version: {}", version);
+        }
+      }
+    }
   }
 
   // check for directory object expiration on Target Customer S3
