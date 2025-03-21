@@ -451,7 +451,7 @@ public class S3Operations {
    * that has been deleted, still has a delete marker, using a versionId in the delete request will
    * then delete the delete marker.
    */
-  public static void s3Delete(
+  public static void s3DeleteVersion(
       S3Client s3Client, String bucket, String versionKey, String versionId) {
     var deleteObjectRequest =
         DeleteObjectRequest.builder().bucket(bucket).key(versionKey).versionId(versionId).build();

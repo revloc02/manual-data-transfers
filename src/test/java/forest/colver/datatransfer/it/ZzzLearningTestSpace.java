@@ -27,6 +27,7 @@ import static forest.colver.datatransfer.config.Utils.getTimeStampFilename;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import forest.colver.datatransfer.aws.S3Operations;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.HashMap;
@@ -117,7 +118,7 @@ class ZzzLearningTestSpace {
 
       LOG.info("...cleanup and delete the file versions...");
       for (var version : versions) {
-        s3Delete(s3Client, S3_INTERNAL, version.key(), version.versionId());
+        S3Operations.s3DeleteVersion(s3Client, S3_INTERNAL, version.key(), version.versionId());
       }
 
       LOG.info("...check for delete markers, can the delete marker be seen? Yes...");
@@ -125,7 +126,8 @@ class ZzzLearningTestSpace {
 
       LOG.info("...cleanup and delete the file delete markers...");
       for (var deleteMarker : deleteMarkers) {
-        s3Delete(s3Client, S3_INTERNAL, deleteMarker.key(), deleteMarker.versionId());
+        S3Operations.s3DeleteVersion(
+            s3Client, S3_INTERNAL, deleteMarker.key(), deleteMarker.versionId());
       }
     }
   }
@@ -290,6 +292,44 @@ class ZzzLearningTestSpace {
       }
     }
     LOG.info("count: {}", count);
+  }
+
+  // todo: clean up the 400GB of files on emx-sandbox-sftp-internal, they might be versioned objects
+  /** Sandbox internal bucket list of objects and versioned objects. */
+  @Test
+  void listS3ObjectsSandboxInternal() {
+    var creds = getEmxSbCreds();
+    var bucket = "emx-sandbox-sftp-internal";
+    var keyPrefix = "";
+    try (var s3Client = getS3Client(creds)) {
+      var objectCount = 0;
+      var response = s3ListResponse(s3Client, bucket, keyPrefix, 1000);
+      if (response.hasContents()) {
+        LOG.info("response.contents().size(): {}", response.contents().size());
+        for (var object : response.contents()) {
+          LOG.info("object: {}", object.key());
+          objectCount++;
+        }
+      }
+      LOG.info("objectCount: {}", objectCount);
+
+      var versionCount = 0;
+      var versions = s3ListVersions(s3Client, bucket, keyPrefix);
+      if (!versions.isEmpty()) {
+        LOG.info("versions.size(): {}", versions.size());
+        for (var version : versions) {
+          LOG.info(
+              "version.key(): {} ======= version.versionId(): {}",
+              version.key(),
+              version.versionId());
+          if (version.key().startsWith("emcor-temp/")) {
+            S3Operations.s3DeleteVersion(s3Client, bucket, version.key(), version.versionId());
+          }
+          versionCount++;
+        }
+      }
+      LOG.info("versionCount: {}", versionCount);
+    }
   }
 
   /** Non-prod internal bucket list of objects and versioned objects. */

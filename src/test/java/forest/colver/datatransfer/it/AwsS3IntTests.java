@@ -23,6 +23,7 @@ import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import forest.colver.datatransfer.aws.S3Operations;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -833,7 +834,7 @@ class AwsS3IntTests {
 
       LOG.info("...cleanup and delete the file and its versions...");
       for (var version : versions) {
-        s3Delete(s3Client, S3_INTERNAL, objectKey, version.versionId());
+        S3Operations.s3DeleteVersion(s3Client, S3_INTERNAL, objectKey, version.versionId());
       }
     }
   }
