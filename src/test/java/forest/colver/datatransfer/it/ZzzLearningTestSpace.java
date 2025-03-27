@@ -116,6 +116,7 @@ class ZzzLearningTestSpace {
       LOG.info("...check for versions, can the delete marker be seen? No...");
       var versions = s3ListVersions(s3Client, S3_INTERNAL, keyPrefix);
 
+      // todo: does it matter if the versions are deleted before the delete marker?
       LOG.info("...cleanup and delete the file versions...");
       for (var version : versions) {
         S3Operations.s3DeleteVersion(s3Client, S3_INTERNAL, version.key(), version.versionId());
@@ -294,10 +295,12 @@ class ZzzLearningTestSpace {
     LOG.info("count: {}", count);
   }
 
-  // todo: clean up the 400GB of files on emx-sandbox-sftp-internal, they might be versioned objects
-  /** Sandbox internal bucket list of objects and versioned objects. */
+  /**
+   * When the SFTP internal bucket in sandbox had versioning turned on, about 2M (400GB) Emcor
+   * objects got versions with a version id of null. This is an attempt at cleaning it up.
+   */
   @Test
-  void listS3ObjectsSandboxInternal() {
+  void listAndDeleteEmcorVersionedObjects() {
     var creds = getEmxSbCreds();
     var bucket = "emx-sandbox-sftp-internal";
     var keyPrefix = "";
@@ -314,21 +317,48 @@ class ZzzLearningTestSpace {
       LOG.info("objectCount: {}", objectCount);
 
       var versionCount = 0;
-      var versions = s3ListVersions(s3Client, bucket, keyPrefix);
-      if (!versions.isEmpty()) {
-        LOG.info("versions.size(): {}", versions.size());
-        for (var version : versions) {
-          LOG.info(
-              "version.key(): {} ======= version.versionId(): {}",
-              version.key(),
-              version.versionId());
-          if (version.key().startsWith("emcor-temp/")) {
-            S3Operations.s3DeleteVersion(s3Client, bucket, version.key(), version.versionId());
+      var deleteMarkerCount = 0;
+      // iterations | time | count
+      // 1 | 1:54 | 666 and 667
+      // 16 | 30:22 | 10,672 and 10,672
+      // 32 | 1:00:00 | 21,344 and 21,344
+      // 64 | 2:13:00 | 42,464 and 42,798
+      // 128 | 4:06:00 | 85,152 and 85,486
+      // 256 | 8:06:00 | 170,752 and 170,752
+      for (var i = 0; i < 256; i++) {
+        var versions = s3ListVersions(s3Client, bucket, keyPrefix);
+        if (!versions.isEmpty()) {
+          LOG.info("versions.size(): {}", versions.size());
+          for (var version : versions) {
+            LOG.info(
+                "version.key(): {} ======= version.versionId(): {}",
+                version.key(),
+                version.versionId());
+            if (version.key().startsWith("emcor-temp/")) {
+              S3Operations.s3DeleteVersion(s3Client, bucket, version.key(), version.versionId());
+              versionCount++;
+            }
           }
-          versionCount++;
+        }
+
+        var deleteMarkers = s3ListDeleteMarkers(s3Client, bucket, keyPrefix);
+        if (!deleteMarkers.isEmpty()) {
+          LOG.info("deleteMarkers.size(): {}", deleteMarkers.size());
+          for (var deleteMarker : deleteMarkers) {
+            LOG.info(
+                "deleteMarker.key(): {} ======= deleteMarker.versionId(): {}",
+                deleteMarker.key(),
+                deleteMarker.versionId());
+            if (deleteMarker.key().startsWith("emcor-temp/")) {
+              S3Operations.s3DeleteVersion(
+                  s3Client, bucket, deleteMarker.key(), deleteMarker.versionId());
+              deleteMarkerCount++;
+            }
+          }
         }
       }
-      LOG.info("versionCount: {}", versionCount);
+      LOG.info("versions deleted: {}", versionCount);
+      LOG.info("deleteMarkers deleted: {}", deleteMarkerCount);
     }
   }
 
