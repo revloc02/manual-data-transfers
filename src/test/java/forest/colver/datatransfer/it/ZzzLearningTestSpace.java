@@ -297,13 +297,14 @@ class ZzzLearningTestSpace {
 
   /**
    * When the SFTP internal bucket in sandbox had versioning turned on, about 2M (400GB) Emcor
-   * objects got versions with a version id of null. This is an attempt at cleaning it up.
+   * objects got versions with a versionId of null. This is an attempt at cleaning it up.
    */
   @Test
-  void listAndDeleteEmcorVersionedObjects() {
+  void listAndDeleteSpecificVersionedObjects() {
     var creds = getEmxSbCreds();
     var bucket = "emx-sandbox-sftp-internal";
     var keyPrefix = "";
+    var deleteStartsWith = "emcor-temp/";
     try (var s3Client = getS3Client(creds)) {
       var objectCount = 0;
       var response = s3ListResponse(s3Client, bucket, keyPrefix, 1000);
@@ -325,7 +326,7 @@ class ZzzLearningTestSpace {
       // 64 | 2:13:00 | 42,464 and 42,798
       // 128 | 4:06:00 | 85,152 and 85,486
       // 256 | 8:06:00 | 170,752 and 170,752
-      for (var i = 0; i < 256; i++) {
+      for (var i = 0; i < 1; i++) {
         var versions = s3ListVersions(s3Client, bucket, keyPrefix);
         if (!versions.isEmpty()) {
           LOG.info("versions.size(): {}", versions.size());
@@ -334,7 +335,7 @@ class ZzzLearningTestSpace {
                 "version.key(): {} ======= version.versionId(): {}",
                 version.key(),
                 version.versionId());
-            if (version.key().startsWith("emcor-temp/")) {
+            if (version.key().startsWith(deleteStartsWith)) {
               S3Operations.s3DeleteVersion(s3Client, bucket, version.key(), version.versionId());
               versionCount++;
             }
@@ -349,7 +350,7 @@ class ZzzLearningTestSpace {
                 "deleteMarker.key(): {} ======= deleteMarker.versionId(): {}",
                 deleteMarker.key(),
                 deleteMarker.versionId());
-            if (deleteMarker.key().startsWith("emcor-temp/")) {
+            if (deleteMarker.key().startsWith(deleteStartsWith)) {
               S3Operations.s3DeleteVersion(
                   s3Client, bucket, deleteMarker.key(), deleteMarker.versionId());
               deleteMarkerCount++;
