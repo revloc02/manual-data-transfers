@@ -10,6 +10,7 @@ import static forest.colver.datatransfer.aws.S3Operations.s3Get;
 import static forest.colver.datatransfer.aws.S3Operations.s3Head;
 import static forest.colver.datatransfer.aws.S3Operations.s3List;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListContResponse;
+import static forest.colver.datatransfer.aws.S3Operations.s3ListDeleteMarkers;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListResponse;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListVersions;
 import static forest.colver.datatransfer.aws.S3Operations.s3Move;
@@ -761,6 +762,12 @@ class AwsS3IntTests {
     }
   }
 
+  /**
+   * WARNING: This test leaves versioned objects on the bucket that are not cleaned up. Back when I
+   * wrote this, putting more than 1000 files on this Internal S3 bucket was benign. But since then
+   * object versioning has been turned on for this bucket, and now this test leaves behind a bunch
+   * of versioned objects with delete markers.
+   */
   @Test
   void testS3CountAll() {
     var creds = getEmxSbCreds();
@@ -813,29 +820,129 @@ class AwsS3IntTests {
     }
   }
 
+  /** Tests S3 ListVersions. (Remember to get creds first using `aws configure sso`.) */
   @Test
   void testS3ListVersions() {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
-      var objectKey = "revloc02/target/test/file-with-versions.txt";
+      var keyPrefix = "revloc02/target/list-versions/";
+      var objectKey = keyPrefix + "file-with-versions.txt";
       LOG.info("...place the same file 3 times...");
       s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
       s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
       s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
 
       LOG.info("...check that there is one file in a list...");
-      var objects = s3List(creds, S3_INTERNAL, "revloc02/target/test");
-      assertThat(objects).hasSize(2); // directory is also counted
-      assertThat(objects.get(1).size()).isEqualTo(40L);
+      var objects = s3List(creds, S3_INTERNAL, keyPrefix);
+      assertThat(objects).hasSize(1);
+      assertThat(objects.get(0).size()).isEqualTo(40L);
 
       LOG.info("...check for 3 versions...");
-      var versions = s3ListVersions(s3Client, S3_INTERNAL, "revloc02/target/test");
+      var versions = s3ListVersions(s3Client, S3_INTERNAL, keyPrefix);
       assertThat(versions).hasSizeGreaterThanOrEqualTo(3);
 
       LOG.info("...cleanup and delete the file and its versions...");
       for (var version : versions) {
         S3Operations.s3DeleteVersion(s3Client, S3_INTERNAL, objectKey, version.versionId());
       }
+      var deleteMarkers = s3ListDeleteMarkers(s3Client, S3_INTERNAL, keyPrefix);
+      for (var deleteMarker : deleteMarkers) {
+        S3Operations.s3DeleteVersion(s3Client, S3_INTERNAL, objectKey, deleteMarker.versionId());
+      }
+      LOG.info("...assert cleanup...");
+      await()
+          .pollInterval(Duration.ofSeconds(3))
+          .atMost(Duration.ofSeconds(10))
+          .untilAsserted(
+              () -> assertThat(s3ListVersions(s3Client, S3_INTERNAL, keyPrefix)).isEmpty());
+    }
+  }
+
+  /**
+   * Version cleanup method 1: Demonstrates cleaning up object versions by just directly deleting
+   * all the version.versionId()s, followed by cleaning up the delete marker. (Remember to get creds
+   * first using `aws configure sso`.)
+   */
+  @Test
+  void testS3VersionCleanupMethod1() {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      var keyPrefix = "revloc02/target/list-versions/";
+      var objectKey = keyPrefix + "file-with-versions.txt";
+      LOG.info("...place the same file 3 times...");
+      s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
+      s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
+      s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
+
+      LOG.info("...check that there is one file in a list...");
+      var objects = s3List(creds, S3_INTERNAL, keyPrefix);
+      assertThat(objects).hasSize(1);
+      assertThat(objects.get(0).size()).isEqualTo(40L);
+
+      LOG.info("...check for 3 versions...");
+      var versions = s3ListVersions(s3Client, S3_INTERNAL, keyPrefix);
+      assertThat(versions).hasSizeGreaterThanOrEqualTo(3);
+
+      LOG.info("...cleanup and delete all version IDs...");
+      for (var version : versions) {
+        S3Operations.s3DeleteVersion(s3Client, S3_INTERNAL, objectKey, version.versionId());
+      }
+      LOG.info("...cleanup and delete the delete markers...");
+      var deleteMarkers = s3ListDeleteMarkers(s3Client, S3_INTERNAL, keyPrefix);
+      for (var deleteMarker : deleteMarkers) {
+        S3Operations.s3DeleteVersion(s3Client, S3_INTERNAL, objectKey, deleteMarker.versionId());
+      }
+      LOG.info("...assert cleanup...");
+      await()
+          .pollInterval(Duration.ofSeconds(3))
+          .atMost(Duration.ofSeconds(10))
+          .untilAsserted(
+              () -> assertThat(s3ListVersions(s3Client, S3_INTERNAL, keyPrefix)).isEmpty());
+    }
+  }
+
+  /**
+   * Version cleanup method 2: Demonstrates cleaning up object versions by: 1) deleting the object,
+   * then 2) deleting all of the versions of that object, and finally 3) deleting the object
+   * delete-marker. (Remember to get creds first using `aws configure sso`.)
+   */
+  @Test
+  void testS3VersionCleanupMethod2() {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      var keyPrefix = "revloc02/target/list-versions/";
+      var objectKey = keyPrefix + "file-with-versions.txt";
+      LOG.info("...place the same file 3 times...");
+      s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
+      s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
+      s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
+
+      LOG.info("...check that there is one file in a list...");
+      var objects = s3List(creds, S3_INTERNAL, keyPrefix);
+      assertThat(objects).hasSize(1);
+      assertThat(objects.get(0).size()).isEqualTo(40L);
+
+      LOG.info("...check for 3 versions...");
+      var versions = s3ListVersions(s3Client, S3_INTERNAL, keyPrefix);
+      assertThat(versions).hasSizeGreaterThanOrEqualTo(3);
+
+      LOG.info("...delete the object itself...");
+      s3Delete(s3Client, S3_INTERNAL, keyPrefix + objectKey);
+      LOG.info("...now delete all the versions of that object...");
+      for (var version : versions) {
+        S3Operations.s3DeleteVersion(s3Client, S3_INTERNAL, objectKey, version.versionId());
+      }
+      LOG.info("...cleanup and delete the delete markers...");
+      var deleteMarkers = s3ListDeleteMarkers(s3Client, S3_INTERNAL, keyPrefix);
+      for (var deleteMarker : deleteMarkers) {
+        S3Operations.s3DeleteVersion(s3Client, S3_INTERNAL, objectKey, deleteMarker.versionId());
+      }
+      LOG.info("...assert cleanup...");
+      await()
+          .pollInterval(Duration.ofSeconds(3))
+          .atMost(Duration.ofSeconds(10))
+          .untilAsserted(
+              () -> assertThat(s3ListVersions(s3Client, S3_INTERNAL, keyPrefix)).isEmpty());
     }
   }
 
