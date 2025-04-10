@@ -1,7 +1,6 @@
 package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
-import static forest.colver.datatransfer.aws.S3Operations.s3DeleteAll;
 import static forest.colver.datatransfer.aws.S3Operations.s3List;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListContResponse;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListDeleteMarkers;
@@ -25,11 +24,9 @@ import static forest.colver.datatransfer.azure.Utils.EMX_PROD_EXT_EMCOR_PROD_SA_
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFilename;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 
 import forest.colver.datatransfer.aws.S3Operations;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -177,59 +174,6 @@ class ZzzLearningTestSpace {
       var objects = s3List(creds, S3_INTERNAL, keyPrefix);
       assertThat(objects).hasSizeGreaterThanOrEqualTo(1); // this actually isn't a good check
     }
-  }
-
-  /**
-   * S3 wildcard search. Demonstrating that we can do a search on s3 for partial filenames.
-   * (Remember to get creds first using `aws configure sso`.)
-   */
-  @Test
-  void testS3WildcardSearch() {
-    var creds = getEmxSbCreds();
-    List<String> filenameList =
-        List.of(
-            "test1.txt",
-            "test2.txt",
-            "test3.txt",
-            "test4.txt",
-            "wildcard5.txt",
-            "testwildcard6.txt");
-    var count = 0;
-    try (var s3Client = getS3Client(creds)) {
-      var keyPrefix = "revloc02/target/test";
-
-      LOG.info("...place files...");
-      for (var filename : filenameList) {
-        var objectKey = keyPrefix + "/" + filename;
-        s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
-      }
-
-      LOG.info("...check the files arrived...");
-      await()
-          .pollInterval(Duration.ofSeconds(3))
-          .atMost(Duration.ofSeconds(60))
-          .untilAsserted(
-              () ->
-                  assertThat(s3List(s3Client, S3_INTERNAL, keyPrefix, 10))
-                      .hasSizeGreaterThanOrEqualTo(filenameList.size()));
-
-      LOG.info("...find the files with 'wildcard' in the name...");
-      var response = s3ListResponse(s3Client, S3_INTERNAL, keyPrefix, 1000);
-      if (response.hasContents()) {
-        LOG.info("response.contents().size(): {}", response.contents().size());
-        for (var object : response.contents()) {
-          if (object.key().contains("wildcard")) {
-            LOG.info("object: {}", object.key());
-            count++;
-          }
-        }
-      }
-      assertThat(count).isEqualTo(2);
-
-      LOG.info("...cleanup...");
-      s3DeleteAll(s3Client, S3_INTERNAL, keyPrefix);
-    }
-    LOG.info("There was {} file with 'wildcard' in the name.", count);
   }
 
   /**
