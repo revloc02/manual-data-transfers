@@ -28,6 +28,7 @@ import forest.colver.datatransfer.aws.S3Operations;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -944,6 +945,74 @@ class AwsS3IntTests {
           .untilAsserted(
               () -> assertThat(s3ListVersions(s3Client, S3_INTERNAL, keyPrefix)).isEmpty());
     }
+  }
+
+  /**
+   * S3 wildcard search. Demonstrating that we can do a search on s3 for partial filenames.
+   * (Remember to get creds first using `aws configure sso`.)
+   */
+  @Test
+  void testS3WildcardSearch() {
+    var creds = getEmxSbCreds();
+    List<String> filenameList =
+        List.of(
+            "test1.txt",
+            "test2.txt",
+            "test3.txt",
+            "test4.txt",
+            "wildcard5.txt",
+            "testwildcard6.txt");
+    var count = 0;
+    try (var s3Client = getS3Client(creds)) {
+      var keyPrefix = "revloc02/target/contains";
+
+      LOG.info("...place files...");
+      for (var filename : filenameList) {
+        var objectKey = keyPrefix + "/" + filename;
+        s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
+      }
+
+      LOG.info("...check the files arrived...");
+      await()
+          .pollInterval(Duration.ofSeconds(3))
+          .atMost(Duration.ofSeconds(60))
+          .untilAsserted(
+              () ->
+                  assertThat(s3List(s3Client, S3_INTERNAL, keyPrefix, 10))
+                      .hasSizeGreaterThanOrEqualTo(filenameList.size()));
+
+      LOG.info("...find the files with 'wildcard' in the name...");
+      var response = s3ListResponse(s3Client, S3_INTERNAL, keyPrefix, 1000);
+      if (response.hasContents()) {
+        LOG.info("response.contents().size(): {}", response.contents().size());
+        for (var object : response.contents()) {
+          if (object.key().contains("wildcard")) {
+            LOG.info("object: {}", object.key());
+            count++;
+          }
+        }
+      }
+      assertThat(count).isEqualTo(2);
+
+      LOG.info("...cleanup and delete all version IDs...");
+      var versions = s3ListVersions(s3Client, S3_INTERNAL, keyPrefix);
+      for (var version : versions) {
+        S3Operations.s3DeleteVersion(s3Client, S3_INTERNAL, version.key(), version.versionId());
+      }
+      LOG.info("...cleanup and delete the delete markers...");
+      var deleteMarkers = s3ListDeleteMarkers(s3Client, S3_INTERNAL, keyPrefix);
+      for (var deleteMarker : deleteMarkers) {
+        S3Operations.s3DeleteVersion(
+            s3Client, S3_INTERNAL, deleteMarker.key(), deleteMarker.versionId());
+      }
+      LOG.info("...assert cleanup...");
+      await()
+          .pollInterval(Duration.ofSeconds(3))
+          .atMost(Duration.ofSeconds(10))
+          .untilAsserted(
+              () -> assertThat(s3ListVersions(s3Client, S3_INTERNAL, keyPrefix)).isEmpty());
+    }
+    LOG.info("There was {} file with 'wildcard' in the name.", count);
   }
 
   /** Checks counting many, many thousands of objects. */
