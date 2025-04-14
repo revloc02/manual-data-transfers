@@ -113,7 +113,6 @@ class ZzzLearningTestSpace {
       LOG.info("...check for versions, can the delete marker be seen? No...");
       var versions = s3ListVersions(s3Client, S3_INTERNAL, keyPrefix);
 
-      // todo: does it matter if the versions are deleted before the delete marker?
       LOG.info("...cleanup and delete the file versions...");
       for (var version : versions) {
         S3Operations.s3DeleteVersion(s3Client, S3_INTERNAL, version.key(), version.versionId());
