@@ -8,6 +8,9 @@ import static forest.colver.datatransfer.aws.S3Operations.s3ListResponse;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListVersions;
 import static forest.colver.datatransfer.aws.S3Operations.s3Put;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessage;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessages;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
+import static forest.colver.datatransfer.aws.SqsOperations.sqsReadMessages;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
 import static forest.colver.datatransfer.aws.Utils.S3_INTERNAL;
@@ -404,5 +407,21 @@ class ZzzLearningTestSpace {
       var uuid = java.util.UUID.randomUUID();
       LOG.info("uuid: {}. uuid.hashCode(): {}", uuid, uuid.hashCode());
     }
+  }
+
+  @Test
+  void deleteLifeflightFileMalwareScanNotifications() {
+    var sqs = "forest-tst-malware-scan-results";
+    var resultingDepth = 5;
+    var creds = getEmxSbCreds();
+    var count = 0;
+    do {
+      var response = sqsReadMessages(creds, sqs, 1, 30);
+      if (response.messages().get(0).body().contains("lifeflightTestFile")) {
+        sqsDeleteMessages(creds, sqs, response);
+        count++;
+      }
+    } while (sqsDepth(creds, sqs) > resultingDepth);
+    LOG.info("deleted: {}", count);
   }
 }
