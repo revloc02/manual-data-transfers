@@ -861,8 +861,9 @@ class AwsS3IntTests {
 
   /**
    * Version cleanup method 1: Demonstrates cleaning up object versions by just directly deleting
-   * all the version.versionId()s, followed by cleaning up the delete marker. (Remember to get creds
-   * first using `aws configure sso`.)
+   * all the version.versionId()s. If you specify a versionId in your delete request, objects are
+   * deleted permanently and a delete marker is not created. (Remember to get creds first using `aws
+   * configure sso`.)
    */
   @Test
   void testS3VersionCleanupMethod1() {
@@ -888,17 +889,19 @@ class AwsS3IntTests {
       for (var version : versions) {
         S3Operations.s3DeleteVersion(s3Client, S3_INTERNAL, objectKey, version.versionId());
       }
-      LOG.info("...cleanup and delete the delete markers...");
-      var deleteMarkers = s3ListDeleteMarkers(s3Client, S3_INTERNAL, keyPrefix);
-      for (var deleteMarker : deleteMarkers) {
-        S3Operations.s3DeleteVersion(s3Client, S3_INTERNAL, objectKey, deleteMarker.versionId());
-      }
       LOG.info("...assert cleanup...");
       await()
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(10))
           .untilAsserted(
               () -> assertThat(s3ListVersions(s3Client, S3_INTERNAL, keyPrefix)).isEmpty());
+      LOG.info(
+          "...if versionId were used to delete, then there should be no deleteMarkers, assert this...");
+      await()
+          .pollInterval(Duration.ofSeconds(3))
+          .atMost(Duration.ofSeconds(10))
+          .untilAsserted(
+              () -> assertThat(s3ListDeleteMarkers(s3Client, S3_INTERNAL, keyPrefix)).isEmpty());
     }
   }
 
