@@ -126,12 +126,24 @@ public class SqsOperations {
   }
 
   /**
-   * Reads one or more message from the SQS (but does not consume them). Note that the
-   * visibilityTimeout is zero so reading the message doesn't tie it up in any way. This also
-   * displays how many messages were read.
+   * Reads up to 10 messages from the SQS (but does not consume them). Note that the
+   * visibilityTimeout is zero so reading the message doesn't tie it up in any way. This is useful
+   * for getting a quick count...actually I am not sure why this is useful.
    */
   public static ReceiveMessageResponse sqsReadMessages(
       AwsCredentialsProvider awsCP, String queueName) {
+    return sqsReadMessages(awsCP, queueName, 10, 0);
+  }
+
+  /**
+   * Reads one or more message from the SQS (but does not consume them). This also displays how many
+   * messages were read.
+   */
+  public static ReceiveMessageResponse sqsReadMessages(
+      AwsCredentialsProvider awsCP,
+      String queueName,
+      int maxNumberOfMessages,
+      int visibilityTimeout) {
     try (var sqsClient = getSqsClient(awsCP)) {
       var receiveMessageRequest =
           ReceiveMessageRequest.builder()
@@ -139,8 +151,8 @@ public class SqsOperations {
               .messageAttributeNames("All")
               .attributeNames(QueueAttributeName.ALL)
               .queueUrl(qUrl(sqsClient, queueName))
-              .maxNumberOfMessages(10) // max 10
-              .visibilityTimeout(0) // default 30 sec
+              .maxNumberOfMessages(maxNumberOfMessages) // max 10
+              .visibilityTimeout(visibilityTimeout) // default 30 sec
               .build();
       var response = sqsClient.receiveMessage(receiveMessageRequest);
       awsResponseValidation(response);
