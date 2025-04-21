@@ -409,6 +409,7 @@ class ZzzLearningTestSpace {
     }
   }
 
+  // this queue got deleted, but I want to keep the test
   @Test
   void deleteLifeflightFileMalwareScanNotifications() {
     var sqs = "forest-tst-malware-scan-results";
