@@ -243,8 +243,8 @@ class ZzzLearningTestSpace {
 
   /**
    * When the SFTP internal bucket in sandbox had versioning turned on, about 2M (400GB) Emcor
-   * objects got versions with a versionId of null. This is an attempt at cleaning it up. (Remember to get creds first using
-   * `aws configure sso`.)
+   * objects got versions with a versionId of null. This is an attempt at cleaning it up. (Remember
+   * to get creds first using `aws configure sso`.)
    */
   @Test
   void listAndDeleteSpecificVersionedObjects() {
