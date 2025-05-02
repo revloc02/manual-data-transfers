@@ -243,14 +243,15 @@ class ZzzLearningTestSpace {
 
   /**
    * When the SFTP internal bucket in sandbox had versioning turned on, about 2M (400GB) Emcor
-   * objects got versions with a versionId of null. This is an attempt at cleaning it up.
+   * objects got versions with a versionId of null. This is an attempt at cleaning it up. (Remember to get creds first using
+   * `aws configure sso`.)
    */
   @Test
   void listAndDeleteSpecificVersionedObjects() {
     var creds = getEmxSbCreds();
     var bucket = "emx-sandbox-sftp-internal";
     var keyPrefix = "";
-    var deleteStartsWith = "emcor-temp/";
+    var deleteStartsWith = "emx2-core-test/";
     try (var s3Client = getS3Client(creds)) {
       var objectCount = 0;
       var response = s3ListResponse(s3Client, bucket, keyPrefix, 1000);
@@ -265,14 +266,14 @@ class ZzzLearningTestSpace {
 
       var versionCount = 0;
       var deleteMarkerCount = 0;
-      // iterations | time | count
+      // iterations | time | versionCount and deleteMarkerCount
       // 1 | 1:54 | 666 and 667
       // 16 | 30:22 | 10,672 and 10,672
       // 32 | 1:00:00 | 21,344 and 21,344
       // 64 | 2:13:00 | 42,464 and 42,798
       // 128 | 4:06:00 | 85,152 and 85,486
       // 256 | 8:06:00 | 170,752 and 170,752
-      for (var i = 0; i < 1; i++) {
+      for (var i = 0; i < 16; i++) {
         var versions = s3ListVersions(s3Client, bucket, keyPrefix);
         if (!versions.isEmpty()) {
           LOG.info("versions.size(): {}", versions.size());
