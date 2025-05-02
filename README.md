@@ -38,6 +38,6 @@ And then for my personal projects see the `.git/config` file as an example, spec
 
 ```bash
 [remote "origin"]
-	url = git@github.com-revloc02:revloc02/manualDataTransfers.git
+	url = git@github.com-revloc02:revloc02/manual-data-transfers.git
 	fetch = +refs/heads/*:refs/remotes/origin/*
 ```
