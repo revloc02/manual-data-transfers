@@ -1,9 +1,11 @@
-// simple topic for testGetSnsTopicAttributes int test
-// When you set this up afresh on a new sandbox account, update the ~/.aws/config file with the new sandbox account ID
+# To get cred goto myapplications.microsoft.com > AWS - Identity Center - Enterprise >
+# (find the sandbox account) > Access keys > Option 1: Set AWS environment variables >
+# (copy and paste the `export` commands to your cli)
+
 data "aws_caller_identity" "current" {}
 module "basic_topic" {
   source            = "app.terraform.io/ICS/sns-topic/aws"
-  version           = "~>1.0"
+  version           = "~>2.0"
   name              = "topic_a"
   kms_master_key_id = "alias/aws/sns"
 
@@ -22,23 +24,28 @@ module "basic_topic" {
 
 // SQS subscribed to the SNS
 module "my_queue" {
-  source                        = "app.terraform.io/ICS/sqs/aws"
-  version                       = "~>1.0"
-  name                          = "sub_demo_adv_queue"
-  kms_master_key_id             = module.my_key.arn
-  policy_allow_source_arns_send = [module.basic_topic.arn]
+  source                  = "app.terraform.io/ICS/sqs/aws"
+  version                 = "~>2.0"
+  name                    = "sub_demo_adv_queue"
+  # kms_master_key_create = true
+  sqs_managed_sse_enabled = true
+  sns_topic_subscriptions = [
+    {
+      topic_arn            = module.basic_topic.arn
+      raw_message_delivery = true
+      filter_policy        = null
+    }
+  ]
 }
-module "my_key" {
-  source                = "app.terraform.io/ICS/kms/aws"
-  version               = "~>1.0"
-  alias                 = "sub_demo_adv_key"
-  description           = "sub_demo_adv_key"
-  policy_allow_services = ["sns.amazonaws.com"]
+
+module "kms_key" {
+  source  = "app.terraform.io/ICS/kms/aws"
+  version = "~>2.0"
+  alias   = "test-key"
 }
-module "simple_sub" {
-  source    = "app.terraform.io/ICS/sns-subscription/aws"
-  version   = "~>1.0"
-  topic_arn = module.basic_topic.arn
-  protocol  = "sqs"
-  endpoint  = module.my_queue.arn
+module "queue_2" {
+  source                  = "app.terraform.io/ICS/sqs/aws"
+  version                 = "~>2.0"
+  name                    = "test-queue-2"
+  sqs_managed_sse_enabled = true
 }
