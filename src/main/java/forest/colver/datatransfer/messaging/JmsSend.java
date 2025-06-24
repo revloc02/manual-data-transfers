@@ -82,8 +82,8 @@ public class JmsSend {
    *
    * @param env Which environment the queue is in.
    * @param queueName Queue to send to.
-   * @param payloads An ArrayList of payloads. If the payloads are not unique just use
-   * {@link #sendMultipleSameMessage(Environment, String, Message, int)}
+   * @param payloads An ArrayList of payloads. If the payloads are not unique just use {@link
+   *     #sendMultipleSameMessage(Environment, String, Message, int)}
    */
   public static void sendMultipleUniqueMessages(
       Environment env, String queueName, List<String> payloads) {
@@ -106,8 +106,8 @@ public class JmsSend {
    *
    * @param env Which environment the queue is in.
    * @param queueName Queue to send to.
-   * @param payloads An ArrayList of payloads. If the payloads are not unique just use
-   * {@link #sendMultipleSameMessage(Environment, String, Message, int)}
+   * @param payloads An ArrayList of payloads. If the payloads are not unique just use {@link
+   *     #sendMultipleSameMessage(Environment, String, Message, int)}
    */
   public static void sendMultipleUniqueMessagesMultithreaded(
       Environment env, String queueName, List<String> payloads) {
@@ -117,8 +117,11 @@ public class JmsSend {
       var queue = ctx.createQueue(queueName);
       var producer = ctx.createProducer().setProperty("datatype", "multithreaded-sending");
       for (String payload : payloads) {
-        es.execute(() -> producer.setProperty("sentTimestamp", TIME_STAMP_FORMATTED)
-            .send(queue, ctx.createTextMessage(payload)));
+        es.execute(
+            () ->
+                producer
+                    .setProperty("sentTimestamp", TIME_STAMP_FORMATTED)
+                    .send(queue, ctx.createTextMessage(payload)));
       }
       // stop accepting new tasks and shut down after all running threads finish
       es.shutdown();
