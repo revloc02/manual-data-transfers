@@ -26,10 +26,14 @@ public class JmsSend {
     throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
   }
 
-  // EMX
+  /**
+   * Sends a simple timestamp payload and one property to the queue "forest-test" in the STAGE
+   * environment.
+   */
   public static void sendDefaultMessage() {
     sendMessageAutoAck(
-        STAGE, "forest-test",
+        STAGE,
+        "forest-test",
         createTextMessage(getDefaultPayload(), Map.of("defaultKey", "defaultValue")));
   }
 

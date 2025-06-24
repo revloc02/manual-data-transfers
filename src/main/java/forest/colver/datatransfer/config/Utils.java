@@ -139,6 +139,7 @@ public class Utils {
     return getCredentials(fullPath);
   }
 
+  /** Creates a timestamp payload of yyyy-MM-dd_HH:mm:ss.SSS. */
   public static String getDefaultPayload() {
     return defaultPayload;
   }
