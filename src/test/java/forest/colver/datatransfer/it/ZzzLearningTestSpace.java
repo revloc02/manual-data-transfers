@@ -29,6 +29,12 @@ import static forest.colver.datatransfer.config.Utils.getTimeStampFilename;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import forest.colver.datatransfer.aws.S3Operations;
+import forest.colver.datatransfer.messaging.DisplayUtils;
+import forest.colver.datatransfer.messaging.Environment;
+import forest.colver.datatransfer.messaging.JmsBrowse;
+import forest.colver.datatransfer.messaging.JmsSend;
+import forest.colver.datatransfer.messaging.Utils;
+import jakarta.jms.JMSException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
@@ -425,5 +431,20 @@ class ZzzLearningTestSpace {
       }
     } while (sqsDepth(creds, sqs) > resultingDepth);
     LOG.info("deleted: {}", count);
+  }
+
+  @Test
+  void addJmsHeaderToMessage() throws JMSException {
+    var message =
+        JmsBrowse.browseForSpecificMessage(
+            Environment.PROD,
+            "forest-test",
+            "traceparent='00-18d4cd7e866a81038fd621d78e21be14-d998fea593265831'");
+    LOG.info("=============== message received ===================");
+    var headers = Utils.extractMsgProperties(message);
+    headers.put("datatype", "temple.recommend.update");
+    var newMessage = Utils.createTextMessage(message.getBody(String.class), headers);
+    LOG.info(DisplayUtils.createStringFromMessage(newMessage));
+    JmsSend.sendMessageAutoAck(Environment.PROD, "temple-entry-emxonramp-prod", newMessage);
   }
 }
