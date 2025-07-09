@@ -860,10 +860,10 @@ class AwsS3IntTests {
   }
 
   /**
-   * Version cleanup method 1: Demonstrates cleaning up object versions by just directly deleting
-   * all the version.versionId()s. If you specify a versionId in your delete request, objects are
-   * deleted permanently and a delete marker is not created. (Remember to get creds first using `aws
-   * configure sso`.)
+   * Version cleanup method 1 (Recommended): Demonstrates cleaning up object versions by just
+   * directly deleting all the version.versionId()s. If you specify a versionId in your delete
+   * request, objects are deleted permanently and a delete marker is not created. (Remember to get
+   * creds first using `aws configure sso`.)
    */
   @Test
   void testS3VersionCleanupMethod1() {
@@ -906,9 +906,9 @@ class AwsS3IntTests {
   }
 
   /**
-   * Version cleanup method 2: Demonstrates cleaning up object versions by: 1) deleting the object,
-   * then 2) deleting all of the versions of that object, and finally 3) deleting the object
-   * delete-marker. (Remember to get creds first using `aws configure sso`.)
+   * Version cleanup method 2 (not recommended): Demonstrates cleaning up object versions by: 1)
+   * deleting the object, then 2) deleting all of the versions of that object, and finally 3)
+   * deleting the object delete-marker. (Remember to get creds first using `aws configure sso`.)
    */
   @Test
   void testS3VersionCleanupMethod2() {
