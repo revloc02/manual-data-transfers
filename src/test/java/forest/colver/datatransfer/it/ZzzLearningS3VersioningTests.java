@@ -13,11 +13,18 @@ import static forest.colver.datatransfer.aws.Utils.getS3Client;
 import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFilename;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.awaitility.Awaitility.await;
 
 import forest.colver.datatransfer.aws.S3Operations;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 class ZzzLearningS3VersioningTests {
   private static final Logger LOG = LoggerFactory.getLogger(ZzzLearningS3VersioningTests.class);
@@ -202,6 +209,128 @@ class ZzzLearningS3VersioningTests {
           LOG.info("version: {}", version);
         }
       }
+    }
+  }
+
+  /**
+   * Retrieves an S3 object from a versioned bucket using a specific version ID. Nothing fancy here,
+   * just a sanity check.
+   */
+  @Test
+  void getS3ObjectWithVersionFromVersionedBucket() throws IOException {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      var keyPrefix = "revloc02/target/versioned";
+      var objectKey = keyPrefix + "/versioned-" + getTimeStampFilename() + ".txt";
+      LOG.info("...place a file...");
+      var versionId = s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
+
+      LOG.info("...check the file arrived...");
+      var objects = s3List(creds, S3_INTERNAL, keyPrefix);
+      assertThat(objects).hasSizeGreaterThanOrEqualTo(1);
+
+      LOG.info("...get the file with versionId: {}", versionId);
+      var response = S3Operations.s3Retrieve(s3Client, S3_INTERNAL, objectKey, versionId);
+      assertThat(response).isNotNull();
+      var respPayload = new String(response.readAllBytes(), StandardCharsets.UTF_8);
+      assertThat(respPayload).isEqualTo(getDefaultPayload());
+
+      LOG.info("...cleanup and delete the file...");
+      S3Operations.s3DeleteVersion(s3Client, S3_INTERNAL, objectKey, versionId.orElseThrow());
+
+      LOG.info("...since versionId was used to delete, there should be no deleteMarkers...");
+      await()
+          .pollInterval(Duration.ofSeconds(3))
+          .atMost(Duration.ofSeconds(10))
+          .untilAsserted(
+              () -> assertThat(s3ListDeleteMarkers(s3Client, S3_INTERNAL, keyPrefix)).isEmpty());
+    }
+  }
+
+  /**
+   * Retrieves an S3 object from a versioned bucket without specifying a version ID. This is
+   * expected to retrieve the latest version of the object.
+   */
+  @Test
+  void getS3ObjectWithoutUsingVersionFromVersionedBucket() throws IOException {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      var keyPrefix = "revloc02/target/version-not-specified";
+      var objectKey = keyPrefix + "/version-not-specified-" + getTimeStampFilename() + ".txt";
+      LOG.info("...place a file...");
+      s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
+
+      LOG.info("...check the file arrived...");
+      var objects = s3List(creds, S3_INTERNAL, keyPrefix);
+      assertThat(objects).hasSizeGreaterThanOrEqualTo(1);
+
+      LOG.info("...put a different version of the file with the same name...");
+      s3Put(s3Client, S3_INTERNAL, objectKey, "Different content");
+
+      LOG.info("...retrieve the file, do not include versionId...");
+      var response = S3Operations.s3Retrieve(s3Client, S3_INTERNAL, objectKey, Optional.empty());
+      assertThat(response).isNotNull();
+      var respPayload = new String(response.readAllBytes(), StandardCharsets.UTF_8);
+      assertThat(respPayload).isEqualTo("Different content");
+
+      LOG.info("...check for 2 versions...");
+      var versions = s3ListVersions(s3Client, S3_INTERNAL, keyPrefix);
+      assertThat(versions).hasSizeGreaterThanOrEqualTo(2);
+
+      LOG.info("...cleanup and delete all version IDs...");
+      for (var version : versions) {
+        S3Operations.s3DeleteVersion(s3Client, S3_INTERNAL, objectKey, version.versionId());
+      }
+      LOG.info("...assert cleanup...");
+      await()
+          .pollInterval(Duration.ofSeconds(3))
+          .atMost(Duration.ofSeconds(10))
+          .untilAsserted(
+              () -> assertThat(s3ListVersions(s3Client, S3_INTERNAL, keyPrefix)).isEmpty());
+      LOG.info(
+          "...if versionId were used to delete, then there should be no deleteMarkers, assert this...");
+      await()
+          .pollInterval(Duration.ofSeconds(3))
+          .atMost(Duration.ofSeconds(10))
+          .untilAsserted(
+              () -> assertThat(s3ListDeleteMarkers(s3Client, S3_INTERNAL, keyPrefix)).isEmpty());
+    }
+  }
+
+  /**
+   * Attempts to retrieve an S3 object from a non-versioned bucket using a version ID. This should
+   * fail, as the bucket is not versioned.
+   */
+  @Test
+  void getS3ObjectWithVersionFromNonVersionedBucket() throws IOException {
+    var creds = getEmxSbCreds();
+    var bucket = "emx-sandbox-sftp-source-cache"; // non-versioned bucket
+    try (var s3Client = getS3Client(creds)) {
+      var keyPrefix = "revloc02/target/non-versioned";
+      var objectKey = keyPrefix + "/non-versioned-" + getTimeStampFilename() + ".txt";
+      LOG.info("...place a file...");
+      s3Put(s3Client, bucket, objectKey, getDefaultPayload());
+
+      LOG.info("...check the file arrived...");
+      var objects = s3List(creds, bucket, keyPrefix);
+      assertThat(objects).hasSizeGreaterThanOrEqualTo(1);
+
+      LOG.info("...first, get the file without versionId...");
+      var response = S3Operations.s3Retrieve(s3Client, bucket, objectKey, Optional.empty());
+      assertThat(response).isNotNull();
+      var respPayload = new String(response.readAllBytes(), StandardCharsets.UTF_8);
+      assertThat(respPayload).isEqualTo(getDefaultPayload());
+
+      LOG.info("...now, get the file using a versionId...");
+      assertThatExceptionOfType(S3Exception.class)
+          .isThrownBy(
+              () ->
+                  S3Operations.s3Retrieve(
+                      s3Client, bucket, objectKey, Optional.of("bogus-version-id")))
+          .withMessageContaining("Invalid version id specified");
+
+      LOG.info("...cleanup and delete the file...");
+      S3Operations.s3Delete(s3Client, S3_INTERNAL, objectKey);
     }
   }
 }
