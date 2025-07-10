@@ -437,7 +437,7 @@ class AwsS3IntTests {
 
       // retrieve object and check it
       var response = s3Get(s3Client, S3_INTERNAL, objectKey);
-      String payload = new String(response.readAllBytes());
+      String payload = new String(response.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(payload).isEqualTo(getDefaultPayload());
       assertThat(response.response().tagCount()).isOne();
       response.close();
@@ -472,7 +472,7 @@ class AwsS3IntTests {
 
       // use the s3Get method and check that it works
       try (var response = s3Get(s3Client, S3_INTERNAL, objectKey)) {
-        String payload = new String(response.readAllBytes());
+        String payload = new String(response.readAllBytes(), StandardCharsets.UTF_8);
         assertThat(payload).isEqualTo(getDefaultPayload());
       }
 
@@ -529,7 +529,7 @@ class AwsS3IntTests {
 
       // retrieve object and check it
       var response = s3Get(s3Client, S3_INTERNAL, objectKey);
-      String payload = new String(response.readAllBytes());
+      String payload = new String(response.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(payload).isEqualTo(getDefaultPayload());
       response.close();
 
