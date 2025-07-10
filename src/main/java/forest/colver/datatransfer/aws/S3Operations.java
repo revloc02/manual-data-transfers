@@ -5,6 +5,7 @@ import static forest.colver.datatransfer.aws.Utils.getS3Client;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
@@ -53,12 +54,14 @@ public class S3Operations {
    * s3Put with S3Client. Put an object on a desired S3 bucket. Creates PutObjectRequest. Pass in
    * the S3Client--good for stringing multiple S3 calls together so only one client is created.
    */
-  public static void s3Put(S3Client s3Client, String bucket, String objectKey, String payload) {
+  public static Optional<String> s3Put(
+      S3Client s3Client, String bucket, String objectKey, String payload) {
     var putObjectRequest = PutObjectRequest.builder().bucket(bucket).key(objectKey).build();
     var requestBody = RequestBody.fromString(payload);
     var putObjectResponse = s3Client.putObject(putObjectRequest, requestBody);
     awsResponseValidation(putObjectResponse);
     LOG.info(PUT_SUCCESS, objectKey, bucket);
+    return Optional.ofNullable(putObjectResponse.versionId());
   }
 
   /**
@@ -259,6 +262,30 @@ public class S3Operations {
     var getObjectResponse = s3Client.getObject(getObjectRequest);
     awsResponseValidation(getObjectResponse.response());
     LOG.info("S3GET: The object {} was retrieved from the {} bucket.\n", objectKey, bucket);
+    return getObjectResponse;
+  }
+
+  /**
+   * Retrieves an object from an S3 bucket, optionally specifying a version ID.
+   *
+   * @param s3Client An S3Client instance to use for the operation.
+   * @param bucket The name of the S3 bucket.
+   * @param key The path and object name in the S3 bucket.
+   * @param versionId An optional version ID for the object. If present, retrieves that specific
+   *     version.
+   * @return A ResponseInputStream containing the object data and metadata.
+   */
+  public static ResponseInputStream<GetObjectResponse> s3Retrieve(
+      S3Client s3Client, String bucket, String key, Optional<String> versionId) {
+    var gorBuilder = GetObjectRequest.builder().bucket(bucket).key(key);
+    versionId.ifPresent(gorBuilder::versionId);
+    var getObjectResponse = s3Client.getObject(gorBuilder.build());
+    awsResponseValidation(getObjectResponse.response());
+    LOG.info(
+        "S3RETRIEVE: The object {}, version {}, was retrieved from the {} bucket.\n",
+        key,
+        versionId,
+        bucket);
     return getObjectResponse;
   }
 
