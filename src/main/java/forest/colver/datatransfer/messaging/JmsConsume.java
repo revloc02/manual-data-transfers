@@ -83,8 +83,7 @@ public class JmsConsume {
     return counter;
   }
 
-  public static int deleteAllSpecificMessages(Environment env, String queueName,
-      String selector) {
+  public static int deleteAllSpecificMessages(Environment env, String queueName, String selector) {
     var cf = new JmsConnectionFactory(env.url());
     var counter = 0;
     try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {
@@ -103,8 +102,12 @@ public class JmsConsume {
         e.printStackTrace();
       }
     }
-    LOG.info("Deleted {} messages from {}:{} queue with criteria {}.", counter, env.name(),
-        queueName, selector);
+    LOG.info(
+        "Deleted {} messages from {}:{} queue with criteria {}.",
+        counter,
+        env.name(),
+        queueName,
+        selector);
     return counter;
   }
 
@@ -146,8 +149,7 @@ public class JmsConsume {
     var cf = new JmsConnectionFactory(env.url());
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
       ctx.createConsumer(ctx.createQueue(queueName))
-          .setMessageListener(
-              DisplayUtils::createStringFromMessage);
+          .setMessageListener(DisplayUtils::createStringFromMessage);
     }
   }
 
@@ -244,7 +246,11 @@ public class JmsConsume {
       } catch (JMSException e) {
         e.printStackTrace();
       }
-      LOG.info("Moved {} messages from {} to {} in {}.", counter, fromQueueName, toQueueName,
+      LOG.info(
+          "Moved {} messages from {} to {} in {}.",
+          counter,
+          fromQueueName,
+          toQueueName,
           env.name());
     }
   }
@@ -260,8 +266,13 @@ public class JmsConsume {
       } catch (JMSException e) {
         e.printStackTrace();
       }
-      LOG.info("Moved {} messages from {} to {} in {}, for selector={}.", counter, fromQueueName,
-          toQueueName, env.name(), selector);
+      LOG.info(
+          "Moved {} messages from {} to {} in {}, for selector={}.",
+          counter,
+          fromQueueName,
+          toQueueName,
+          env.name(),
+          selector);
     }
   }
 
@@ -283,10 +294,7 @@ public class JmsConsume {
         counter++;
         producer.send(toQueue, message);
         message.acknowledge();
-        LOG.info(
-            "Moved to Queue={}, counter={}",
-            toQueue.getQueueName(),
-            counter);
+        LOG.info("Moved to Queue={}, counter={}", toQueue.getQueueName(), counter);
       } else {
         moreMessages = false;
       }
@@ -314,9 +322,14 @@ public class JmsConsume {
       } catch (JMSException e) {
         e.printStackTrace();
       }
-      LOG.info("Moved {} messages from {}:{} to {}:{}, for selector={}.", counter, env.name(),
-          fromQueueName, env.name(),
-          toQueueName, selector);
+      LOG.info(
+          "Moved {} messages from {}:{} to {}:{}, for selector={}.",
+          counter,
+          env.name(),
+          fromQueueName,
+          env.name(),
+          toQueueName,
+          selector);
     }
   }
 }

@@ -43,12 +43,11 @@ public class CommonTasks {
    * Downloads directory.
    *
    * @param selector JMS selector for identifying a unique message. Example:
-   * "name='gtmbancoindustrialACH20230331123002258.xml'"
+   *     "name='gtmbancoindustrialACH20230331123002258.xml'"
    * @param fullyQualifiedPath The path to write the file. Example:
-   * "/Users/revloc02/Downloads/gtmbancoindustrialACH20230331123002258.xml"
+   *     "/Users/revloc02/Downloads/gtmbancoindustrialACH20230331123002258.xml"
    */
-  public static void saveMessageFromQpidReplayCache(String selector,
-      String fullyQualifiedPath) {
+  public static void saveMessageFromQpidReplayCache(String selector, String fullyQualifiedPath) {
     // possible selectors:
     //    emxReplayEnvironmentName = prod
     //    datatype             = finance.payment.eft
@@ -63,11 +62,9 @@ public class CommonTasks {
     writeFile(fullyQualifiedPath, payload.getBytes());
   }
 
-  /**
-   * Retrieves a message from the Qpid Replay Caches and copies it to another queue.
-   */
-  public static void copyMessageFromQpidReplayCache(Environment env, String selector,
-      String toQueue) {
+  /** Retrieves a message from the Qpid Replay Caches and copies it to another queue. */
+  public static void copyMessageFromQpidReplayCache(
+      Environment env, String selector, String toQueue) {
     // Example selector: traceparent='00-ab1cd1673eca0818d440923099cb9123-6a72088af80545d8-01'
     copySpecificMessages(env, "emx-replay-cache", selector, toQueue);
   }
@@ -130,22 +127,25 @@ public class CommonTasks {
    * Messages older than a couple of weeks are almost certainly irrelevant, but retaining three
    * months worth should be plenty of time.
    *
-   * The impetus for this was when the ops queue went over 100 messages, and the one that I had just
-   * copied to there was not visible in the Voyager interface (which the ops team uses), until I
-   * deleted messages down to below 100.
+   * <p>The impetus for this was when the ops queue went over 100 messages, and the one that I had
+   * just copied to there was not visible in the Voyager interface (which the ops team uses), until
+   * I deleted messages down to below 100.
    */
   public static void cleanupOpsQueue() {
     var timestamp = "1638297326591"; // messages older than ~ 30Nov2021
 
-    // 1. You need to find a timestamp to use in the "timestamp" var above, get this from the list of messages in the queue. Use whatever selector is helpful to do this.
-    browseForSpecificMessage(PROD, "ops",
-        "emxTraceOnrampMessageName='CFISLDS-GTM-INDUS-05-ACH-20210817111659.xml'");
+    // 1. You need to find a timestamp to use in the "timestamp" var above, get this from the list
+    // of messages in the queue. Use whatever selector is helpful to do this.
+    browseForSpecificMessage(
+        PROD, "ops", "emxTraceOnrampMessageName='CFISLDS-GTM-INDUS-05-ACH-20210817111659.xml'");
 
-    // 2. Once you have set the timestamp var above, check how many messages are going to be deleted according that timestamp
+    // 2. Once you have set the timestamp var above, check how many messages are going to be deleted
+    // according that timestamp
     browseAndCountSpecificMessages(PROD, "ops", "emxTraceSourceTimestamp<=" + timestamp);
 
-    // 3. If those results look good, actually delete the messages (uncomment and run, then re-comment the code)
-//    deleteAllSpecificMessages(PROD, "ops", "emxTraceSourceTimestamp<=" + timestamp);
+    // 3. If those results look good, actually delete the messages (uncomment and run, then
+    // re-comment the code)
+    //    deleteAllSpecificMessages(PROD, "ops", "emxTraceSourceTimestamp<=" + timestamp);
   }
 
   /**
@@ -170,12 +170,12 @@ public class CommonTasks {
           } else {
             skipped++;
             LOG.info("TOO RECENT: {}", object.key());
-            var getTags = GetObjectTaggingRequest.builder().bucket(bucket).key(object.key())
-                .build();
+            var getTags =
+                GetObjectTaggingRequest.builder().bucket(bucket).key(object.key()).build();
             var result = s3Client.getObjectTagging(getTags);
             if (result.hasTagSet()) {
-              LOG.info("     tags: {}={}", result.tagSet().get(0).key(),
-                  result.tagSet().get(0).value());
+              LOG.info(
+                  "     tags: {}={}", result.tagSet().get(0).key(), result.tagSet().get(0).value());
             }
           }
         }
@@ -210,38 +210,47 @@ public class CommonTasks {
         count = count + listObjectsResponse.contents().size();
         for (var object : listObjectsResponse.contents()) {
 
-//          var response = s3Get(s3Client, bucket, object.key());
-//          var contents = new String(response.readAllBytes(),
-//              StandardCharsets.UTF_8);
-//          if (contents.contains("emx-health-check")) {
-//            // delete lifeflight logs to make it easier to peruse other logs
-//            lifeflight++;
-//            s3Delete(s3Client, bucket, object.key());
-//          }
-//          if (contents.contains("DivvyCloud")) {
-//            // delete lifeflight logs to make it easier to peruse other logs
-//            divvy++;
-//            s3Delete(s3Client, bucket, object.key());
-//          }
-//          if (contents.contains("TrustedAdvisor")) {
-//            // delete lifeflight logs to make it easier to peruse other logs
-//            trusted++;
-//            s3Delete(s3Client, bucket, object.key());
-//          }
+          //          var response = s3Get(s3Client, bucket, object.key());
+          //          var contents = new String(response.readAllBytes(),
+          //              StandardCharsets.UTF_8);
+          //          if (contents.contains("emx-health-check")) {
+          //            // delete lifeflight logs to make it easier to peruse other logs
+          //            lifeflight++;
+          //            s3Delete(s3Client, bucket, object.key());
+          //          }
+          //          if (contents.contains("DivvyCloud")) {
+          //            // delete lifeflight logs to make it easier to peruse other logs
+          //            divvy++;
+          //            s3Delete(s3Client, bucket, object.key());
+          //          }
+          //          if (contents.contains("TrustedAdvisor")) {
+          //            // delete lifeflight logs to make it easier to peruse other logs
+          //            trusted++;
+          //            s3Delete(s3Client, bucket, object.key());
+          //          }
 
           if (object.lastModified().isBefore(oneYearAgo)) {
             deleted++;
             s3Delete(s3Client, bucket, object.key());
           }
         }
-        var now = DateTimeFormatter.ofPattern("HH:mm:ss").withZone(ZoneId.systemDefault())
-            .format(Instant.now());
-        LOG.info("Timestamp={} count={} deleted={} key={}", now, count,
-            deleted, listObjectsResponse.contents().get(0).key());
+        var now =
+            DateTimeFormatter.ofPattern("HH:mm:ss")
+                .withZone(ZoneId.systemDefault())
+                .format(Instant.now());
+        LOG.info(
+            "Timestamp={} count={} deleted={} key={}",
+            now,
+            count,
+            deleted,
+            listObjectsResponse.contents().get(0).key());
         // get the next set
         listObjectsRequest =
-            ListObjectsV2Request.builder().bucket(bucket).prefix(keyPrefix)
-                .continuationToken(listObjectsResponse.nextContinuationToken()).maxKeys(maxKeys)
+            ListObjectsV2Request.builder()
+                .bucket(bucket)
+                .prefix(keyPrefix)
+                .continuationToken(listObjectsResponse.nextContinuationToken())
+                .maxKeys(maxKeys)
                 .build();
         listObjectsResponse = s3Client.listObjectsV2(listObjectsRequest);
         awsResponseValidation(listObjectsResponse);
