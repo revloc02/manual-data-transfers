@@ -71,55 +71,70 @@ public class CommonTasks {
   }
 
   /**
-   * Downloads (consumes) all messages from a specified Qpid queue and saves them as files to the local
-   * Downloads/qpid/queue directory. The files are named using the traceparent property if it
+   * Downloads (consumes) all messages from a specified Qpid queue and saves them as files to the
+   * local Downloads/qpid/queue directory. The files are named using the traceparent property if it
    * exists, otherwise a default name is used.
    *
    * @param env The environment where the queue is located (e.g., DEV, TEST, STAGE, PROD).
    * @param queue The name of the Qpid queue to download messages from.
    */
-public static void downloadListOfMessagesFromQpid(Environment env, String queue) {
-  var baseDir = Paths.get(System.getProperty("user.home"), "Downloads", "qpid", queue,
-      DateTimeFormatter.BASIC_ISO_DATE.format(LocalDateTime.now()));
+  public static void downloadListOfMessagesFromQpid(Environment env, String queue) {
+    var baseDir =
+        Paths.get(
+            System.getProperty("user.home"),
+            "Downloads",
+            "qpid",
+            queue,
+            DateTimeFormatter.BASIC_ISO_DATE.format(LocalDateTime.now()));
 
-  try {
-    Files.createDirectories(baseDir);
-  } catch (IOException e) {
-    throw new RuntimeException("Failed to create directory: " + baseDir, e);
-  }
-
-  Message message;
-  int messageCount = 0;
-  while ((message = JmsConsume.consumeOneMessage(env, queue)) != null) {
-    messageCount++;
-    var payload = getJmsMsgPayload(message);
-    var filename = generateFilename(message, messageCount);
-    var filePath = baseDir.resolve(filename);
-
-    writeFile(filePath.toString(), payload.getBytes());
-    LOG.info("Wrote file: {}", filePath);
-  }
-  LOG.info("DONE: Downloaded {} messages from queue: {}", messageCount, queue);
-}
-
-private static String generateFilename(Message message, int messageCount) {
-  try {
-    var traceparent = message.getStringProperty("traceparent");
-    if (traceparent != null && !traceparent.isBlank()) {
-      return sanitizeFilename(traceparent) + ".txt";
+    try {
+      Files.createDirectories(baseDir);
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to create directory: " + baseDir, e);
     }
-  } catch (JMSException e) {
-    LOG.warn("Failed to get traceparent property: {}", e.getMessage());
+
+    Message message;
+    int messageCount = 0;
+    while ((message = JmsConsume.consumeOneMessage(env, queue)) != null) {
+      messageCount++;
+      var payload = getJmsMsgPayload(message);
+      var filename = generateFilename(message, messageCount);
+      var filePath = baseDir.resolve(filename);
+
+      writeFile(filePath.toString(), payload.getBytes());
+      LOG.info("Wrote file: {}", filePath);
+    }
+    LOG.info("DONE: Downloaded {} messages from queue: {}", messageCount, queue);
   }
 
-  return String.format("message-%04d-%s.txt",
-      messageCount,
-      DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss-SSS").format(LocalDateTime.now()));
-}
+  /**
+   * Helper method to generate a filename for a message based on its traceparent property or a
+   * default naming scheme.
+   *
+   * @param message The JMS message.
+   * @param messageCount The sequential count of the message being processed.
+   * @return A sanitized filename for the message.
+   */
+  private static String generateFilename(Message message, int messageCount) {
+    try {
+      var traceparent = message.getStringProperty("traceparent");
+      if (traceparent != null && !traceparent.isBlank()) {
+        return sanitizeFilename(traceparent) + ".txt";
+      }
+    } catch (JMSException e) {
+      LOG.warn("Failed to get traceparent property: {}", e.getMessage());
+    }
 
-private static String sanitizeFilename(String filename) {
-  return filename.replaceAll("[^a-zA-Z0-9.-]", "-");
-}
+    return String.format(
+        "message-%04d-%s.txt",
+        messageCount,
+        DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss-SSS").format(LocalDateTime.now()));
+  }
+
+  /** Helper method to sanitize filenames by replacing unsafe characters. */
+  private static String sanitizeFilename(String filename) {
+    return filename.replaceAll("[^a-zA-Z0-9.-]", "-");
+  }
 
   /**
    * Clears Lifeflight health checks from the Stage sftp-error queue. Occasionally a Lifeflight
