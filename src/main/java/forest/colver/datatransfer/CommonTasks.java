@@ -18,13 +18,14 @@ import forest.colver.datatransfer.messaging.Environment;
 import forest.colver.datatransfer.messaging.JmsConsume;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
-import java.text.SimpleDateFormat;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.s3.model.GetObjectTaggingRequest;
@@ -70,43 +71,55 @@ public class CommonTasks {
   }
 
   /**
-   * Downloads all messages from a specified Qpid queue and saves them as files to the local
+   * Downloads (consumes) all messages from a specified Qpid queue and saves them as files to the local
    * Downloads/qpid/queue directory. The files are named using the traceparent property if it
    * exists, otherwise a default name is used.
    *
    * @param env The environment where the queue is located (e.g., DEV, TEST, STAGE, PROD).
    * @param queue The name of the Qpid queue to download messages from.
    */
-  public static void downloadListOfMessagesFromQpid(Environment env, String queue) {
-    Message message;
-    while ((message = JmsConsume.consumeOneMessage(env, queue)) != null) {
-      var payload = getJmsMsgPayload(message);
-      var path =
-          "/Users/revloc02/Downloads/qpid/"
-              + queue
-              + "/"
-              + DateTimeFormatter.BASIC_ISO_DATE.format(LocalDateTime.now())
-              + "/";
-      String filename;
-      try {
-        filename = message.getStringProperty("traceparent");
-      } catch (JMSException e) {
-        throw new RuntimeException(e);
-      }
-      if (filename == null || filename.isBlank()) {
-        filename =
-            "no-traceparent-"
-                + new SimpleDateFormat("yyyyMMdd-HHmmss-SSS").format(new Date())
-                + ".txt";
-      } else {
-        filename = filename.replaceAll("[:]", "-") + ".txt";
-      }
-      path += filename;
-      writeFile(path, payload.getBytes());
-      LOG.info("wrote file: {}", path);
-    }
-    LOG.info("DONE: no more messages in queue: {}", queue);
+public static void downloadListOfMessagesFromQpid(Environment env, String queue) {
+  var baseDir = Paths.get(System.getProperty("user.home"), "Downloads", "qpid", queue,
+      DateTimeFormatter.BASIC_ISO_DATE.format(LocalDateTime.now()));
+
+  try {
+    Files.createDirectories(baseDir);
+  } catch (IOException e) {
+    throw new RuntimeException("Failed to create directory: " + baseDir, e);
   }
+
+  Message message;
+  int messageCount = 0;
+  while ((message = JmsConsume.consumeOneMessage(env, queue)) != null) {
+    messageCount++;
+    var payload = getJmsMsgPayload(message);
+    var filename = generateFilename(message, messageCount);
+    var filePath = baseDir.resolve(filename);
+
+    writeFile(filePath.toString(), payload.getBytes());
+    LOG.info("Wrote file: {}", filePath);
+  }
+  LOG.info("DONE: Downloaded {} messages from queue: {}", messageCount, queue);
+}
+
+private static String generateFilename(Message message, int messageCount) {
+  try {
+    var traceparent = message.getStringProperty("traceparent");
+    if (traceparent != null && !traceparent.isBlank()) {
+      return sanitizeFilename(traceparent) + ".txt";
+    }
+  } catch (JMSException e) {
+    LOG.warn("Failed to get traceparent property: {}", e.getMessage());
+  }
+
+  return String.format("message-%04d-%s.txt",
+      messageCount,
+      DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss-SSS").format(LocalDateTime.now()));
+}
+
+private static String sanitizeFilename(String filename) {
+  return filename.replaceAll("[^a-zA-Z0-9.-]", "-");
+}
 
   /**
    * Clears Lifeflight health checks from the Stage sftp-error queue. Occasionally a Lifeflight
