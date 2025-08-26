@@ -64,11 +64,18 @@ public class Utils {
   /**
    * Used to write a file to disk, most useful when a message payload is too big to peruse in a log.
    *
-   * @param fullyQualifiedFilePath The path to the intended location of the written file.
+   * @param fullyQualifiedFilePath The path to the intended location of the written file, e.g.
+   *     "/Users/revloc02/Downloads/manual-data-transfers-test.txt"
    * @param contents The contents to be written to the file.
    */
   public static void writeFile(String fullyQualifiedFilePath, byte[] contents) {
     var path = Paths.get(fullyQualifiedFilePath);
+    // ensure parent directories exist
+    try {
+      Files.createDirectories(path.getParent());
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
     try {
       Files.write(path, contents);
       LOG.info("File written to: {}", path);

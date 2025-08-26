@@ -1,7 +1,6 @@
 package forest.colver.datatransfer;
 
 import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
-import static forest.colver.datatransfer.aws.S3Operations.s3Get;
 import static forest.colver.datatransfer.aws.S3Operations.s3List;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessagesWithPayloadLike;
 import static forest.colver.datatransfer.aws.Utils.awsResponseValidation;
@@ -16,10 +15,16 @@ import static forest.colver.datatransfer.messaging.JmsBrowse.copySpecificMessage
 import static forest.colver.datatransfer.messaging.Utils.getJmsMsgPayload;
 
 import forest.colver.datatransfer.messaging.Environment;
+import forest.colver.datatransfer.messaging.JmsConsume;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.s3.model.GetObjectTaggingRequest;
@@ -65,6 +70,45 @@ public class CommonTasks {
       String toQueue) {
     // Example selector: traceparent='00-ab1cd1673eca0818d440923099cb9123-6a72088af80545d8-01'
     copySpecificMessages(env, "emx-replay-cache", selector, toQueue);
+  }
+
+  /**
+   * Downloads all messages from a specified Qpid queue and saves them as files to the local
+   * Downloads/qpid/queue directory. The files are named using the traceparent property if it
+   * exists, otherwise a default name is used.
+   *
+   * @param env The environment where the queue is located (e.g., DEV, TEST, STAGE, PROD).
+   * @param queue The name of the Qpid queue to download messages from.
+   */
+  public static void downloadListOfMessagesFromQpid(Environment env, String queue) {
+    Message message;
+    while ((message = JmsConsume.consumeOneMessage(env, queue)) != null) {
+      var payload = getJmsMsgPayload(message);
+      var path =
+          "/Users/revloc02/Downloads/qpid/"
+              + queue
+              + "/"
+              + DateTimeFormatter.BASIC_ISO_DATE.format(LocalDateTime.now())
+              + "/";
+      String filename;
+      try {
+        filename = message.getStringProperty("traceparent");
+      } catch (JMSException e) {
+        throw new RuntimeException(e);
+      }
+      if (filename == null || filename.isBlank()) {
+        filename =
+            "no-traceparent-"
+                + new SimpleDateFormat("yyyyMMdd-HHmmss-SSS").format(new Date())
+                + ".txt";
+      } else {
+        filename = filename.replaceAll("[:]", "-") + ".txt";
+      }
+      path += filename;
+      writeFile(path, payload.getBytes());
+      LOG.info("wrote file: {}", path);
+    }
+    LOG.info("DONE: no more messages in queue: {}", queue);
   }
 
   /**

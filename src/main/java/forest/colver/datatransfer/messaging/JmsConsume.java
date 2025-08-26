@@ -179,7 +179,7 @@ public class JmsConsume {
       var fromQ = ctx.createQueue(fromQueueName);
       try (var consumer = ctx.createConsumer(fromQ)) {
         message = consumer.receive(5_000L);
-        message.acknowledge();
+        if (message != null) message.acknowledge();
       } catch (JMSException e) {
         e.printStackTrace();
       }
@@ -319,6 +319,4 @@ public class JmsConsume {
           toQueueName, selector);
     }
   }
-
 }
-

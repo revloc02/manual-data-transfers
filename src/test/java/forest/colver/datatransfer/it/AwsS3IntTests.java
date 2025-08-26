@@ -1028,4 +1028,6 @@ class AwsS3IntTests {
           s3CountAll(s3Client, "cp-aws-gayedtiak3nflbiftucz-s3-logging", "emx-sandbox-sftp"));
     }
   }
+
+  // todo: add tests for S3Operations.s3Retrieve(), both with a versionId and without a versionId
 }
