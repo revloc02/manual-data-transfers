@@ -21,51 +21,76 @@ public class Main {
 
     //    cleanupSftpErrorSqsStage();
 
+    //    JmsSend.sendDefaultMessage();
+
+    //    for (int i = 0; i < 10; i++) {
+    //      JmsSend.sendDefaultMessage();
+    //    }
+
+    //    CommonTasks.downloadListOfMessagesFromQpid(STAGE,
+    // "patriarchal-blessing-emxofframp-gsc-dlq");
+    //      "patriarchal-blessing-emxofframp-test-dlq");
+
+    //    moveAllSpecificMessages(
+    //        Environment.PROD,
+    //        EMX_ERROR,
+    //        "emxSystem='english-connect' AND emxSystemEnvironment='prod'",
+    //        "emx-to-english-connect-prod");
+    //    moveAllSpecificMessages(
+    //        Environment.STAGE,
+    //        EMX_ERROR,
+    //        "emxSystem='english-connect' AND emxSystemEnvironment='stage'",
+    //        "emx-to-english-connect-stage");
+
     // si-services
-    moveAllSpecificMessages(
-        PROD,
-        "emx-error",
-        "emxSystem='si-services' AND emxSystemEnvironment='prod'",
-        "emx-to-si-services-prod");
-    moveAllSpecificMessages(
-        STAGE,
-        "emx-error",
-        "emxSystem='si-services' AND emxSystemEnvironment='test'",
-        "emx-to-si-services-test");
     moveAllSpecificMessages(
         STAGE,
         "emx-error",
         "emxSystem='si-services' AND emxSystemEnvironment='stage'",
-        "watchtower-si-services");
-    moveAllSpecificMessages(
-        STAGE,
-        "watchtower-si-services",
-        "emxSystem='si-services' AND emxSystemEnvironment='stage' AND emxErrorRampName='off-ramp'",
         "emx-to-si-services-stage");
-    moveAllSpecificMessages(
-        STAGE,
-        "watchtower-si-services",
-        "emxSystem='si-services' AND emxSystemEnvironment='stage' AND emxErrorRampName='off-ramp-wds'",
-        "emx-to-si-services-stage-wds");
+    //    moveAllSpecificMessages(
+    //        STAGE,
+    //        "emx-error",
+    //        "emxSystem='si-services' AND emxSystemEnvironment='test' AND
+    // emxErrorRampName='off-ramp-wds'",
+    //        "emx-to-si-services-test-wds");
+    //    moveAllSpecificMessages(
+    //        STAGE,
+    //        "emx-error",
+    //        "emxSystem='si-services' AND emxSystemEnvironment='stage'",
+    //        "emx-to-si-services-stage");
+    //    moveAllSpecificMessages(
+    //        STAGE,
+    //        "watchtower-si-services",
+    //        "emxSystem='si-services' AND emxSystemEnvironment='stage' AND
+    // emxErrorRampName='off-ramp'",
+    //        "emx-to-si-services-stage");
+    //    moveAllSpecificMessages(
+    //        STAGE,
+    //        "watchtower-si-services",
+    //        "emxSystem='si-services' AND emxSystemEnvironment='stage' AND
+    // emxErrorRampName='off-ramp-wds'",
+    //        "emx-to-si-services-stage-wds");
 
     // Lenel
-    moveAllSpecificMessages(
-        PROD,
-        "emx-error",
-        "emxSystem='lenel' AND emxErrorRampName='hr-data-broker'",
-        "watchtower-lenel-hr-data-broker");
-    moveAllSpecificMessages(
-        PROD, "emx-error", "emxSystem='lenel' AND emxErrorRampName='off-ramp'", "watchtower-lenel");
-    moveAllSpecificMessages(
-        PROD,
-        "watchtower-lenel-hr-data-broker",
-        "emxSystem='lenel' AND emxErrorRampName='hr-data-broker'",
-        "emx-to-lenel-prod-hr-data-broker");
-    moveAllSpecificMessages(
-        PROD,
-        "watchtower-lenel",
-        "emxSystem='lenel' AND emxErrorRampName='off-ramp'",
-        "emx-to-lenel-prod");
+    //    moveAllSpecificMessages(
+    //        PROD,
+    //        "emx-error",
+    //        "emxSystem='lenel' AND emxErrorRampName='hr-data-broker'",
+    //        "watchtower-lenel-hr-data-broker");
+    //    moveAllSpecificMessages(
+    //        PROD, "emx-error", "emxSystem='lenel' AND emxErrorRampName='off-ramp'",
+    // "watchtower-lenel");
+    //    moveAllSpecificMessages(
+    //        PROD,
+    //        "watchtower-lenel-hr-data-broker",
+    //        "emxSystem='lenel' AND emxErrorRampName='hr-data-broker'",
+    //        "emx-to-lenel-prod-hr-data-broker");
+    //    moveAllSpecificMessages(
+    //        PROD,
+    //        "watchtower-lenel",
+    //        "emxSystem='lenel' AND emxErrorRampName='off-ramp'",
+    //        "emx-to-lenel-prod");
 
     //    retrieveMessageFromQpidReplayCache("name='gtmbancoindustrialACH20230411123003061.xml'",
     // "/Users/revloc02/Downloads/gtmbancoindustrialACH20230411123003061.xml");
