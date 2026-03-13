@@ -931,7 +931,16 @@ class AwsS3IntTests {
       assertThat(versions).hasSizeGreaterThanOrEqualTo(3);
 
       LOG.info("...delete the object itself...");
-      s3Delete(s3Client, S3_INTERNAL, keyPrefix + objectKey);
+      s3Delete(s3Client, S3_INTERNAL, objectKey);
+
+      LOG.info("...assert that the object is deleted, but the versions still exist...");
+      await()
+          .pollInterval(Duration.ofSeconds(3))
+          .atMost(Duration.ofSeconds(10))
+          .untilAsserted(() -> assertThat(s3List(s3Client, S3_INTERNAL, keyPrefix)).isEmpty());
+      versions = s3ListVersions(s3Client, S3_INTERNAL, keyPrefix);
+      assertThat(versions).hasSizeGreaterThanOrEqualTo(3);
+
       LOG.info("...now delete all the versions of that object...");
       for (var version : versions) {
         S3Operations.s3DeleteVersion(s3Client, S3_INTERNAL, objectKey, version.versionId());
