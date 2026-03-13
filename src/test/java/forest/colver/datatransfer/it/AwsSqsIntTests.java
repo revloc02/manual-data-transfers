@@ -40,18 +40,14 @@ import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.services.sqs.model.Message;
 
-/**
- * Integration Tests for AWS SQS
- */
+/** Integration Tests for AWS SQS */
 class AwsSqsIntTests {
 
   private static final Logger LOG = LoggerFactory.getLogger(AwsSqsIntTests.class);
   private static final String SQS1 = EMX_SANDBOX_TEST_SQS1;
   private static final String SQS2 = EMX_SANDBOX_TEST_SQS2;
 
-  /**
-   * A helper method to ensure an SQS queue has been emptied of all messages.
-   */
+  /** A helper method to ensure an SQS queue has been emptied of all messages. */
   private void clearSqs(AwsCredentialsProvider creds, String sqs) {
     sqsClear(creds, sqs);
     // assert the sqs was cleared
@@ -66,7 +62,7 @@ class AwsSqsIntTests {
    * This is actually not a unit test. This is a helper method that allows me to cleanup both SQS1
    * and SQS2 in case other unit tests didn't finish correctly and cleanup after themselves.
    */
-//  @Test // uncomment this line if you need to run this
+  //  @Test // uncomment this line if you need to run this
   void helperPurge() {
     var creds = getEmxSbCreds();
 
@@ -92,10 +88,7 @@ class AwsSqsIntTests {
     var creds = getEmxSbCreds();
     var numMsgs = 5;
     for (var i = 0; i < numMsgs; i++) {
-      sqsSend(
-          creds,
-          SQS1,
-          readFile("src/test/resources/1test.txt", StandardCharsets.UTF_8));
+      sqsSend(creds, SQS1, readFile("src/test/resources/1test.txt", StandardCharsets.UTF_8));
     }
     await()
         .pollInterval(Duration.ofSeconds(3))
@@ -207,19 +200,18 @@ class AwsSqsIntTests {
     sqsDeleteMessage(creds, SQS1, msg);
   }
 
-  /**
-   * Sends a {@link software.amazon.awssdk.services.sqs.model.Message Message} to an SQS.
-   */
+  /** Sends a {@link software.amazon.awssdk.services.sqs.model.Message Message} to an SQS. */
   @Test
   void testSqsSendMessage() {
     LOG.info("Interacting with: sqs={}", SQS1);
     var payload = "Message Payload. This message also includes message attributes.";
     var attributes = Map.of("key1", "value1", "key2", "value2");
-    var message = Message.builder()
-        .body(payload)
-        .messageAttributes(createSqsMessageAttributes(attributes))
-        .messageId(getUuid())
-        .build();
+    var message =
+        Message.builder()
+            .body(payload)
+            .messageAttributes(createSqsMessageAttributes(attributes))
+            .messageId(getUuid())
+            .build();
     // send a message
     var creds = getEmxSbCreds();
     sqsSend(creds, SQS1, message);
@@ -266,8 +258,8 @@ class AwsSqsIntTests {
     LOG.info("Interacting with: sqs={}", SQS1);
     // send some stuff
     var creds = getEmxSbCreds();
-    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3",
-        "value3");
+    var messageProps =
+        Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3", "value3");
     var payload = getDefaultPayload();
     sqsSend(creds, SQS1, payload, messageProps);
 
@@ -415,8 +407,8 @@ class AwsSqsIntTests {
 
     // send the first specific message
     var payload = getDefaultPayload();
-    var specificProps = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
-        "specificValue");
+    var specificProps =
+        Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
     sqsSend(creds, SQS1, payload, specificProps);
     // send some generic messages
     var numMsgs = 4;
@@ -434,8 +426,8 @@ class AwsSqsIntTests {
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMsgs + 3));
     // move the specific messages
     assertThat(
-        sqsMoveMessagesWithSelectedAttribute(creds, SQS1, "specificKey", "specificValue",
-            SQS2)).isEqualTo(3);
+            sqsMoveMessagesWithSelectedAttribute(creds, SQS1, "specificKey", "specificValue", SQS2))
+        .isEqualTo(3);
     // verify moved messages are on the other sqs
     await()
         .pollInterval(Duration.ofSeconds(3))
@@ -472,8 +464,7 @@ class AwsSqsIntTests {
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMsgs));
     // moving only the specific message that has a "2" appended
-    assertThat(
-        sqsMoveMessagesWithPayloadLike(creds, SQS1, payload + "2", SQS2)).isOne();
+    assertThat(sqsMoveMessagesWithPayloadLike(creds, SQS1, payload + "2", SQS2)).isOne();
     // verify moved messages are on the other sqs
     await()
         .pollInterval(Duration.ofSeconds(3))
@@ -510,11 +501,10 @@ class AwsSqsIntTests {
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(
-            () -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMsgs1 + numMsgs2));
+        .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMsgs1 + numMsgs2));
     // delete the messages with the specific payload
-    assertThat(
-        sqsDeleteMessagesWithPayloadLike(creds, SQS1, "specific payload")).isEqualTo(numMsgs2);
+    assertThat(sqsDeleteMessagesWithPayloadLike(creds, SQS1, "specific payload"))
+        .isEqualTo(numMsgs2);
     // assert the sqs has correct number of messages left on it
     await()
         .pollInterval(Duration.ofSeconds(3))
@@ -526,8 +516,7 @@ class AwsSqsIntTests {
   }
 
   /**
-   * Put more than 100 messages on the first SQS, and then try a
-   * {@link
+   * Put more than 100 messages on the first SQS, and then try a {@link
    * forest.colver.datatransfer.aws.SqsOperations#sqsMoveMessagesWithSelectedAttribute(AwsCredentialsProvider,
    * String, String, String, String) sqsMoveMessagesWithSelectedAttribute} and have it fail because
    * the queue is too deep.
@@ -541,8 +530,8 @@ class AwsSqsIntTests {
     clearSqs(creds, SQS2);
 
     // send a specific message
-    var specificProps = Map.of("timestamp", getTimeStampFormatted(), "specificKey",
-        "specificValue");
+    var specificProps =
+        Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
     sqsSend(creds, SQS1, getDefaultPayload(), specificProps);
     // send some generic messages
     var numMsgs = 122; // sqsMoveMessagesWithSelectedAttribute() limit is currently hardcoded to 100
@@ -557,8 +546,8 @@ class AwsSqsIntTests {
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isGreaterThanOrEqualTo(numMsgs + 1));
     // move the specific messages and get a -1 result indicating the queue depth is too big
     assertThat(
-        sqsMoveMessagesWithSelectedAttribute(creds, SQS1, "specificKey", "specificValue",
-            SQS2)).isEqualTo(-1);
+            sqsMoveMessagesWithSelectedAttribute(creds, SQS1, "specificKey", "specificValue", SQS2))
+        .isEqualTo(-1);
 
     // Post: cleanup
     clearSqs(creds, SQS1);
@@ -586,8 +575,7 @@ class AwsSqsIntTests {
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isEqualTo(numMsgs));
     // copy the messages
-    assertThat(
-        sqsCopyAll(creds, SQS1, SQS2)).isEqualTo(numMsgs);
+    assertThat(sqsCopyAll(creds, SQS1, SQS2)).isEqualTo(numMsgs);
     // verify copied messages are on the other sqs
     await()
         .pollInterval(Duration.ofSeconds(3))
@@ -670,9 +658,7 @@ class AwsSqsIntTests {
   void testSqsDownloadMessage() {
     LOG.info("Interacting with: sqs={}", SQS1);
     var payload = "Message Payload.";
-    var message = Message.builder()
-        .body(payload)
-        .build();
+    var message = Message.builder().body(payload).build();
     // send a message
     var creds = getEmxSbCreds();
     sqsSend(creds, SQS1, message);

@@ -75,10 +75,11 @@ public class S3AndBlobStorage {
       String objectKey,
       String connectStr,
       String endpoint,
-      String containerName) throws IOException {
-      var objects = s3List(awsCp, bucket, objectKey);
-      for (var object : objects) {
-        moveOneS3toAzureBlob(awsCp, bucket, object.key(), connectStr, endpoint, containerName);
-      }
+      String containerName)
+      throws IOException {
+    var objects = s3List(awsCp, bucket, objectKey);
+    for (var object : objects) {
+      moveOneS3toAzureBlob(awsCp, bucket, object.key(), connectStr, endpoint, containerName);
+    }
   }
 }

@@ -5,8 +5,6 @@ import static forest.colver.datatransfer.config.Utils.getPassword;
 import static forest.colver.datatransfer.config.Utils.getUsername;
 import static forest.colver.datatransfer.messaging.Environment.STAGE;
 
-import java.util.Enumeration;
-import java.util.Map;
 import jakarta.jms.BytesMessage;
 import jakarta.jms.JMSException;
 import jakarta.jms.MapMessage;
@@ -14,13 +12,13 @@ import jakarta.jms.Message;
 import jakarta.jms.ObjectMessage;
 import jakarta.jms.StreamMessage;
 import jakarta.jms.TextMessage;
+import java.util.Enumeration;
+import java.util.Map;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * JMS specific utilities.
- */
+/** JMS specific utilities. */
 public class Utils {
 
   private static final Logger LOG = LoggerFactory.getLogger(Utils.class);

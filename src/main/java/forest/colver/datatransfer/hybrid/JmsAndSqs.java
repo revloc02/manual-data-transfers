@@ -22,9 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 
-/**
- * This is for methods that perform operations between Qpid and SQS.
- */
+/** This is for methods that perform operations between Qpid and SQS. */
 public class JmsAndSqs {
 
   private static final Logger LOG = LoggerFactory.getLogger(JmsAndSqs.class);
@@ -37,28 +35,29 @@ public class JmsAndSqs {
    * @param awsCreds Credentials for the AWS environment.
    * @param sqs The AWS SQS.
    */
-  public static void moveOneJmsToSqs(Environment qpidEnv, String qpidQ,
-      AwsCredentialsProvider awsCreds, String sqs) {
+  public static void moveOneJmsToSqs(
+      Environment qpidEnv, String qpidQ, AwsCredentialsProvider awsCreds, String sqs) {
     Message msg = consumeOneMessage(qpidEnv, qpidQ);
 
     // SQS messages are limited to 10 attributes of up to 256 characters each
     sqsSend(awsCreds, sqs, getJmsMsgPayload(msg), extractMsgProperties(msg));
   }
 
-  public static void moveOneSqsToJms(AwsCredentialsProvider awsCreds, String sqs, Environment env,
-      String queue) {
+  public static void moveOneSqsToJms(
+      AwsCredentialsProvider awsCreds, String sqs, Environment env, String queue) {
     var sqsMsg = sqsConsumeOneMessage(awsCreds, sqs);
     if (sqsMsg != null) {
-      TextMessage message = createTextMessage(sqsMsg.body(),
-          convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
+      TextMessage message =
+          createTextMessage(
+              sqsMsg.body(), convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
       sendMessageAutoAck(env, queue, message);
     } else {
       LOG.error("ERROR: SQS message was null.");
     }
   }
 
-  public static void moveAllSpecificMessagesFromJmsToSqs(Environment env, String queue,
-      String selector, AwsCredentialsProvider awsCreds, String sqs) {
+  public static void moveAllSpecificMessagesFromJmsToSqs(
+      Environment env, String queue, String selector, AwsCredentialsProvider awsCreds, String sqs) {
     var cf = new JmsConnectionFactory(env.url());
     try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {
       var fromQ = ctx.createQueue(queue);
@@ -70,8 +69,8 @@ public class JmsAndSqs {
     }
   }
 
-  public static void moveAllMessagesFromJmsToSqs(Environment env, String queue,
-      AwsCredentialsProvider awsCreds, String sqs) {
+  public static void moveAllMessagesFromJmsToSqs(
+      Environment env, String queue, AwsCredentialsProvider awsCreds, String sqs) {
     var cf = new JmsConnectionFactory(env.url());
     try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {
       var fromQ = ctx.createQueue(queue);
@@ -93,8 +92,12 @@ public class JmsAndSqs {
    * @param env The environment for the Qpid queue. This var is only used for the log statement.
    * @param queue The Qpid queue name. This var is only used for the log statement.
    */
-  private static void jmsToSqsMessageMover(JMSConsumer consumer, AwsCredentialsProvider awsCreds,
-      String sqs, Environment env, String queue)
+  private static void jmsToSqsMessageMover(
+      JMSConsumer consumer,
+      AwsCredentialsProvider awsCreds,
+      String sqs,
+      Environment env,
+      String queue)
       throws JMSException {
     var counter = 0;
     var moreMessages = true;
@@ -104,12 +107,7 @@ public class JmsAndSqs {
         counter++;
         sqsSend(awsCreds, sqs, getJmsMsgPayload(message), extractMsgProperties(message));
         message.acknowledge();
-        LOG.info(
-            "Moved from Queue={}:{} to SQS={}, counter={}",
-            env.name(),
-            queue,
-            sqs,
-            counter);
+        LOG.info("Moved from Queue={}:{} to SQS={}, counter={}", env.name(), queue, sqs, counter);
       } else {
         moreMessages = false;
       }
@@ -117,24 +115,19 @@ public class JmsAndSqs {
     LOG.info("Moved {} messages.", counter);
   }
 
-  public static void moveAllMessagesFromSqsToJms(AwsCredentialsProvider awsCreds, String sqs,
-      Environment env,
-      String queue) {
+  public static void moveAllMessagesFromSqsToJms(
+      AwsCredentialsProvider awsCreds, String sqs, Environment env, String queue) {
     var moreMessages = true;
     var counter = 0;
     while (moreMessages) {
       var sqsMsg = sqsConsumeOneMessage(awsCreds, sqs);
       if (sqsMsg != null) {
         counter++;
-        TextMessage message = createTextMessage(sqsMsg.body(),
-            convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
+        TextMessage message =
+            createTextMessage(
+                sqsMsg.body(), convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
         sendMessageAutoAck(env, queue, message);
-        LOG.info(
-            "Moved from SQS={} to, Queue={}:{} counter={}",
-            sqs,
-            env.name(),
-            queue,
-            counter);
+        LOG.info("Moved from SQS={} to, Queue={}:{} counter={}", sqs, env.name(), queue, counter);
       } else {
         moreMessages = false;
       }

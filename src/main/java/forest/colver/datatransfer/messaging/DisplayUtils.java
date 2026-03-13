@@ -1,11 +1,11 @@
 package forest.colver.datatransfer.messaging;
 
-import java.util.Enumeration;
 import jakarta.jms.BytesMessage;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.StreamMessage;
 import jakarta.jms.TextMessage;
+import java.util.Enumeration;
 
 public class DisplayUtils {
 
@@ -16,7 +16,8 @@ public class DisplayUtils {
     return md.createString();
   }
 
-  public static String stringFromMessage(Message message, int payloadOutputTrunc, boolean listJmsProps) {
+  public static String stringFromMessage(
+      Message message, int payloadOutputTrunc, boolean listJmsProps) {
     var md = new MessageDisplayer(message);
     return md.createString(payloadOutputTrunc, listJmsProps);
   }

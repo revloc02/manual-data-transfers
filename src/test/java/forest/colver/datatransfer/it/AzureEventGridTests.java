@@ -37,21 +37,24 @@ class AzureEventGridTests {
     var eventType = "test.event.type";
     var dataVersion = "0.0.1";
     // todo: currently the timestamp is a hack, not sure how to fix that yet
-    aegSendMessage(EVENTGRID_HOST, EVENTGRID_TOPIC_KEY, createEvent(id, subject, body, eventType,
-        "2017-08-10T21:03:07+00:00", dataVersion));
+    aegSendMessage(
+        EVENTGRID_HOST,
+        EVENTGRID_TOPIC_KEY,
+        createEvent(id, subject, body, eventType, "2017-08-10T21:03:07+00:00", dataVersion));
 
     // asb queue is subscribed to event grid, retrieve the message from the queue and check it
-    var msg = asbConsume(
-        connectAsbQ(EMX_SANDBOX_NAMESPACE, EMX_SANDBOX_EVENTGRID_SUBSCRIPTION_QUEUE,
-            EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
-            EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY));
+    var msg =
+        asbConsume(
+            connectAsbQ(
+                EMX_SANDBOX_NAMESPACE,
+                EMX_SANDBOX_EVENTGRID_SUBSCRIPTION_QUEUE,
+                EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
+                EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY));
     LOG.info("message body type: {}", msg.getMessageBody().getBodyType().name());
     var message =
-        new ObjectMapper()
-            .readValue(msg.getMessageBody().getBinaryData().get(0), HashMap.class);
+        new ObjectMapper().readValue(msg.getMessageBody().getBinaryData().get(0), HashMap.class);
     assertEquals(body, message.get("data"));
     assertEquals(eventType, message.get("eventType"));
     assertEquals(subject, message.get("subject"));
   }
-
 }

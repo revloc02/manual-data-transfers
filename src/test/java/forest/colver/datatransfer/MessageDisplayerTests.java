@@ -10,11 +10,11 @@ import static forest.colver.datatransfer.messaging.Utils.createTextMessage;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import forest.colver.datatransfer.messaging.MessageDisplayer;
-import java.util.Map;
 import jakarta.jms.BytesMessage;
 import jakarta.jms.JMSException;
 import jakarta.jms.ObjectMessage;
 import jakarta.jms.TextMessage;
+import java.util.Map;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -45,18 +45,19 @@ public class MessageDisplayerTests {
       message = ctx.createTextMessage(payload);
     }
     var md = new MessageDisplayer(message);
-    assertThat(md.createString(10, false)).isEqualTo("\n"
-        + "Message Type: Text\n"
-        + "  Custom Properties:\n"
-        + "    JMSXDeliveryCount    = 1\n"
-        + "  Payload (truncated to 10 chars): Default Pa");
+    assertThat(md.createString(10, false))
+        .isEqualTo(
+            "\n"
+                + "Message Type: Text\n"
+                + "  Custom Properties:\n"
+                + "    JMSXDeliveryCount    = 1\n"
+                + "  Payload (truncated to 10 chars): Default Pa");
   }
-
 
   @Test
   public void testCreateStringTruncatePayload() {
-    var message = createTextMessage("This is the body, and part of it should be truncated.",
-        Map.of());
+    var message =
+        createTextMessage("This is the body, and part of it should be truncated.", Map.of());
     var md = new MessageDisplayer(message);
     var s = md.createString(16, false);
     LOG.info(s);
@@ -94,8 +95,8 @@ public class MessageDisplayerTests {
   public void testCreateStringBytesMessage() throws JMSException {
     byte[] bytes = "payload".getBytes();
     BytesMessage message;
-    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key", "value", "datatype",
-        "test.message");
+    var messageProps =
+        Map.of("timestamp", getTimeStampFormatted(), "key", "value", "datatype", "test.message");
     var cf = new JmsConnectionFactory(STAGE.url());
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
       message = ctx.createBytesMessage();
@@ -116,8 +117,8 @@ public class MessageDisplayerTests {
   public void testCreateStringObjectMessage() throws JMSException {
     var payload = "using a String for the payload in this case";
     ObjectMessage message;
-    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key", "value", "datatype",
-        "test.message");
+    var messageProps =
+        Map.of("timestamp", getTimeStampFormatted(), "key", "value", "datatype", "test.message");
     var cf = new JmsConnectionFactory(STAGE.url());
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
       message = ctx.createObjectMessage(payload);

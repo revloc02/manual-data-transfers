@@ -14,17 +14,18 @@ public class LambdaOps {
 
   private static final Logger LOG = LoggerFactory.getLogger(LambdaOps.class);
 
-  public static InvokeResponse lambdaInvoke(AwsCredentialsProvider awsCp, String funcName,
-      String p) {
+  public static InvokeResponse lambdaInvoke(
+      AwsCredentialsProvider awsCp, String funcName, String p) {
     var payload = SdkBytes.fromUtf8String(p);
     try (var lambdaClient = getLambdaClient(awsCp)) {
       var invokeRequest = InvokeRequest.builder().functionName(funcName).payload(payload).build();
       LOG.info("Invoked {}", funcName);
       var response = lambdaClient.invoke(invokeRequest);
-      LOG.info("Response {}: {}\n", response.statusCode(),
+      LOG.info(
+          "Response {}: {}\n",
+          response.statusCode(),
           response.payload().asString(StandardCharsets.UTF_8));
       return response;
     }
   }
 }
-

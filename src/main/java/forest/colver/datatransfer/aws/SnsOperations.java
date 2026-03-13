@@ -20,15 +20,16 @@ public class SnsOperations {
 
   private static final Logger LOG = LoggerFactory.getLogger(SnsOperations.class);
 
-  public static Map<String, String> getSnsTopicAttributes(AwsCredentialsProvider awsCp,
-      String topicArn) {
+  public static Map<String, String> getSnsTopicAttributes(
+      AwsCredentialsProvider awsCp, String topicArn) {
 
     try (var snsClient = getSnsClient(awsCp)) {
-      GetTopicAttributesRequest request = GetTopicAttributesRequest.builder()
-          .topicArn(topicArn)
-          .build();
+      GetTopicAttributesRequest request =
+          GetTopicAttributesRequest.builder().topicArn(topicArn).build();
       GetTopicAttributesResponse result = snsClient.getTopicAttributes(request);
-      LOG.info("Status is {}\nAttributes: {}\n", result.sdkHttpResponse().statusCode(),
+      LOG.info(
+          "Status is {}\nAttributes: {}\n",
+          result.sdkHttpResponse().statusCode(),
           result.attributes());
       return result.attributes();
     }

@@ -1,6 +1,5 @@
 package forest.colver.datatransfer;
 
-import static forest.colver.datatransfer.messaging.Environment.PROD;
 import static forest.colver.datatransfer.messaging.Environment.STAGE;
 import static forest.colver.datatransfer.messaging.JmsConsume.moveAllSpecificMessages;
 
@@ -14,6 +13,33 @@ public class Main {
 
   public static void main(String[] args) {
     LOG.info("main start");
+
+    //    moveAllSpecificMessages(
+    //        STAGE,
+    //        "emx-error",
+    //        "emxSystem='edu-int-wise' AND emxSystemEnvironment='stage'",
+    //        "emx-to-edu-int-wise-stage-cmiss-receive-message");
+    //    moveAllSpecificMessages(
+    //        STAGE,
+    //        "emx-error",
+    //        "emxSystem='edu-int-wise' AND emxSystemEnvironment='test'",
+    //        "emx-to-edu-int-wise-test-cmiss-receive-message");
+
+    moveAllSpecificMessages(
+        STAGE,
+        "emx-error",
+        "emxErrorRetryQueue='emx-to-si-services-stage'",
+        "emx-to-si-services-stage");
+    moveAllSpecificMessages(
+        STAGE,
+        "emx-error",
+        "emxErrorRetryQueue='emx-to-si-services-test-wds'",
+        "emx-to-si-services-test-wds");
+    moveAllSpecificMessages(
+        STAGE,
+        "emx-error",
+        "emxErrorRetryQueue='emx-to-si-services-stage-wds'",
+        "emx-to-si-services-stage-wds");
 
     //    var bucket = "cp-aws-gayedtiak3nflbiftucz-s3-logging";
     //    var keyPrefix = "emx-sandbox-sftp/";
@@ -47,18 +73,18 @@ public class Main {
         STAGE,
         "emx-error",
         "emxSystem='si-services' AND emxSystemEnvironment='stage'",
-        "emx-to-si-services-stage");
+        "watchtower-si-services-stage");
+    moveAllSpecificMessages(
+        STAGE,
+        "emx-error",
+        "emxSystem='si-services' AND emxSystemEnvironment='test'",
+        "watchtower-si-services-test");
     //    moveAllSpecificMessages(
     //        STAGE,
     //        "emx-error",
     //        "emxSystem='si-services' AND emxSystemEnvironment='test' AND
     // emxErrorRampName='off-ramp-wds'",
     //        "emx-to-si-services-test-wds");
-    //    moveAllSpecificMessages(
-    //        STAGE,
-    //        "emx-error",
-    //        "emxSystem='si-services' AND emxSystemEnvironment='stage'",
-    //        "emx-to-si-services-stage");
     //    moveAllSpecificMessages(
     //        STAGE,
     //        "watchtower-si-services",

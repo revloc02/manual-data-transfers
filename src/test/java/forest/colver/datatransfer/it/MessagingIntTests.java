@@ -33,29 +33,27 @@ import static forest.colver.datatransfer.messaging.Utils.createDefaultMessage;
 import static forest.colver.datatransfer.messaging.Utils.createTextMessage;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.TextMessage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import jakarta.jms.JMSException;
-import jakarta.jms.Message;
-import jakarta.jms.TextMessage;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * These are integration tests for standard messaging against Qpid queues.
- */
+/** These are integration tests for standard messaging against Qpid queues. */
 public class MessagingIntTests {
 
   private static final Logger LOG = LoggerFactory.getLogger(MessagingIntTests.class);
 
   public static Message createMessage() {
-    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3",
-        "value3");
+    var messageProps =
+        Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3", "value3");
     return createTextMessage(getDefaultPayload(), messageProps);
   }
 
@@ -241,9 +239,8 @@ public class MessagingIntTests {
     }
 
     // check browseAndCountSpecificMessages() gets the correct number
-    assertThat(
-        browseAndCountSpecificMessages(env, queueName, "specificKey='specificValue'")).isEqualTo(
-        numMsg);
+    assertThat(browseAndCountSpecificMessages(env, queueName, "specificKey='specificValue'"))
+        .isEqualTo(numMsg);
 
     // cleanup
     purgeQueue(env, queueName);
@@ -268,16 +265,14 @@ public class MessagingIntTests {
 
     // move some of one kind of message
     var numMsgsToMove = 2;
-    moveSomeSpecificMessages(env, fromQueueName, "specificKey='specificValue'", toQueueName,
-        numMsgsToMove);
+    moveSomeSpecificMessages(
+        env, fromQueueName, "specificKey='specificValue'", toQueueName, numMsgsToMove);
 
     // check each queue has the correct number of specific messages after moving some
-    assertThat(browseAndCountSpecificMessages(env, fromQueueName,
-        "specificKey='specificValue'")).isEqualTo(
-        numMsgsTo - numMsgsToMove);
-    assertThat(
-        browseAndCountSpecificMessages(env, toQueueName, "specificKey='specificValue'")).isEqualTo(
-        numMsgsToMove);
+    assertThat(browseAndCountSpecificMessages(env, fromQueueName, "specificKey='specificValue'"))
+        .isEqualTo(numMsgsTo - numMsgsToMove);
+    assertThat(browseAndCountSpecificMessages(env, toQueueName, "specificKey='specificValue'"))
+        .isEqualTo(numMsgsToMove);
 
     // cleanup and check that the queues have the correct number of messages
     var deletedTo = deleteAllMessagesFromQueue(env, toQueueName);
@@ -386,8 +381,8 @@ public class MessagingIntTests {
     // send some specific messages
     var messageProps = Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
     var numSpecific = 5;
-    sendMultipleSameMessage(env, queue, createTextMessage(getDefaultPayload(), messageProps),
-        numSpecific);
+    sendMultipleSameMessage(
+        env, queue, createTextMessage(getDefaultPayload(), messageProps), numSpecific);
 
     // check the queue depth
     assertThat(queueDepth(STAGE, queue)).isEqualTo(num + numSpecific);
@@ -454,8 +449,8 @@ public class MessagingIntTests {
     // send some specific messages
     var messageProps = Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
     var numSpecific = 5;
-    sendMultipleSameMessage(env, fromQueue, createTextMessage(getDefaultPayload(), messageProps),
-        numSpecific);
+    sendMultipleSameMessage(
+        env, fromQueue, createTextMessage(getDefaultPayload(), messageProps), numSpecific);
 
     // copy specific messages over
     var toQueue = "forest-test";
@@ -466,8 +461,7 @@ public class MessagingIntTests {
     assertThat(queueDepth(STAGE, toQueue)).isEqualTo(numSpecific);
 
     // cleanup and ensure correct number of specific messages are deleted
-    assertThat(
-        deleteAllSpecificMessages(env, toQueue, "specificKey='specificValue'"))
+    assertThat(deleteAllSpecificMessages(env, toQueue, "specificKey='specificValue'"))
         .isEqualTo(numSpecific);
     assertThat(deleteAllMessagesFromQueue(env, fromQueue)).isEqualTo(num + numSpecific);
   }
@@ -497,8 +491,7 @@ public class MessagingIntTests {
    * them against the master list of unique messages to ensure everything got consumed correctly.
    */
   @Test
-  void testCompetingConsumer()
-      throws ExecutionException, InterruptedException, JMSException {
+  void testCompetingConsumer() throws ExecutionException, InterruptedException, JMSException {
     var queueName = "forest-test";
     purgeQueue(STAGE, queueName);
 

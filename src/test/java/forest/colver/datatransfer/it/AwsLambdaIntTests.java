@@ -20,9 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Integration Tests for AWS Lambda
- */
+/** Integration Tests for AWS Lambda */
 class AwsLambdaIntTests {
 
   private static final Logger LOG = LoggerFactory.getLogger(AwsLambdaIntTests.class);
@@ -54,8 +52,8 @@ class AwsLambdaIntTests {
     // The S3 object placement triggered the bridge lambda, which sent a message, so verify that...
     var messageResp = sqsReadOneMessage(creds, SQS1);
     assert messageResp != null;
-    assertThat(messageResp.body()).contains(
-        "\"key\": \"ext-aiko1/outbound/dev/flox/dd/1test.txt\"");
+    assertThat(messageResp.body())
+        .contains("\"key\": \"ext-aiko1/outbound/dev/flox/dd/1test.txt\"");
 
     // ...and then clean up the message, so we can test invoking the Lambda directly
     sqsPurge(creds, SQS1);
@@ -74,12 +72,11 @@ class AwsLambdaIntTests {
 
     // ...and ensure the SQS got the new message.
     messageResp = sqsReadOneMessage(creds, SQS1);
-    assertThat(messageResp.body()).contains(
-        "\"key\": \"ext-aiko1/outbound/dev/flox/dd/1test.txt\"");
+    assertThat(messageResp.body())
+        .contains("\"key\": \"ext-aiko1/outbound/dev/flox/dd/1test.txt\"");
 
     // Cleanup the queue and the s3.
     sqsDeleteMessage(creds, SQS1, messageResp);
     s3Delete(creds, S3_SOURCE_CACHE, objectKey);
   }
-
 }

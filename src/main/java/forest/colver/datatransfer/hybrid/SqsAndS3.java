@@ -19,30 +19,34 @@ public class SqsAndS3 {
 
   private static final Logger LOG = LoggerFactory.getLogger(SqsAndS3.class);
 
-  /**
-   * Retrieve next message from an SQS and deliver it to an S3.
-   */
+  /** Retrieve next message from an SQS and deliver it to an S3. */
   public static void moveOneSqsToS3(
       AwsCredentialsProvider awsCreds, String sqs, String bucket, String objectKey) {
     var sqsMsg = sqsConsumeOneMessage(awsCreds, sqs);
     if (sqsMsg != null) {
       // send body and properties to s3
-      s3Put(awsCreds, bucket, objectKey, sqsMsg.body(),
+      s3Put(
+          awsCreds,
+          bucket,
+          objectKey,
+          sqsMsg.body(),
           convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
     } else {
       LOG.error("ERROR: SQS message was null.");
     }
   }
 
-  /**
-   * Copy (read) next message from an SQS and save it to an S3.
-   */
+  /** Copy (read) next message from an SQS and save it to an S3. */
   public static void copyOneSqsToS3(
       AwsCredentialsProvider awsCreds, String sqs, String bucket, String objectKey) {
     var sqsMsg = sqsReadOneMessage(awsCreds, sqs);
     if (sqsMsg != null) {
       // send body and properties to s3
-      s3Put(awsCreds, bucket, objectKey, sqsMsg.body(),
+      s3Put(
+          awsCreds,
+          bucket,
+          objectKey,
+          sqsMsg.body(),
           convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
     } else {
       LOG.error("ERROR: SQS message was null.");
@@ -53,8 +57,9 @@ public class SqsAndS3 {
    * Retrieve an object from S3, check that the size is not too big for SQS, and then place it on an
    * SQS.
    */
-  public static void moveS3ObjectToSqs(AwsCredentialsProvider awsCreds, String bucket,
-      String objectKey, String sqs) throws IOException {
+  public static void moveS3ObjectToSqs(
+      AwsCredentialsProvider awsCreds, String bucket, String objectKey, String sqs)
+      throws IOException {
     try (var s3Client = getS3Client(awsCreds)) {
       // find out how big the object is
       var size = s3Head(s3Client, bucket, objectKey).contentLength();
@@ -76,8 +81,9 @@ public class SqsAndS3 {
    * Copy an object from S3, check that the size is not too big for SQS, and then place it on an
    * SQS.
    */
-  public static void copyS3ObjectToSqs(AwsCredentialsProvider awsCreds, String bucket,
-      String objectKey, String sqs) throws IOException {
+  public static void copyS3ObjectToSqs(
+      AwsCredentialsProvider awsCreds, String bucket, String objectKey, String sqs)
+      throws IOException {
     try (var s3Client = getS3Client(awsCreds)) {
       // find out how big the object is
       var size = s3Head(s3Client, bucket, objectKey).contentLength();

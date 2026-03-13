@@ -76,8 +76,8 @@ public class HybridSqsAndS3IntTests {
     // place a message on SQS
     LOG.info("Interacting with: sqs={}", SQS1);
     var creds = getEmxSbCreds();
-    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3",
-        "value3");
+    var messageProps =
+        Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3", "value3");
     var payload = getDefaultPayload();
     sqsSend(creds, SQS1, payload, messageProps);
 
@@ -151,10 +151,7 @@ public class HybridSqsAndS3IntTests {
     // put a file on S3
     var objectKey = "revloc02/source/test/test.txt";
     var creds = getEmxSbCreds();
-    var putObjectRequest = PutObjectRequest.builder()
-        .bucket(S3_INTERNAL)
-        .key(objectKey)
-        .build();
+    var putObjectRequest = PutObjectRequest.builder().bucket(S3_INTERNAL).key(objectKey).build();
     s3Put(creds, getDefaultPayload(), putObjectRequest);
 
     // verify the file is there
@@ -189,10 +186,7 @@ public class HybridSqsAndS3IntTests {
     var objectKey = "revloc02/source/test/BoMx1.txt";
     var contents = readFile("src/test/resources/BoMx1.txt", StandardCharsets.UTF_8);
     var creds = getEmxSbCreds();
-    var putObjectRequest = PutObjectRequest.builder()
-        .bucket(S3_INTERNAL)
-        .key(objectKey)
-        .build();
+    var putObjectRequest = PutObjectRequest.builder().bucket(S3_INTERNAL).key(objectKey).build();
     s3Put(creds, contents, putObjectRequest);
 
     // verify the file is there
@@ -218,10 +212,7 @@ public class HybridSqsAndS3IntTests {
     // put a file on S3
     var objectKey = "revloc02/source/test/test.txt";
     var creds = getEmxSbCreds();
-    var putObjectRequest = PutObjectRequest.builder()
-        .bucket(S3_INTERNAL)
-        .key(objectKey)
-        .build();
+    var putObjectRequest = PutObjectRequest.builder().bucket(S3_INTERNAL).key(objectKey).build();
     s3Put(creds, getDefaultPayload(), putObjectRequest);
 
     // verify the file is there
@@ -257,10 +248,7 @@ public class HybridSqsAndS3IntTests {
     var objectKey = "revloc02/source/test/BoMx1.txt";
     var contents = readFile("src/test/resources/BoMx1.txt", StandardCharsets.UTF_8);
     var creds = getEmxSbCreds();
-    var putObjectRequest = PutObjectRequest.builder()
-        .bucket(S3_INTERNAL)
-        .key(objectKey)
-        .build();
+    var putObjectRequest = PutObjectRequest.builder().bucket(S3_INTERNAL).key(objectKey).build();
     s3Put(creds, contents, putObjectRequest);
 
     // verify the file is there

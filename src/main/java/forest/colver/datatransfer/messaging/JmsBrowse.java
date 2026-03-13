@@ -4,11 +4,11 @@ import static forest.colver.datatransfer.config.Utils.getPassword;
 import static forest.colver.datatransfer.config.Utils.getUsername;
 import static forest.colver.datatransfer.messaging.DisplayUtils.createStringFromMessage;
 
-import java.util.Collections;
-import java.util.Enumeration;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.TextMessage;
+import java.util.Collections;
+import java.util.Enumeration;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,9 +17,7 @@ public class JmsBrowse {
 
   private static final Logger LOG = LoggerFactory.getLogger(JmsBrowse.class);
 
-  /**
-   * Retrieves the next message from the queue.
-   */
+  /** Retrieves the next message from the queue. */
   public static Message browseNextMessage(Environment env, String queueName) {
     Message message = null;
     var cf = new JmsConnectionFactory(env.url());
@@ -34,7 +32,9 @@ public class JmsBrowse {
             env.name(),
             queueName,
             createStringFromMessage(message));
-        var msgCount = Collections.list(msgs).size() + 1; // note that this statement empties msgs Enumeration series
+        var msgCount =
+            Collections.list(msgs).size()
+                + 1; // note that this statement empties msgs Enumeration series
         LOG.info("Queue={}:{}; MessageCountFromSelector={}\n", env.name(), queueName, msgCount);
       } catch (JMSException e) {
         e.printStackTrace();
@@ -47,8 +47,8 @@ public class JmsBrowse {
    * Copies a message from a queue and returns the Message object. Retrieved Message also remains on
    * the queue.
    */
-  public static Message browseForSpecificMessage(Environment env, String queueName,
-      String selector) {
+  public static Message browseForSpecificMessage(
+      Environment env, String queueName, String selector) {
     Message message = null;
     var cf = new JmsConnectionFactory(env.url());
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
@@ -79,8 +79,8 @@ public class JmsBrowse {
    * @param selector The selector to identify specific messages.
    * @return The specific message count.
    */
-  public static int browseAndCountSpecificMessages(Environment env, String queueName,
-      String selector) {
+  public static int browseAndCountSpecificMessages(
+      Environment env, String queueName, String selector) {
     var cf = new JmsConnectionFactory(env.url());
     var msgCount = 0;
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
@@ -201,8 +201,8 @@ public class JmsBrowse {
     }
   }
 
-  public static void copyAllMessagesAcrossEnvironments(Environment fromEnv, String fromQName,
-      Environment toEnv, String toQName) {
+  public static void copyAllMessagesAcrossEnvironments(
+      Environment fromEnv, String fromQName, Environment toEnv, String toQName) {
     var fromCf = new JmsConnectionFactory(fromEnv.url());
     try (var fromCtx = fromCf.createContext(getUsername(), getPassword())) {
       var fromQ = fromCtx.createQueue(fromQName);
@@ -233,7 +233,9 @@ public class JmsBrowse {
       } catch (JMSException e) {
         e.printStackTrace();
       }
-      LOG.info("Copied {} messages. From Queue={}:{}, sent to Queue={}:{}", count,
+      LOG.info(
+          "Copied {} messages. From Queue={}:{}, sent to Queue={}:{}",
+          count,
           fromEnv.name(),
           fromQName,
           toEnv.name(),

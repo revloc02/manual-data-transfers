@@ -32,27 +32,27 @@ public class SqsAndAsbQueue {
 
   private static final Logger LOG = LoggerFactory.getLogger(SqsAndAsbQueue.class);
 
-  public static void moveOneSqsToAsbQueue(AwsCredentialsProvider awsCreds, String sqs,
-      ConnectionStringBuilder azureConnStr) {
+  public static void moveOneSqsToAsbQueue(
+      AwsCredentialsProvider awsCreds, String sqs, ConnectionStringBuilder azureConnStr) {
     var sqsMsg = sqsConsumeOneMessage(awsCreds, sqs);
     if (sqsMsg != null) {
       // send body and properties to ASB queue
-      Map<String, Object> properties = new HashMap<>(
-          convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
+      Map<String, Object> properties =
+          new HashMap<>(convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
       asbSend(azureConnStr, createIMessage(sqsMsg.body(), properties));
     } else {
       LOG.error("ERROR: SQS message was null.");
     }
   }
 
-  public static void moveOneAsbQueueToSqs(ConnectionStringBuilder azureConnStr,
-      AwsCredentialsProvider awsCreds, String sqs) {
+  public static void moveOneAsbQueueToSqs(
+      ConnectionStringBuilder azureConnStr, AwsCredentialsProvider awsCreds, String sqs) {
     IMessage iMessage = asbConsume(azureConnStr);
     sendIMessageToSqs(iMessage, awsCreds, sqs);
   }
 
-  public static void moveAllSqsToAsbQueue(AwsCredentialsProvider awsCreds, String sqs,
-      ConnectionStringBuilder azureConnStr) {
+  public static void moveAllSqsToAsbQueue(
+      AwsCredentialsProvider awsCreds, String sqs, ConnectionStringBuilder azureConnStr) {
     var moreMessages = true;
     var counter = 0;
     while (moreMessages) {
@@ -60,8 +60,8 @@ public class SqsAndAsbQueue {
       if (sqsMsg != null) {
         counter++;
         // send body and properties to ASB queue
-        Map<String, Object> properties = new HashMap<>(
-            convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
+        Map<String, Object> properties =
+            new HashMap<>(convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
         asbSend(azureConnStr, createIMessage(sqsMsg.body(), properties));
         LOG.info(
             "Moved from SQS={} to ASB-Queue={}; counter={}",
@@ -72,12 +72,15 @@ public class SqsAndAsbQueue {
         moreMessages = false;
       }
     }
-    LOG.info("Moved {} messages from SQS={} to ASB-Queue={}.", counter, sqs,
+    LOG.info(
+        "Moved {} messages from SQS={} to ASB-Queue={}.",
+        counter,
+        sqs,
         azureConnStr.getEntityPath());
   }
 
-  public static void moveAllAsbQueueToSqs(ConnectionStringBuilder azureConnStr, String sqs,
-      AwsCredentialsProvider awsCreds) {
+  public static void moveAllAsbQueueToSqs(
+      ConnectionStringBuilder azureConnStr, String sqs, AwsCredentialsProvider awsCreds) {
     var moreMessages = true;
     var counter = 0;
     while (moreMessages) {
@@ -95,25 +98,28 @@ public class SqsAndAsbQueue {
         moreMessages = false;
       }
     }
-    LOG.info("Moved {} messages from ASB-Queue={} to SQS={}.", counter,
-        azureConnStr.getEntityPath(), sqs);
+    LOG.info(
+        "Moved {} messages from ASB-Queue={} to SQS={}.",
+        counter,
+        azureConnStr.getEntityPath(),
+        sqs);
   }
 
-  public static void copyOneSqsToAsbQueue(AwsCredentialsProvider awsCreds, String sqs,
-      ConnectionStringBuilder azureConnStr) {
+  public static void copyOneSqsToAsbQueue(
+      AwsCredentialsProvider awsCreds, String sqs, ConnectionStringBuilder azureConnStr) {
     var sqsMsg = sqsReadOneMessage(awsCreds, sqs);
     if (sqsMsg != null) {
       // send body and properties to ASB queue
-      Map<String, Object> properties = new HashMap<>(
-          convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
+      Map<String, Object> properties =
+          new HashMap<>(convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
       asbSend(azureConnStr, createIMessage(sqsMsg.body(), properties));
     } else {
       LOG.error("ERROR: SQS message was null.");
     }
   }
 
-  public static void copyOneAsbQueueToSqs(ConnectionStringBuilder azureConnStr,
-      AwsCredentialsProvider awsCreds, String sqs) {
+  public static void copyOneAsbQueueToSqs(
+      ConnectionStringBuilder azureConnStr, AwsCredentialsProvider awsCreds, String sqs) {
     var iMessage = asbRead(azureConnStr);
     if (iMessage != null) {
       sendIMessageToSqs(iMessage, awsCreds, sqs);
@@ -122,8 +128,8 @@ public class SqsAndAsbQueue {
     }
   }
 
-  public static int copyAllSqsToAsbQueue(AwsCredentialsProvider awsCreds, String sqs,
-      ConnectionStringBuilder azureConnStr) {
+  public static int copyAllSqsToAsbQueue(
+      AwsCredentialsProvider awsCreds, String sqs, ConnectionStringBuilder azureConnStr) {
     // check the queue depth, if it is beyond a certain size, abort
     var depth = sqsDepth(awsCreds, sqs);
     var maxDepth = 1000; // This could probably go as high as 40k
@@ -148,8 +154,8 @@ public class SqsAndAsbQueue {
             for (var message : response.messages()) {
               // copy to ASB queue
               counter++;
-              Map<String, Object> properties = new HashMap<>(
-                  convertSqsMessageAttributesToStrings(message.messageAttributes()));
+              Map<String, Object> properties =
+                  new HashMap<>(convertSqsMessageAttributesToStrings(message.messageAttributes()));
               asbSend(azureConnStr, createIMessage(message.body(), properties));
               LOG.info("Copied message #{}", counter);
             }
@@ -162,11 +168,13 @@ public class SqsAndAsbQueue {
       LOG.info("Copied {} messages", counter);
     } else {
       counter = -1;
-      LOG.info("Queue {} is too deep ({}), for an SQS copy all, max depth is currently {}.",
-          sqs, depth, maxDepth);
+      LOG.info(
+          "Queue {} is too deep ({}), for an SQS copy all, max depth is currently {}.",
+          sqs,
+          depth,
+          maxDepth);
     }
     return counter;
-
   }
 
   /**
@@ -176,13 +184,14 @@ public class SqsAndAsbQueue {
    * @param awsCreds Credentials for AWS.
    * @param sqs The SQS queue.
    */
-  private static void sendIMessageToSqs(IMessage iMessage, AwsCredentialsProvider awsCreds,
-      String sqs) {
+  private static void sendIMessageToSqs(
+      IMessage iMessage, AwsCredentialsProvider awsCreds, String sqs) {
     var asbQueProps = iMessage.getProperties();
     var body = new String(iMessage.getMessageBody().getBinaryData().get(0));
-    Map<String, String> properties = asbQueProps.entrySet().stream()
-        .filter(entry -> entry.getValue() instanceof String).collect(
-            Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue()));
+    Map<String, String> properties =
+        asbQueProps.entrySet().stream()
+            .filter(entry -> entry.getValue() instanceof String)
+            .collect(Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue()));
     sqsSend(awsCreds, sqs, body, properties);
   }
 }

@@ -26,10 +26,10 @@ import static forest.colver.datatransfer.messaging.Utils.createTextMessage;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
-import java.time.Duration;
-import java.util.Map;
 import jakarta.jms.JMSException;
 import jakarta.jms.TextMessage;
+import java.time.Duration;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,15 +39,13 @@ public class HybridJmsAndSqsIntTests {
   private static final Logger LOG = LoggerFactory.getLogger(HybridJmsAndSqsIntTests.class);
   private static final String SQS1 = EMX_SANDBOX_TEST_SQS1;
 
-  /**
-   * This tests moving a message from Qpid to AWS SQS.
-   */
+  /** This tests moving a message from Qpid to AWS SQS. */
   @Test
   public void testMoveOneJmsToSqs() {
     // place a message on Qpid
     var payload = "this is the payload";
-    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3",
-        "value3");
+    var messageProps =
+        Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3", "value3");
     var queueName = "forest-test";
     sendMessageAutoAck(STAGE, queueName, createTextMessage(payload, messageProps));
 
@@ -71,8 +69,8 @@ public class HybridJmsAndSqsIntTests {
     // place a message on SQS
     LOG.info("Interacting with: sqs={}", SQS1);
     var creds = getEmxSbCreds();
-    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3",
-        "value3");
+    var messageProps =
+        Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3", "value3");
     var payload = getDefaultPayload();
     sqsSend(creds, SQS1, payload, messageProps);
 
@@ -127,8 +125,8 @@ public class HybridJmsAndSqsIntTests {
       var response = sqsConsumeOneMessage(creds, SQS1);
       assertThat(response.body()).isEqualTo(payload);
       assertThat(response.hasMessageAttributes()).isEqualTo(true);
-      assertThat(response.messageAttributes().get("specificKey").stringValue()).isEqualTo(
-          "specificValue");
+      assertThat(response.messageAttributes().get("specificKey").stringValue())
+          .isEqualTo("specificValue");
     }
 
     // cleanup and check that the Qpid queue had the correct number of messages after the move
@@ -145,8 +143,8 @@ public class HybridJmsAndSqsIntTests {
     // place some messages
     var creds = getEmxSbCreds();
     var payload = getDefaultPayload();
-    var messageProps = Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3",
-        "value3");
+    var messageProps =
+        Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3", "value3");
     var numMsgs = 5;
     for (var i = 0; i < numMsgs; i++) {
       sqsSend(creds, SQS1, payload, messageProps);

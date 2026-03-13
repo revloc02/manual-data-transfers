@@ -17,13 +17,12 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Integration Tests for AWS SNS
- */
+/** Integration Tests for AWS SNS */
 class AwsSnsIntTests {
 
   private static final Logger LOG = LoggerFactory.getLogger(AwsSnsIntTests.class);
-  // Watch out! This changes frequently, update the ~/.aws/config file to your latest sandbox account
+  // Watch out! This changes frequently, update the ~/.aws/config file to your latest sandbox
+  // account
   private static final String SNS_ARN_TEMP = PERSONAL_SANDBOX_TEST_SNS_TOPIC_ARN;
   private static final String SQS = PERSONAL_SANDBOX_SQS_SUB_SNS;
 
@@ -43,9 +42,7 @@ class AwsSnsIntTests {
     assertThat(attributes).isNotEmpty();
   }
 
-  /**
-   * Tests publishTopic. Requires Terraform to be run in advance in a personal AWS sandbox.
-   */
+  /** Tests publishTopic. Requires Terraform to be run in advance in a personal AWS sandbox. */
   @Test
   void testSnsPublishTopic() {
     LOG.info("SNS ARN: {}", SNS_ARN_TEMP);

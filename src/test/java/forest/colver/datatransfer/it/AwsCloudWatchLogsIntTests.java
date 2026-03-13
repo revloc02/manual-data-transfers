@@ -1,7 +1,6 @@
 package forest.colver.datatransfer.it;
 
 import static forest.colver.datatransfer.aws.CloudWatchLogsOps.putCWLogEvents;
-import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.aws.Utils.getPersonalSbCreds;
 import static forest.colver.datatransfer.config.Utils.getRandomNumber;
 import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
@@ -44,9 +43,12 @@ public class AwsCloudWatchLogsIntTests {
 
     var streamName = STREAM_PREFIX + "-" + getUuid();
     LOG.info("streamName={}", streamName);
-    var putLogEventsResponse = putCWLogEvents(getPersonalSbCreds(), LOG_GROUP_NAME, streamName,
-        List.of(message));
-    putCWLogEvents(getPersonalSbCreds(), LOG_GROUP_NAME, streamName,
+    var putLogEventsResponse =
+        putCWLogEvents(getPersonalSbCreds(), LOG_GROUP_NAME, streamName, List.of(message));
+    putCWLogEvents(
+        getPersonalSbCreds(),
+        LOG_GROUP_NAME,
+        streamName,
         putLogEventsResponse.nextSequenceToken(),
         List.of(anotherMessage));
   }
@@ -58,14 +60,18 @@ public class AwsCloudWatchLogsIntTests {
     var streamName = STREAM_PREFIX + "-" + getUuid();
     LOG.info("streamName={}", streamName);
     var message = messagePrefix + getUuid();
-    var putLogEventsResponse = putCWLogEvents(getPersonalSbCreds(), LOG_GROUP_NAME, streamName,
-        List.of(message));
+    var putLogEventsResponse =
+        putCWLogEvents(getPersonalSbCreds(), LOG_GROUP_NAME, streamName, List.of(message));
 
     for (int i = 0; i < 35; i++) {
       message = messagePrefix + getUuid();
-      putLogEventsResponse = putCWLogEvents(getPersonalSbCreds(), LOG_GROUP_NAME, streamName,
-          putLogEventsResponse.nextSequenceToken(),
-          List.of(message));
+      putLogEventsResponse =
+          putCWLogEvents(
+              getPersonalSbCreds(),
+              LOG_GROUP_NAME,
+              streamName,
+              putLogEventsResponse.nextSequenceToken(),
+              List.of(message));
     }
   }
 
@@ -84,37 +90,49 @@ public class AwsCloudWatchLogsIntTests {
   private List<String> generateLogs(String messagePrefix, int numOfLogs, int sizeMin, int sizeMax) {
     List<String> messages = new ArrayList<>();
     for (int i = 0; i < numOfLogs; i++) {
-      var jsonString = new JSONObject()
-          .put("name", messagePrefix)
-          .put("trace", getUuid())
-          .put("id", getTimeStampFormatted())
-          .put("parent", "mom")
-          .put("start", Instant.now().toEpochMilli())
-          .put("end", Instant.now().toEpochMilli())
-          .put("kind", getRandomNumber(1, 5))
-          .put("attr", new JSONObject()
-              .put("messaging.destination", "cubs-pucker-skim")
-              .put("messaging.message_id", getUuid())
-              .put("route.id", getUuid())
-              .put("size", getRandomNumber(sizeMin, sizeMax))
-              .put("time", Instant.now().toEpochMilli()))
-          .put("status", new JSONObject()
-              .put("code", "200")
-              .put("desc", "hey mom"))
-          .put("resource", new JSONObject()
-              .put("attr", new JSONObject()
-                  .put("app.emx_env", "prod")
-                  .put("app.env", "prod")
-                  .put("app.interchange", "cars")))
-          .put("events", new JSONArray()
-              .put(new JSONObject()
-                  .put("attr", new JSONObject()
-                      .put("exception.stacktrace",
-                          "l.e.Destination$EmxSendException: Bad request returned status 400, see logs for response body")
-                      .put("exception.type", "lds.emx.Destination$EmxSendException"))
-                  .put("name", "exception")
-                  .put("time", Instant.now().toEpochMilli())))
-          .toString();
+      var jsonString =
+          new JSONObject()
+              .put("name", messagePrefix)
+              .put("trace", getUuid())
+              .put("id", getTimeStampFormatted())
+              .put("parent", "mom")
+              .put("start", Instant.now().toEpochMilli())
+              .put("end", Instant.now().toEpochMilli())
+              .put("kind", getRandomNumber(1, 5))
+              .put(
+                  "attr",
+                  new JSONObject()
+                      .put("messaging.destination", "cubs-pucker-skim")
+                      .put("messaging.message_id", getUuid())
+                      .put("route.id", getUuid())
+                      .put("size", getRandomNumber(sizeMin, sizeMax))
+                      .put("time", Instant.now().toEpochMilli()))
+              .put("status", new JSONObject().put("code", "200").put("desc", "hey mom"))
+              .put(
+                  "resource",
+                  new JSONObject()
+                      .put(
+                          "attr",
+                          new JSONObject()
+                              .put("app.emx_env", "prod")
+                              .put("app.env", "prod")
+                              .put("app.interchange", "cars")))
+              .put(
+                  "events",
+                  new JSONArray()
+                      .put(
+                          new JSONObject()
+                              .put(
+                                  "attr",
+                                  new JSONObject()
+                                      .put(
+                                          "exception.stacktrace",
+                                          "l.e.Destination$EmxSendException: Bad request returned status 400, see logs for response body")
+                                      .put(
+                                          "exception.type", "lds.emx.Destination$EmxSendException"))
+                              .put("name", "exception")
+                              .put("time", Instant.now().toEpochMilli())))
+              .toString();
       messages.add(jsonString);
     }
     return messages;

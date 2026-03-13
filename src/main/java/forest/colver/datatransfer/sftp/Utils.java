@@ -56,7 +56,7 @@ public class Utils {
   public static Session getKeySession(String host, String username, String prvKeyLoc)
       throws JSchException {
     Session session = JSCH.getSession(username, host, 22);
-//    JSCH.addIdentity(new InMemoryIdentity(prvKey), null);
+    //    JSCH.addIdentity(new InMemoryIdentity(prvKey), null);
     JSCH.addIdentity(prvKeyLoc);
     LOG.info("sftp ssh key auth");
     JSCH.setKnownHosts(new ByteArrayInputStream(KNOWNHOSTS.getBytes()));
@@ -77,6 +77,7 @@ public class Utils {
 
     /**
      * Example usage: JSCH.addIdentity(new InMemoryIdentity(prvKey), null);
+     *
      * @param prvkey a string representation of the private key
      */
     public InMemoryIdentity(String prvkey) throws JSchException {

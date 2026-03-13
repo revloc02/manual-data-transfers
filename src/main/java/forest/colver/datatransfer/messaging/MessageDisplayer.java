@@ -4,14 +4,14 @@ import static forest.colver.datatransfer.messaging.Utils.extractJmsHeaders;
 import static forest.colver.datatransfer.messaging.Utils.extractMsgProperties;
 import static forest.colver.datatransfer.messaging.Utils.getJmsMsgPayload;
 
-import java.util.Map;
-import java.util.Objects;
 import jakarta.jms.BytesMessage;
 import jakarta.jms.MapMessage;
 import jakarta.jms.Message;
 import jakarta.jms.ObjectMessage;
 import jakarta.jms.StreamMessage;
 import jakarta.jms.TextMessage;
+import java.util.Map;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +62,7 @@ public class MessageDisplayer {
    * Creates a string from the message payload and header properties.
    *
    * @param payloadOutputTrunc Payloads can be big, this limits the payload output to the number of
-   * characters given in this int.
+   *     characters given in this int.
    * @param listJmsProps Whether to include the JMS properties as a part of the output.
    * @return A multi-line string of the message properties and payload.
    */
@@ -73,7 +73,8 @@ public class MessageDisplayer {
     var tab = "  ";
     final String fmt = "%s%s%-20s = %s%n";
     if (listJmsProps) {
-      sb.append(tab).append("JMS Properties:\n")
+      sb.append(tab)
+          .append("JMS Properties:\n")
           .append(String.format(fmt, tab, tab, "JMSMessageID", jmsHeaders.get("JMSMessageID")))
           .append(String.format(fmt, tab, tab, "JMSPriority", jmsHeaders.get("JMSPriority")))
           .append(String.format(fmt, tab, tab, "JMSRedelivered", jmsHeaders.get("JMSRedelivered")))
@@ -91,8 +92,9 @@ public class MessageDisplayer {
     }
 
     sb.append(
-        String.format(tab +
-                "Payload (truncated to "
+        String.format(
+            tab
+                + "Payload (truncated to "
                 + payloadOutputTrunc
                 + " chars): %1."
                 + payloadOutputTrunc
