@@ -54,6 +54,10 @@ public class Utils {
     return ProfileCredentialsProvider.create("aws-cloud-developer-463420020431");
   }
 
+  /**
+   * Run `aws sso login --profile aws-cloud-admin-646129096172` in the terminal before using these
+   * creds.
+   */
   public static AwsCredentialsProvider getEmxSbCreds() { // enterprise sandbox
     //    return ProfileCredentialsProvider.create("enterprise-sb"); // old way
     return ProfileCredentialsProvider.create("aws-cloud-admin-646129096172");

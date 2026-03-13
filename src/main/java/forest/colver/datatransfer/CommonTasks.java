@@ -1,7 +1,10 @@
 package forest.colver.datatransfer;
 
 import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
+import static forest.colver.datatransfer.aws.S3Operations.s3DeleteVersion;
 import static forest.colver.datatransfer.aws.S3Operations.s3List;
+import static forest.colver.datatransfer.aws.S3Operations.s3ListDeleteMarkers;
+import static forest.colver.datatransfer.aws.S3Operations.s3ListVersions;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessagesWithPayloadLike;
 import static forest.colver.datatransfer.aws.Utils.awsResponseValidation;
 import static forest.colver.datatransfer.aws.Utils.getEmxNpCreds;
@@ -208,6 +211,59 @@ public class CommonTasks {
           }
         }
       }
+      LOG.info("deleted={}; skipped={}", deleted, skipped);
+    }
+  }
+
+  /**
+   * Delete versioned objects and delete markers more than 1 week old from an S3 directory. This is
+   * useful for versioning-enabled buckets where both object versions and delete markers accumulate
+   * over time.
+   *
+   * @param bucket The S3 bucket to work on.
+   * @param objectKey The directory on the S3 to work on. E.g. "emx-health-check1/inbound"
+   */
+  public static void cleanS3DirectoryVersioned(String bucket, String objectKey) {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      var oneWeekAgo = Instant.now().minus(7, ChronoUnit.DAYS);
+      var deleted = 0;
+      var skipped = 0;
+
+      // Delete old object versions
+      var versions = s3ListVersions(s3Client, bucket, objectKey);
+      for (var version : versions) {
+        if (version.lastModified().isBefore(oneWeekAgo)) {
+          LOG.info(
+              "VERSION key={}; versionId={}; lastModified={}",
+              version.key(),
+              version.versionId(),
+              version.lastModified());
+          s3DeleteVersion(s3Client, bucket, version.key(), version.versionId());
+          deleted++;
+        } else {
+          skipped++;
+          LOG.info("TOO RECENT (version): {}", version.key());
+        }
+      }
+
+      // Delete old delete markers
+      var deleteMarkers = s3ListDeleteMarkers(s3Client, bucket, objectKey);
+      for (var marker : deleteMarkers) {
+        if (marker.lastModified().isBefore(oneWeekAgo)) {
+          LOG.info(
+              "DELETE MARKER key={}; versionId={}; lastModified={}",
+              marker.key(),
+              marker.versionId(),
+              marker.lastModified());
+          s3DeleteVersion(s3Client, bucket, marker.key(), marker.versionId());
+          deleted++;
+        } else {
+          skipped++;
+          LOG.info("TOO RECENT (delete marker): {}", marker.key());
+        }
+      }
+
       LOG.info("deleted={}; skipped={}", deleted, skipped);
     }
   }

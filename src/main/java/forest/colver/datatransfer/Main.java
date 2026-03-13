@@ -1,7 +1,6 @@
 package forest.colver.datatransfer;
 
-import static forest.colver.datatransfer.messaging.Environment.STAGE;
-import static forest.colver.datatransfer.messaging.JmsConsume.moveAllSpecificMessages;
+import static forest.colver.datatransfer.CommonTasks.cleanS3DirectoryVersioned;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,32 +13,7 @@ public class Main {
   public static void main(String[] args) {
     LOG.info("main start");
 
-    //    moveAllSpecificMessages(
-    //        STAGE,
-    //        "emx-error",
-    //        "emxSystem='edu-int-wise' AND emxSystemEnvironment='stage'",
-    //        "emx-to-edu-int-wise-stage-cmiss-receive-message");
-    //    moveAllSpecificMessages(
-    //        STAGE,
-    //        "emx-error",
-    //        "emxSystem='edu-int-wise' AND emxSystemEnvironment='test'",
-    //        "emx-to-edu-int-wise-test-cmiss-receive-message");
-
-    moveAllSpecificMessages(
-        STAGE,
-        "emx-error",
-        "emxErrorRetryQueue='emx-to-si-services-stage'",
-        "emx-to-si-services-stage");
-    moveAllSpecificMessages(
-        STAGE,
-        "emx-error",
-        "emxErrorRetryQueue='emx-to-si-services-test-wds'",
-        "emx-to-si-services-test-wds");
-    moveAllSpecificMessages(
-        STAGE,
-        "emx-error",
-        "emxErrorRetryQueue='emx-to-si-services-stage-wds'",
-        "emx-to-si-services-stage-wds");
+    cleanS3DirectoryVersioned("emx-sandbox-sftp-internal", "emx2-core-test");
 
     //    var bucket = "cp-aws-gayedtiak3nflbiftucz-s3-logging";
     //    var keyPrefix = "emx-sandbox-sftp/";
@@ -57,28 +31,17 @@ public class Main {
     // "patriarchal-blessing-emxofframp-gsc-dlq");
     //      "patriarchal-blessing-emxofframp-test-dlq");
 
-    //    moveAllSpecificMessages(
-    //        Environment.PROD,
-    //        EMX_ERROR,
-    //        "emxSystem='english-connect' AND emxSystemEnvironment='prod'",
-    //        "emx-to-english-connect-prod");
-    //    moveAllSpecificMessages(
-    //        Environment.STAGE,
-    //        EMX_ERROR,
-    //        "emxSystem='english-connect' AND emxSystemEnvironment='stage'",
-    //        "emx-to-english-connect-stage");
-
     // si-services
-    moveAllSpecificMessages(
-        STAGE,
-        "emx-error",
-        "emxSystem='si-services' AND emxSystemEnvironment='stage'",
-        "watchtower-si-services-stage");
-    moveAllSpecificMessages(
-        STAGE,
-        "emx-error",
-        "emxSystem='si-services' AND emxSystemEnvironment='test'",
-        "watchtower-si-services-test");
+    //    moveAllSpecificMessages(
+    //        STAGE,
+    //        "emx-error",
+    //        "emxSystem='si-services' AND emxSystemEnvironment='stage'",
+    //        "watchtower-si-services-stage");
+    //    moveAllSpecificMessages(
+    //        STAGE,
+    //        "emx-error",
+    //        "emxSystem='si-services' AND emxSystemEnvironment='test'",
+    //        "watchtower-si-services-test");
     //    moveAllSpecificMessages(
     //        STAGE,
     //        "emx-error",
