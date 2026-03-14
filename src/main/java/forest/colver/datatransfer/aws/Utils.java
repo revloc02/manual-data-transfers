@@ -41,6 +41,8 @@ public class Utils {
       userCreds.getProperty("aws-emx-sandbox-test-sqs2");
   public static final String S3_INTERNAL =
       userCreds.getProperty("aws-enterprise-sandbox-test-s3-internal");
+  public static final String S3_INTERNAL_VERSIONED =
+      userCreds.getProperty("aws-enterprise-sandbox-test-s3-internal-versioned");
   public static final String S3_TARGET_CUSTOMER =
       userCreds.getProperty("aws-enterprise-sandbox-test-s3-target-customer");
   public static final String S3_SOURCE_CACHE =

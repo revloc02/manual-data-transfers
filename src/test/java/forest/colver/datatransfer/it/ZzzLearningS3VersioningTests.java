@@ -6,7 +6,7 @@ import static forest.colver.datatransfer.aws.S3Operations.s3ListDeleteMarkers;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListResponse;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListVersions;
 import static forest.colver.datatransfer.aws.S3Operations.s3Put;
-import static forest.colver.datatransfer.aws.Utils.S3_INTERNAL;
+import static forest.colver.datatransfer.aws.Utils.S3_INTERNAL_VERSIONED;
 import static forest.colver.datatransfer.aws.Utils.getEmxNpCreds;
 import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
 import static forest.colver.datatransfer.aws.Utils.getS3Client;
@@ -41,17 +41,17 @@ class ZzzLearningS3VersioningTests {
       var keyPrefix = "revloc02/target/versions-remain";
       var objectKey = keyPrefix + "/remain" + getTimeStampFilename() + ".txt";
       LOG.info("...place a file...");
-      s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
+      s3Put(s3Client, S3_INTERNAL_VERSIONED, objectKey, getDefaultPayload());
 
       LOG.info("...check the file arrived...");
-      var objects = s3List(creds, S3_INTERNAL, keyPrefix);
+      var objects = s3List(creds, S3_INTERNAL_VERSIONED, keyPrefix);
       assertThat(objects).hasSizeGreaterThanOrEqualTo(1); // this actually isn't a good check
 
       LOG.info("...delete the file...");
-      s3Delete(creds, S3_INTERNAL, objectKey);
+      s3Delete(creds, S3_INTERNAL_VERSIONED, objectKey);
 
       LOG.info("...check for versions, can the versions be seen? Yes...");
-      s3ListVersions(s3Client, S3_INTERNAL, keyPrefix);
+      s3ListVersions(s3Client, S3_INTERNAL_VERSIONED, keyPrefix);
     }
   }
 
@@ -67,10 +67,10 @@ class ZzzLearningS3VersioningTests {
       var keyPrefix = "revloc02/target/same-name";
       var objectKey = keyPrefix + "/text.txt";
       LOG.info("...place a file...");
-      s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
+      s3Put(s3Client, S3_INTERNAL_VERSIONED, objectKey, getDefaultPayload());
 
       LOG.info("...check the file arrived...");
-      var objects = s3List(creds, S3_INTERNAL, keyPrefix);
+      var objects = s3List(creds, S3_INTERNAL_VERSIONED, keyPrefix);
       assertThat(objects).hasSizeGreaterThanOrEqualTo(1); // this actually isn't a good check
     }
   }
@@ -87,30 +87,31 @@ class ZzzLearningS3VersioningTests {
       var keyPrefix = "revloc02/target/versions-removed";
       var objectKey = keyPrefix + "/removed" + getTimeStampFilename() + ".txt";
       LOG.info("...place a file...");
-      s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
+      s3Put(s3Client, S3_INTERNAL_VERSIONED, objectKey, getDefaultPayload());
 
       LOG.info("...check the file arrived...");
-      var objects = s3List(creds, S3_INTERNAL, keyPrefix);
+      var objects = s3List(creds, S3_INTERNAL_VERSIONED, keyPrefix);
       assertThat(objects).hasSizeGreaterThanOrEqualTo(1);
 
       LOG.info("...delete the file...");
-      s3Delete(creds, S3_INTERNAL, objectKey);
+      s3Delete(creds, S3_INTERNAL_VERSIONED, objectKey);
 
       LOG.info("...check for versions, can the delete marker be seen? No...");
-      var versions = s3ListVersions(s3Client, S3_INTERNAL, keyPrefix);
+      var versions = s3ListVersions(s3Client, S3_INTERNAL_VERSIONED, keyPrefix);
 
       LOG.info("...cleanup and delete the file versions...");
       for (var version : versions) {
-        S3Operations.s3DeleteVersion(s3Client, S3_INTERNAL, version.key(), version.versionId());
+        S3Operations.s3DeleteVersion(
+            s3Client, S3_INTERNAL_VERSIONED, version.key(), version.versionId());
       }
 
       LOG.info("...check for delete markers, can the delete marker be seen? Yes...");
-      var deleteMarkers = s3ListDeleteMarkers(s3Client, S3_INTERNAL, keyPrefix);
+      var deleteMarkers = s3ListDeleteMarkers(s3Client, S3_INTERNAL_VERSIONED, keyPrefix);
 
       LOG.info("...cleanup and delete the file delete markers...");
       for (var deleteMarker : deleteMarkers) {
         S3Operations.s3DeleteVersion(
-            s3Client, S3_INTERNAL, deleteMarker.key(), deleteMarker.versionId());
+            s3Client, S3_INTERNAL_VERSIONED, deleteMarker.key(), deleteMarker.versionId());
       }
     }
   }
@@ -223,27 +224,30 @@ class ZzzLearningS3VersioningTests {
       var keyPrefix = "revloc02/target/versioned";
       var objectKey = keyPrefix + "/versioned-" + getTimeStampFilename() + ".txt";
       LOG.info("...place a file...");
-      var versionId = s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
+      var versionId = s3Put(s3Client, S3_INTERNAL_VERSIONED, objectKey, getDefaultPayload());
 
       LOG.info("...check the file arrived...");
-      var objects = s3List(creds, S3_INTERNAL, keyPrefix);
+      var objects = s3List(creds, S3_INTERNAL_VERSIONED, keyPrefix);
       assertThat(objects).hasSizeGreaterThanOrEqualTo(1);
 
       LOG.info("...get the file with versionId: {}", versionId);
-      var response = S3Operations.s3Retrieve(s3Client, S3_INTERNAL, objectKey, versionId);
+      var response = S3Operations.s3Retrieve(s3Client, S3_INTERNAL_VERSIONED, objectKey, versionId);
       assertThat(response).isNotNull();
       var respPayload = new String(response.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(respPayload).isEqualTo(getDefaultPayload());
 
       LOG.info("...cleanup and delete the file...");
-      S3Operations.s3DeleteVersion(s3Client, S3_INTERNAL, objectKey, versionId.orElseThrow());
+      S3Operations.s3DeleteVersion(
+          s3Client, S3_INTERNAL_VERSIONED, objectKey, versionId.orElseThrow());
 
       LOG.info("...since versionId was used to delete, there should be no deleteMarkers...");
       await()
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(10))
           .untilAsserted(
-              () -> assertThat(s3ListDeleteMarkers(s3Client, S3_INTERNAL, keyPrefix)).isEmpty());
+              () ->
+                  assertThat(s3ListDeleteMarkers(s3Client, S3_INTERNAL_VERSIONED, keyPrefix))
+                      .isEmpty());
     }
   }
 
@@ -258,42 +262,47 @@ class ZzzLearningS3VersioningTests {
       var keyPrefix = "revloc02/target/version-not-specified";
       var objectKey = keyPrefix + "/version-not-specified-" + getTimeStampFilename() + ".txt";
       LOG.info("...place a file...");
-      s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
+      s3Put(s3Client, S3_INTERNAL_VERSIONED, objectKey, getDefaultPayload());
 
       LOG.info("...check the file arrived...");
-      var objects = s3List(creds, S3_INTERNAL, keyPrefix);
+      var objects = s3List(creds, S3_INTERNAL_VERSIONED, keyPrefix);
       assertThat(objects).hasSizeGreaterThanOrEqualTo(1);
 
       LOG.info("...put a different version of the file with the same name...");
-      s3Put(s3Client, S3_INTERNAL, objectKey, "Different content");
+      s3Put(s3Client, S3_INTERNAL_VERSIONED, objectKey, "Different content");
 
       LOG.info("...retrieve the file, do not include versionId...");
-      var response = S3Operations.s3Retrieve(s3Client, S3_INTERNAL, objectKey, Optional.empty());
+      var response =
+          S3Operations.s3Retrieve(s3Client, S3_INTERNAL_VERSIONED, objectKey, Optional.empty());
       assertThat(response).isNotNull();
       var respPayload = new String(response.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(respPayload).isEqualTo("Different content");
 
       LOG.info("...check for 2 versions...");
-      var versions = s3ListVersions(s3Client, S3_INTERNAL, keyPrefix);
+      var versions = s3ListVersions(s3Client, S3_INTERNAL_VERSIONED, keyPrefix);
       assertThat(versions).hasSizeGreaterThanOrEqualTo(2);
 
       LOG.info("...cleanup and delete all version IDs...");
       for (var version : versions) {
-        S3Operations.s3DeleteVersion(s3Client, S3_INTERNAL, objectKey, version.versionId());
+        S3Operations.s3DeleteVersion(
+            s3Client, S3_INTERNAL_VERSIONED, objectKey, version.versionId());
       }
       LOG.info("...assert cleanup...");
       await()
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(10))
           .untilAsserted(
-              () -> assertThat(s3ListVersions(s3Client, S3_INTERNAL, keyPrefix)).isEmpty());
+              () ->
+                  assertThat(s3ListVersions(s3Client, S3_INTERNAL_VERSIONED, keyPrefix)).isEmpty());
       LOG.info(
           "...if versionId were used to delete, then there should be no deleteMarkers, assert this...");
       await()
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(10))
           .untilAsserted(
-              () -> assertThat(s3ListDeleteMarkers(s3Client, S3_INTERNAL, keyPrefix)).isEmpty());
+              () ->
+                  assertThat(s3ListDeleteMarkers(s3Client, S3_INTERNAL_VERSIONED, keyPrefix))
+                      .isEmpty());
     }
   }
 
@@ -330,7 +339,7 @@ class ZzzLearningS3VersioningTests {
           .withMessageContaining("Invalid version id specified");
 
       LOG.info("...cleanup and delete the file...");
-      S3Operations.s3Delete(s3Client, S3_INTERNAL, objectKey);
+      S3Operations.s3Delete(s3Client, bucket, objectKey);
     }
   }
 }
