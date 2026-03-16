@@ -845,18 +845,21 @@ class AwsS3IntTests {
 
       LOG.info("...cleanup and delete the file and its versions...");
       for (var version : versions) {
-        S3Operations.s3DeleteVersion(s3Client, S3_INTERNAL_VERSIONED, objectKey, version.versionId());
+        S3Operations.s3DeleteVersion(
+            s3Client, S3_INTERNAL_VERSIONED, objectKey, version.versionId());
       }
       var deleteMarkers = s3ListDeleteMarkers(s3Client, S3_INTERNAL_VERSIONED, keyPrefix);
       for (var deleteMarker : deleteMarkers) {
-        S3Operations.s3DeleteVersion(s3Client, S3_INTERNAL_VERSIONED, objectKey, deleteMarker.versionId());
+        S3Operations.s3DeleteVersion(
+            s3Client, S3_INTERNAL_VERSIONED, objectKey, deleteMarker.versionId());
       }
       LOG.info("...assert cleanup...");
       await()
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(10))
           .untilAsserted(
-              () -> assertThat(s3ListVersions(s3Client, S3_INTERNAL_VERSIONED, keyPrefix)).isEmpty());
+              () ->
+                  assertThat(s3ListVersions(s3Client, S3_INTERNAL_VERSIONED, keyPrefix)).isEmpty());
     }
   }
 
@@ -888,21 +891,25 @@ class AwsS3IntTests {
 
       LOG.info("...cleanup and delete all version IDs...");
       for (var version : versions) {
-        S3Operations.s3DeleteVersion(s3Client, S3_INTERNAL_VERSIONED, objectKey, version.versionId());
+        S3Operations.s3DeleteVersion(
+            s3Client, S3_INTERNAL_VERSIONED, objectKey, version.versionId());
       }
       LOG.info("...assert cleanup...");
       await()
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(10))
           .untilAsserted(
-              () -> assertThat(s3ListVersions(s3Client, S3_INTERNAL_VERSIONED, keyPrefix)).isEmpty());
+              () ->
+                  assertThat(s3ListVersions(s3Client, S3_INTERNAL_VERSIONED, keyPrefix)).isEmpty());
       LOG.info(
           "...if versionId were used to delete, then there should be no deleteMarkers, assert this...");
       await()
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(10))
           .untilAsserted(
-              () -> assertThat(s3ListDeleteMarkers(s3Client, S3_INTERNAL_VERSIONED, keyPrefix)).isEmpty());
+              () ->
+                  assertThat(s3ListDeleteMarkers(s3Client, S3_INTERNAL_VERSIONED, keyPrefix))
+                      .isEmpty());
     }
   }
 
@@ -938,25 +945,29 @@ class AwsS3IntTests {
       await()
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(10))
-          .untilAsserted(() -> assertThat(s3List(s3Client, S3_INTERNAL_VERSIONED, keyPrefix)).isEmpty());
+          .untilAsserted(
+              () -> assertThat(s3List(s3Client, S3_INTERNAL_VERSIONED, keyPrefix)).isEmpty());
       versions = s3ListVersions(s3Client, S3_INTERNAL_VERSIONED, keyPrefix);
       assertThat(versions).hasSizeGreaterThanOrEqualTo(3);
 
       LOG.info("...now delete all the versions of that object...");
       for (var version : versions) {
-        S3Operations.s3DeleteVersion(s3Client, S3_INTERNAL_VERSIONED, objectKey, version.versionId());
+        S3Operations.s3DeleteVersion(
+            s3Client, S3_INTERNAL_VERSIONED, objectKey, version.versionId());
       }
       LOG.info("...cleanup and delete the delete markers...");
       var deleteMarkers = s3ListDeleteMarkers(s3Client, S3_INTERNAL_VERSIONED, keyPrefix);
       for (var deleteMarker : deleteMarkers) {
-        S3Operations.s3DeleteVersion(s3Client, S3_INTERNAL_VERSIONED, objectKey, deleteMarker.versionId());
+        S3Operations.s3DeleteVersion(
+            s3Client, S3_INTERNAL_VERSIONED, objectKey, deleteMarker.versionId());
       }
       LOG.info("...assert cleanup...");
       await()
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(10))
           .untilAsserted(
-              () -> assertThat(s3ListVersions(s3Client, S3_INTERNAL_VERSIONED, keyPrefix)).isEmpty());
+              () ->
+                  assertThat(s3ListVersions(s3Client, S3_INTERNAL_VERSIONED, keyPrefix)).isEmpty());
     }
   }
 
@@ -1010,7 +1021,8 @@ class AwsS3IntTests {
       LOG.info("...cleanup and delete all version IDs...");
       var versions = s3ListVersions(s3Client, S3_INTERNAL_VERSIONED, keyPrefix);
       for (var version : versions) {
-        S3Operations.s3DeleteVersion(s3Client, S3_INTERNAL_VERSIONED, version.key(), version.versionId());
+        S3Operations.s3DeleteVersion(
+            s3Client, S3_INTERNAL_VERSIONED, version.key(), version.versionId());
       }
       LOG.info("...cleanup and delete the delete markers...");
       var deleteMarkers = s3ListDeleteMarkers(s3Client, S3_INTERNAL_VERSIONED, keyPrefix);
@@ -1023,7 +1035,8 @@ class AwsS3IntTests {
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(10))
           .untilAsserted(
-              () -> assertThat(s3ListVersions(s3Client, S3_INTERNAL_VERSIONED, keyPrefix)).isEmpty());
+              () ->
+                  assertThat(s3ListVersions(s3Client, S3_INTERNAL_VERSIONED, keyPrefix)).isEmpty());
     }
     LOG.info("There was {} file with 'wildcard' in the name.", count);
   }
