@@ -56,7 +56,7 @@ public class Utils {
     try {
       encoded = Files.readAllBytes(Paths.get(path));
     } catch (IOException e) {
-      e.printStackTrace();
+      LOG.error("Failed to read file: {}", path, e);
     }
     return new String(encoded, encoding);
   }
@@ -80,7 +80,7 @@ public class Utils {
       Files.write(path, contents);
       LOG.info("File written to: {}", path);
     } catch (IOException e) {
-      e.printStackTrace();
+      LOG.error("Failed to write file: {}", path, e);
     }
   }
 
@@ -89,7 +89,7 @@ public class Utils {
       Files.delete(Paths.get(fullyQualifiedFilePath));
       LOG.info("Deleted file: {}", fullyQualifiedFilePath);
     } catch (IOException e) {
-      e.printStackTrace();
+      LOG.error("Failed to delete file: {}", fullyQualifiedFilePath, e);
     }
   }
 
@@ -176,7 +176,8 @@ public class Utils {
     try {
       Thread.sleep(seconds * 1_000L);
     } catch (InterruptedException e) {
-      e.printStackTrace();
+      LOG.error("Thread sleep interrupted", e);
+      Thread.currentThread().interrupt(); // Restore interrupt status
     }
   }
 }
