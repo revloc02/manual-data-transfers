@@ -64,7 +64,13 @@ public class JmsAndSqs {
       try (var consumer = ctx.createConsumer(fromQ, selector)) {
         jmsToSqsMessageMover(consumer, awsCreds, sqs, env, queue);
       } catch (JMSException e) {
-        e.printStackTrace();
+        LOG.error(
+            "Failed to move all specific messages from JMS queue: {}:{} to SQS: {} with selector: {}",
+            env.name(),
+            queue,
+            sqs,
+            selector,
+            e);
       }
     }
   }
@@ -77,7 +83,12 @@ public class JmsAndSqs {
       try (var consumer = ctx.createConsumer(fromQ)) {
         jmsToSqsMessageMover(consumer, awsCreds, sqs, env, queue);
       } catch (JMSException e) {
-        e.printStackTrace();
+        LOG.error(
+            "Failed to move all messages from JMS queue: {}:{} to SQS: {}",
+            env.name(),
+            queue,
+            sqs,
+            e);
       }
     }
   }

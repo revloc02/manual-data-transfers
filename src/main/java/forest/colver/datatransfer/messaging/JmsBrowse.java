@@ -37,7 +37,7 @@ public class JmsBrowse {
                 + 1; // note that this statement empties msgs Enumeration series
         LOG.info("Queue={}:{}; MessageCountFromSelector={}\n", env.name(), queueName, msgCount);
       } catch (JMSException e) {
-        e.printStackTrace();
+        LOG.error("Failed to browse next message from queue: {}:{}", env.name(), queueName, e);
       }
     }
     return message;
@@ -65,7 +65,12 @@ public class JmsBrowse {
         var msgCount = Collections.list(msgs).size() + 1; // this empties msgs Enumeration series
         LOG.info("Queue={}:{}; MessageCountFromSelector={}\n", env.name(), queueName, msgCount);
       } catch (JMSException e) {
-        e.printStackTrace();
+        LOG.error(
+            "Failed to browse for specific message from queue: {}:{} with selector: {}",
+            env.name(),
+            queueName,
+            selector,
+            e);
       }
     }
     return message;
@@ -91,7 +96,12 @@ public class JmsBrowse {
         msgCount = Collections.list(msgs).size();
         LOG.info("Queue={}:{}; MessageCountFromSelector={}\n", env.name(), queueName, msgCount);
       } catch (JMSException e) {
-        e.printStackTrace();
+        LOG.error(
+            "Failed to browse and count specific messages from queue: {}:{} with selector: {}",
+            env.name(),
+            queueName,
+            selector,
+            e);
       }
     }
     return msgCount;
@@ -118,7 +128,7 @@ public class JmsBrowse {
           LOG.info(payload.substring(0, truncation));
         }
       } catch (JMSException e) {
-        e.printStackTrace();
+        LOG.error("Failed to display messages payload from queue: {}:{}", env.name(), queueName, e);
       }
     }
   }
@@ -134,7 +144,7 @@ public class JmsBrowse {
         queueDepth = Collections.list(msgs).size();
         LOG.info("Queue={}:{} Depth={}", env.name(), queueName, queueDepth);
       } catch (JMSException e) {
-        e.printStackTrace();
+        LOG.error("Failed to get queue depth for queue: {}:{}", env.name(), queueName, e);
       }
     }
     return queueDepth;
@@ -165,7 +175,14 @@ public class JmsBrowse {
           LOG.info("Could not find message to copy");
         }
       } catch (JMSException e) {
-        e.printStackTrace();
+        LOG.error(
+            "Failed to copy specific messages from queue: {}:{} to queue: {}:{} with selector: {}",
+            env.name(),
+            fromQName,
+            env.name(),
+            toQName,
+            selector,
+            e);
       }
       LOG.info("Copied {} messages.", count);
     }
@@ -195,7 +212,13 @@ public class JmsBrowse {
           LOG.info("Could not find message to copy");
         }
       } catch (JMSException e) {
-        e.printStackTrace();
+        LOG.error(
+            "Failed to copy all messages from queue: {}:{} to queue: {}:{}",
+            env.name(),
+            fromQName,
+            env.name(),
+            toQName,
+            e);
       }
       LOG.info("Copied {} messages from {} to {}.", count, fromQName, toQName);
     }
@@ -231,7 +254,13 @@ public class JmsBrowse {
           }
         }
       } catch (JMSException e) {
-        e.printStackTrace();
+        LOG.error(
+            "Failed to copy all messages from queue: {}:{} to queue: {}:{}",
+            fromEnv.name(),
+            fromQName,
+            toEnv.name(),
+            toQName,
+            e);
       }
       LOG.info(
           "Copied {} messages. From Queue={}:{}, sent to Queue={}:{}",

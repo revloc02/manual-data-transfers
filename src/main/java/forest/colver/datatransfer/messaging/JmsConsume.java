@@ -45,7 +45,7 @@ public class JmsConsume {
           }
         } while (message != null);
       } catch (JMSException e) {
-        e.printStackTrace();
+        LOG.error("Failed to delete messages from queue: {}:{}", env.name(), queueName, e);
       }
     }
     LOG.info("Deleted {} messages from {}:{} queue.", counter, env.name(), queueName);
@@ -76,7 +76,7 @@ public class JmsConsume {
 
         } while (message != null);
       } catch (JMSException e) {
-        e.printStackTrace();
+        LOG.error("Failed to purge queue: {}:{}", env.name(), queueName, e);
       }
     }
     LOG.info("Purged {} messages from {}:{} queue.", counter, env.name(), queueName);
@@ -99,7 +99,12 @@ public class JmsConsume {
 
         } while (message != null);
       } catch (JMSException e) {
-        e.printStackTrace();
+        LOG.error(
+            "Failed to delete specific messages from queue: {}:{} with selector: {}",
+            env.name(),
+            queueName,
+            selector,
+            e);
       }
     }
     LOG.info(
@@ -132,7 +137,8 @@ public class JmsConsume {
           }
         }
       } catch (JMSException e) {
-        e.printStackTrace();
+        LOG.error(
+            "Failed to delete {} messages from queue: {}:{}", amount, env.name(), queueName, e);
       }
     }
     LOG.info("Purged {} messages from {}:{} queue.", counter, env.name(), queueName);
@@ -168,7 +174,12 @@ public class JmsConsume {
             createStringFromMessage(message));
         message.acknowledge();
       } catch (JMSException e) {
-        e.printStackTrace();
+        LOG.error(
+            "Failed to consume specific message from queue: {}:{} with selector: {}",
+            env.name(),
+            fromQueueName,
+            selector,
+            e);
       }
     }
     return message;
@@ -183,7 +194,7 @@ public class JmsConsume {
         message = consumer.receive(5_000L);
         if (message != null) message.acknowledge();
       } catch (JMSException e) {
-        e.printStackTrace();
+        LOG.error("Failed to consume message from queue: {}:{}", env.name(), fromQueueName, e);
       }
     }
     return message;
@@ -207,7 +218,14 @@ public class JmsConsume {
             toQueueName,
             createStringFromMessage(message));
       } catch (JMSException e) {
-        e.printStackTrace();
+        LOG.error(
+            "Failed to move specific message from queue: {}:{} to queue: {}:{} with selector: {}",
+            env.name(),
+            fromQueueName,
+            env.name(),
+            toQueueName,
+            selector,
+            e);
       }
     }
     LOG.info("Done.");
@@ -230,7 +248,13 @@ public class JmsConsume {
             toQueueName,
             createStringFromMessage(message));
       } catch (JMSException e) {
-        e.printStackTrace();
+        LOG.error(
+            "Failed to move message from queue: {}:{} to queue: {}:{}",
+            env.name(),
+            fromQueueName,
+            env.name(),
+            toQueueName,
+            e);
       }
     }
     LOG.info("Done.");
@@ -244,7 +268,13 @@ public class JmsConsume {
       try (var consumer = ctx.createConsumer(fromQ)) {
         counter = jmsMove(ctx.createProducer(), consumer, ctx.createQueue(toQueueName));
       } catch (JMSException e) {
-        e.printStackTrace();
+        LOG.error(
+            "Failed to move all messages from queue: {}:{} to queue: {}:{}",
+            env.name(),
+            fromQueueName,
+            env.name(),
+            toQueueName,
+            e);
       }
       LOG.info(
           "Moved {} messages from {} to {} in {}.",
@@ -264,7 +294,14 @@ public class JmsConsume {
       try (var consumer = ctx.createConsumer(fromQ, selector)) {
         counter = jmsMove(ctx.createProducer(), consumer, ctx.createQueue(toQueueName));
       } catch (JMSException e) {
-        e.printStackTrace();
+        LOG.error(
+            "Failed to move all specific messages from queue: {}:{} to queue: {}:{} with selector: {}",
+            env.name(),
+            fromQueueName,
+            env.name(),
+            toQueueName,
+            selector,
+            e);
       }
       LOG.info(
           "Moved {} messages from {} to {} in {}, for selector={}.",
@@ -320,7 +357,15 @@ public class JmsConsume {
           }
         }
       } catch (JMSException e) {
-        e.printStackTrace();
+        LOG.error(
+            "Failed to move {} specific messages from queue: {}:{} to queue: {}:{} with selector: {}",
+            amount,
+            env.name(),
+            fromQueueName,
+            env.name(),
+            toQueueName,
+            selector,
+            e);
       }
       LOG.info(
           "Moved {} messages from {}:{} to {}:{}, for selector={}.",

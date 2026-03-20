@@ -57,7 +57,7 @@ public class Utils {
     try {
       payload = textMessage.getText();
     } catch (JMSException e) {
-      e.printStackTrace();
+      LOG.error("Failed to extract payload from TextMessage", e);
     }
     return payload;
   }
@@ -71,7 +71,7 @@ public class Utils {
       bytes = new byte[(int) bytesMessage.getBodyLength()];
       bytesMessage.readBytes(bytes);
     } catch (JMSException e) {
-      e.printStackTrace();
+      LOG.error("Failed to extract payload from BytesMessage", e);
     }
     assert bytes != null;
     return new String(bytes);
@@ -82,7 +82,7 @@ public class Utils {
     try {
       payload = objectMessage.getObject().toString();
     } catch (JMSException e) {
-      e.printStackTrace();
+      LOG.error("Failed to extract payload from ObjectMessage", e);
     }
     return payload;
   }
@@ -101,7 +101,7 @@ public class Utils {
         properties.put(s, message.getObjectProperty(s).toString());
       }
     } catch (JMSException e) {
-      e.printStackTrace();
+      LOG.error("Failed to extract message properties", e);
     }
     LOG.info("Number of properties (map size)={}", properties.size());
     return properties;
@@ -124,7 +124,7 @@ public class Utils {
       jmsHeaders.put("JMSExpiration", String.valueOf(message.getJMSExpiration()));
       jmsHeaders.put("JMSCorrelationID", message.getJMSCorrelationID());
     } catch (JMSException e) {
-      e.printStackTrace();
+      LOG.error("Failed to extract JMS headers", e);
     }
     return jmsHeaders;
   }
@@ -144,7 +144,7 @@ public class Utils {
         }
       }
     } catch (JMSException e) {
-      e.printStackTrace();
+      LOG.error("Failed to create text message with properties", e);
     }
     return message;
   }

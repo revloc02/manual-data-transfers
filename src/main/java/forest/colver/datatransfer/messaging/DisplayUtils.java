@@ -6,9 +6,12 @@ import jakarta.jms.Message;
 import jakarta.jms.StreamMessage;
 import jakarta.jms.TextMessage;
 import java.util.Enumeration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DisplayUtils {
 
+  private static final Logger LOG = LoggerFactory.getLogger(DisplayUtils.class);
   private static final int DEFAULT_PAYLOAD_OUTPUT_LEN = 100;
 
   public static String stringFromMessage(Message message) {
@@ -37,7 +40,7 @@ public class DisplayUtils {
         payload = ((TextMessage) message).getText();
       }
     } catch (JMSException e) {
-      e.printStackTrace();
+      LOG.error("Failed to extract payload from TextMessage", e);
     }
     appendPayoadString(payload, payloadOutputTrunc, sb);
     return sb;
@@ -57,7 +60,7 @@ public class DisplayUtils {
       bytes = new byte[(int) bytesMessage.getBodyLength()];
       bytesMessage.readBytes(bytes);
     } catch (JMSException e) {
-      e.printStackTrace();
+      LOG.error("Failed to extract payload from BytesMessage", e);
     }
     appendPayoadString(new String(bytes), payloadOutputTrunc, sb);
     return sb;
@@ -106,7 +109,7 @@ public class DisplayUtils {
       appendJmsProps(message, listJmsProps, sb);
       appendCustomProps(message, sb);
     } catch (JMSException e) {
-      e.printStackTrace();
+      LOG.error("Failed to append message properties", e);
     }
   }
 
