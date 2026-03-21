@@ -764,6 +764,7 @@ class AwsS3IntTests {
     }
   }
 
+  // todo: this warning will soon no longer be true. Clean it up and make it a JavaDoc.
   /**
    * WARNING: This test leaves versioned objects on the bucket that are not cleaned up. Back when I
    * wrote this, putting more than 1000 files on this Internal S3 bucket was benign. But since then
@@ -822,6 +823,7 @@ class AwsS3IntTests {
     }
   }
 
+  // S3 Version Tests
   /** Tests S3 ListVersions. (Remember to get creds first using `aws configure sso`.) */
   @Test
   void testS3ListVersions() {
