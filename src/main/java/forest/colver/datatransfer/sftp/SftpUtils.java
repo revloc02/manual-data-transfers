@@ -1,6 +1,6 @@
 package forest.colver.datatransfer.sftp;
 
-import static forest.colver.datatransfer.config.Utils.userCreds;
+import static forest.colver.datatransfer.config.ConfigUtils.userCreds;
 
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelSftp;
@@ -14,17 +14,17 @@ import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Utils {
+public class SftpUtils {
 
   public static final String SFTP_EXIT = "sftp exit";
-  static final Logger LOG = LoggerFactory.getLogger(Utils.class);
+  static final Logger LOG = LoggerFactory.getLogger(SftpUtils.class);
   private static final JSch JSCH = new JSch();
   private static final String KNOWNHOSTS = userCreds.getProperty("sftp.knownhosts");
   public static final String SFTP_HOST = userCreds.getProperty("sftp.host");
   public static final String SFTP_PASSWORD = userCreds.getProperty("sftp.password");
   public static final String SFTP_KEY = userCreds.getProperty("sftp.key");
 
-  private Utils() {
+  private SftpUtils() {
     // https://rules.sonarsource.com/java/RSPEC-1118/
     throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
   }

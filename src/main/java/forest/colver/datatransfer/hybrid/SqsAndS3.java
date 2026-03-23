@@ -1,5 +1,7 @@
 package forest.colver.datatransfer.hybrid;
 
+import static forest.colver.datatransfer.aws.AwsUtils.convertSqsMessageAttributesToStrings;
+import static forest.colver.datatransfer.aws.AwsUtils.getS3Client;
 import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
 import static forest.colver.datatransfer.aws.S3Operations.s3Get;
 import static forest.colver.datatransfer.aws.S3Operations.s3Head;
@@ -7,8 +9,6 @@ import static forest.colver.datatransfer.aws.S3Operations.s3Put;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsConsumeOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
-import static forest.colver.datatransfer.aws.Utils.convertSqsMessageAttributesToStrings;
-import static forest.colver.datatransfer.aws.Utils.getS3Client;
 
 import java.io.IOException;
 import org.slf4j.Logger;

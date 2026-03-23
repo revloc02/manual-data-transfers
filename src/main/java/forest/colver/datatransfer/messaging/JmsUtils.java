@@ -1,8 +1,8 @@
 package forest.colver.datatransfer.messaging;
 
-import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
-import static forest.colver.datatransfer.config.Utils.getPassword;
-import static forest.colver.datatransfer.config.Utils.getUsername;
+import static forest.colver.datatransfer.config.ConfigUtils.getDefaultPayload;
+import static forest.colver.datatransfer.config.ConfigUtils.getPassword;
+import static forest.colver.datatransfer.config.ConfigUtils.getUsername;
 import static forest.colver.datatransfer.messaging.Environment.STAGE;
 
 import jakarta.jms.BytesMessage;
@@ -19,9 +19,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** JMS specific utilities. */
-public class Utils {
+public class JmsUtils {
 
-  private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
+  private static final Logger LOG = LoggerFactory.getLogger(JmsUtils.class);
 
   /**
    * Retrieves the payload of the message as a String. The message type is checked, and then the

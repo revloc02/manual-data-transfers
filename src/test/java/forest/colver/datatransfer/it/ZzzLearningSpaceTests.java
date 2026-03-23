@@ -1,5 +1,9 @@
 package forest.colver.datatransfer.it;
 
+import static forest.colver.datatransfer.aws.AwsUtils.getEmxProdCreds;
+import static forest.colver.datatransfer.aws.AwsUtils.getEmxSbCreds;
+import static forest.colver.datatransfer.aws.AwsUtils.getPersonalSbCreds;
+import static forest.colver.datatransfer.aws.AwsUtils.getS3Client;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListContResponse;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListResponse;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessage;
@@ -8,22 +12,17 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadMessages;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
-import static forest.colver.datatransfer.aws.Utils.getEmxProdCreds;
-import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
-import static forest.colver.datatransfer.aws.Utils.getPersonalSbCreds;
-import static forest.colver.datatransfer.aws.Utils.getS3Client;
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_EXTEMCORNP_SA_EXT_EMCOR_NP_SAS_TOKEN;
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_PROD_EXT_EMCOR_PROD_SA_CONN_STR;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobGet;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobPut;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobPutSas;
-import static forest.colver.datatransfer.azure.Utils.EMX_EXTEMCORNP_SA_EXT_EMCOR_NP_SAS_TOKEN;
-import static forest.colver.datatransfer.azure.Utils.EMX_PROD_EXT_EMCOR_PROD_SA_CONN_STR;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import forest.colver.datatransfer.messaging.DisplayUtils;
 import forest.colver.datatransfer.messaging.Environment;
 import forest.colver.datatransfer.messaging.JmsBrowse;
 import forest.colver.datatransfer.messaging.JmsSend;
-import forest.colver.datatransfer.messaging.Utils;
 import jakarta.jms.JMSException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;

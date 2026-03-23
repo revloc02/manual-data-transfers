@@ -1,17 +1,17 @@
 package forest.colver.datatransfer.it;
 
+import static forest.colver.datatransfer.aws.AwsUtils.S3_INTERNAL;
+import static forest.colver.datatransfer.aws.AwsUtils.getEmxSbCreds;
+import static forest.colver.datatransfer.aws.AwsUtils.getS3Client;
 import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
 import static forest.colver.datatransfer.aws.S3Operations.s3List;
 import static forest.colver.datatransfer.aws.S3Operations.s3Put;
-import static forest.colver.datatransfer.aws.Utils.S3_INTERNAL;
-import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
-import static forest.colver.datatransfer.aws.Utils.getS3Client;
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_SA_CONN_STR;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobDelete;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobDeleteAll;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobGet;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobList;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_SA_CONN_STR;
-import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
+import static forest.colver.datatransfer.config.ConfigUtils.getDefaultPayload;
 import static forest.colver.datatransfer.hybrid.S3AndBlobStorage.copyOneS3toAzureBlob;
 import static forest.colver.datatransfer.hybrid.S3AndBlobStorage.moveAllS3ToAzureBlob;
 import static forest.colver.datatransfer.hybrid.S3AndBlobStorage.moveOneS3toAzureBlob;

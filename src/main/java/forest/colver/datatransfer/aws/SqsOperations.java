@@ -1,10 +1,10 @@
 package forest.colver.datatransfer.aws;
 
-import static forest.colver.datatransfer.aws.Utils.awsResponseValidation;
-import static forest.colver.datatransfer.aws.Utils.createSqsMessageAttributes;
-import static forest.colver.datatransfer.aws.Utils.getSqsClient;
-import static forest.colver.datatransfer.aws.Utils.sqsCalcVisTimeout;
-import static forest.colver.datatransfer.config.Utils.writeFile;
+import static forest.colver.datatransfer.aws.AwsUtils.awsResponseValidation;
+import static forest.colver.datatransfer.aws.AwsUtils.createSqsMessageAttributes;
+import static forest.colver.datatransfer.aws.AwsUtils.getSqsClient;
+import static forest.colver.datatransfer.aws.AwsUtils.sqsCalcVisTimeout;
+import static forest.colver.datatransfer.config.ConfigUtils.writeFile;
 
 import java.util.Map;
 import org.slf4j.Logger;

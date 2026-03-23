@@ -1,6 +1,6 @@
 package forest.colver.datatransfer.aws;
 
-import static forest.colver.datatransfer.config.Utils.userCreds;
+import static forest.colver.datatransfer.config.ConfigUtils.userCreds;
 import static software.amazon.awssdk.regions.Region.US_EAST_1;
 
 import java.util.HashMap;
@@ -19,9 +19,9 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
 /** AWS specific utils */
-public class Utils {
+public class AwsUtils {
 
-  private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AwsUtils.class);
 
   public static Map<String, String> personalSandboxRole;
   public static final String PERSONAL_SANDBOX_KEY_ID =

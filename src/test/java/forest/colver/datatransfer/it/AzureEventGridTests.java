@@ -1,15 +1,15 @@
 package forest.colver.datatransfer.it;
 
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_EVENTGRID_HOST;
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_EVENTGRID_SUBSCRIPTION_QUEUE;
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_EVENTGRID_TOPIC_KEY;
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_NAMESPACE;
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY;
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY;
+import static forest.colver.datatransfer.azure.AzureUtils.createEvent;
 import static forest.colver.datatransfer.azure.EventGridOperations.aegSendMessage;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsume;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.connectAsbQ;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_EVENTGRID_HOST;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_EVENTGRID_SUBSCRIPTION_QUEUE;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_EVENTGRID_TOPIC_KEY;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY;
-import static forest.colver.datatransfer.azure.Utils.createEvent;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.fasterxml.jackson.databind.ObjectMapper;

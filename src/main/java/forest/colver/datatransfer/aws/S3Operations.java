@@ -1,7 +1,7 @@
 package forest.colver.datatransfer.aws;
 
-import static forest.colver.datatransfer.aws.Utils.awsResponseValidation;
-import static forest.colver.datatransfer.aws.Utils.getS3Client;
+import static forest.colver.datatransfer.aws.AwsUtils.awsResponseValidation;
+import static forest.colver.datatransfer.aws.AwsUtils.getS3Client;
 
 import java.util.List;
 import java.util.Map;

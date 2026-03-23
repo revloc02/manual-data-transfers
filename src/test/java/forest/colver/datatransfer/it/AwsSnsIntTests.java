@@ -1,13 +1,13 @@
 package forest.colver.datatransfer.it;
 
+import static forest.colver.datatransfer.aws.AwsUtils.PERSONAL_SANDBOX_SQS_SUB_SNS;
+import static forest.colver.datatransfer.aws.AwsUtils.PERSONAL_SANDBOX_TEST_SNS_TOPIC_ARN;
+import static forest.colver.datatransfer.aws.AwsUtils.getPersonalSbCreds;
 import static forest.colver.datatransfer.aws.SnsOperations.getSnsTopicAttributes;
 import static forest.colver.datatransfer.aws.SnsOperations.publishTopic;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
-import static forest.colver.datatransfer.aws.Utils.PERSONAL_SANDBOX_SQS_SUB_SNS;
-import static forest.colver.datatransfer.aws.Utils.PERSONAL_SANDBOX_TEST_SNS_TOPIC_ARN;
-import static forest.colver.datatransfer.aws.Utils.getPersonalSbCreds;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 

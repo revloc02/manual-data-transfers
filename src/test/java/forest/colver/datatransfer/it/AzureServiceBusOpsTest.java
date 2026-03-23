@@ -1,21 +1,21 @@
 package forest.colver.datatransfer.it;
 
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_ASB_FOREST_TEST_QUEUE_CONN_STR;
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_ASB_FOREST_TEST_SUB_QUEUE_CONN_STR;
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_ASB_FOREST_TEST_SUB_TOPIC_CONN_STR;
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_FOREST_QUEUE;
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_NAMESPACE;
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY;
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY;
+import static forest.colver.datatransfer.azure.AzureUtils.createServiceBusMessage;
 import static forest.colver.datatransfer.azure.ServiceBusOperations.asbReadMessage;
 import static forest.colver.datatransfer.azure.ServiceBusOperations.asbReceiveMessageComplete;
 import static forest.colver.datatransfer.azure.ServiceBusOperations.asbSendMessageToQueue;
 import static forest.colver.datatransfer.azure.ServiceBusOperations.asbSendMessageToTopic;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.connectAsbQ;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.messageCount;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_ASB_FOREST_TEST_QUEUE_CONN_STR;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_ASB_FOREST_TEST_SUB_QUEUE_CONN_STR;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_ASB_FOREST_TEST_SUB_TOPIC_CONN_STR;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY;
-import static forest.colver.datatransfer.azure.Utils.createServiceBusMessage;
-import static forest.colver.datatransfer.config.Utils.defaultPayload;
-import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
+import static forest.colver.datatransfer.config.ConfigUtils.defaultPayload;
+import static forest.colver.datatransfer.config.ConfigUtils.getTimeStampFormatted;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 

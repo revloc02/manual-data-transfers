@@ -1,5 +1,7 @@
 package forest.colver.datatransfer.it;
 
+import static forest.colver.datatransfer.aws.AwsUtils.EMX_SANDBOX_TEST_SQS1;
+import static forest.colver.datatransfer.aws.AwsUtils.getEmxSbCreds;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsConsumeOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
@@ -7,10 +9,8 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadMessages;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
-import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
-import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
-import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
-import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
+import static forest.colver.datatransfer.config.ConfigUtils.getDefaultPayload;
+import static forest.colver.datatransfer.config.ConfigUtils.getTimeStampFormatted;
 import static forest.colver.datatransfer.hybrid.JmsAndSqs.moveAllMessagesFromJmsToSqs;
 import static forest.colver.datatransfer.hybrid.JmsAndSqs.moveAllMessagesFromSqsToJms;
 import static forest.colver.datatransfer.hybrid.JmsAndSqs.moveAllSpecificMessagesFromJmsToSqs;
@@ -21,8 +21,8 @@ import static forest.colver.datatransfer.messaging.JmsConsume.consumeOneMessage;
 import static forest.colver.datatransfer.messaging.JmsConsume.deleteAllMessagesFromQueue;
 import static forest.colver.datatransfer.messaging.JmsSend.sendMessageAutoAck;
 import static forest.colver.datatransfer.messaging.JmsSend.sendMultipleSameMessage;
-import static forest.colver.datatransfer.messaging.Utils.createDefaultMessage;
-import static forest.colver.datatransfer.messaging.Utils.createTextMessage;
+import static forest.colver.datatransfer.messaging.JmsUtils.createDefaultMessage;
+import static forest.colver.datatransfer.messaging.JmsUtils.createTextMessage;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 

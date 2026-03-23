@@ -1,8 +1,8 @@
 package forest.colver.datatransfer.it;
 
-import static forest.colver.datatransfer.config.Utils.generateUniqueStrings;
-import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
-import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
+import static forest.colver.datatransfer.config.ConfigUtils.generateUniqueStrings;
+import static forest.colver.datatransfer.config.ConfigUtils.getDefaultPayload;
+import static forest.colver.datatransfer.config.ConfigUtils.getTimeStampFormatted;
 import static forest.colver.datatransfer.messaging.DisplayUtils.stringFromMessage;
 import static forest.colver.datatransfer.messaging.Environment.PROD;
 import static forest.colver.datatransfer.messaging.Environment.STAGE;
@@ -29,8 +29,8 @@ import static forest.colver.datatransfer.messaging.JmsSend.sendMessageAutoAck;
 import static forest.colver.datatransfer.messaging.JmsSend.sendMultipleSameMessage;
 import static forest.colver.datatransfer.messaging.JmsSend.sendMultipleUniqueMessages;
 import static forest.colver.datatransfer.messaging.JmsSend.sendMultipleUniqueMessagesMultithreaded;
-import static forest.colver.datatransfer.messaging.Utils.createDefaultMessage;
-import static forest.colver.datatransfer.messaging.Utils.createTextMessage;
+import static forest.colver.datatransfer.messaging.JmsUtils.createDefaultMessage;
+import static forest.colver.datatransfer.messaging.JmsUtils.createTextMessage;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import jakarta.jms.JMSException;

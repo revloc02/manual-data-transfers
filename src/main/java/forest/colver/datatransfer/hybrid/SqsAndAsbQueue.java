@@ -1,16 +1,16 @@
 package forest.colver.datatransfer.hybrid;
 
+import static forest.colver.datatransfer.aws.AwsUtils.convertSqsMessageAttributesToStrings;
+import static forest.colver.datatransfer.aws.AwsUtils.getSqsClient;
 import static forest.colver.datatransfer.aws.SqsOperations.qUrl;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsConsumeOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
-import static forest.colver.datatransfer.aws.Utils.convertSqsMessageAttributesToStrings;
-import static forest.colver.datatransfer.aws.Utils.getSqsClient;
+import static forest.colver.datatransfer.azure.AzureUtils.createIMessage;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsume;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbRead;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbSend;
-import static forest.colver.datatransfer.azure.Utils.createIMessage;
 
 import com.microsoft.azure.servicebus.IMessage;
 import com.microsoft.azure.servicebus.primitives.ConnectionStringBuilder;

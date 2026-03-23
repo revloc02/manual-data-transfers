@@ -1,5 +1,6 @@
 package forest.colver.datatransfer.it;
 
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_SA_CONN_STR;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqConsume;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqCopy;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqMove;
@@ -9,8 +10,7 @@ import static forest.colver.datatransfer.azure.StorageQueueOperations.asqPurge;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqQueueDepth;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqSend;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqSendMultipleUniqueMessages;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_SA_CONN_STR;
-import static forest.colver.datatransfer.config.Utils.generateUniqueStrings;
+import static forest.colver.datatransfer.config.ConfigUtils.generateUniqueStrings;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 

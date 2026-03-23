@@ -1,5 +1,10 @@
 package forest.colver.datatransfer.it;
 
+import static forest.colver.datatransfer.aws.AwsUtils.S3_INTERNAL;
+import static forest.colver.datatransfer.aws.AwsUtils.S3_INTERNAL_VERSIONED;
+import static forest.colver.datatransfer.aws.AwsUtils.S3_TARGET_CUSTOMER;
+import static forest.colver.datatransfer.aws.AwsUtils.getEmxSbCreds;
+import static forest.colver.datatransfer.aws.AwsUtils.getS3Client;
 import static forest.colver.datatransfer.aws.S3Operations.s3Consume;
 import static forest.colver.datatransfer.aws.S3Operations.s3Copy;
 import static forest.colver.datatransfer.aws.S3Operations.s3CopyAll;
@@ -16,12 +21,7 @@ import static forest.colver.datatransfer.aws.S3Operations.s3ListVersions;
 import static forest.colver.datatransfer.aws.S3Operations.s3Move;
 import static forest.colver.datatransfer.aws.S3Operations.s3MoveAll;
 import static forest.colver.datatransfer.aws.S3Operations.s3Put;
-import static forest.colver.datatransfer.aws.Utils.S3_INTERNAL;
-import static forest.colver.datatransfer.aws.Utils.S3_INTERNAL_VERSIONED;
-import static forest.colver.datatransfer.aws.Utils.S3_TARGET_CUSTOMER;
-import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
-import static forest.colver.datatransfer.aws.Utils.getS3Client;
-import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
+import static forest.colver.datatransfer.config.ConfigUtils.getDefaultPayload;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 

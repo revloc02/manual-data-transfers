@@ -1,6 +1,6 @@
 package forest.colver.datatransfer.aws;
 
-import static forest.colver.datatransfer.aws.Utils.getSnsClient;
+import static forest.colver.datatransfer.aws.AwsUtils.getSnsClient;
 
 import java.util.Map;
 import org.slf4j.Logger;

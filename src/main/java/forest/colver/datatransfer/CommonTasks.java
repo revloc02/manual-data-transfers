@@ -1,21 +1,21 @@
 package forest.colver.datatransfer;
 
+import static forest.colver.datatransfer.aws.AwsUtils.awsResponseValidation;
+import static forest.colver.datatransfer.aws.AwsUtils.getEmxNpCreds;
+import static forest.colver.datatransfer.aws.AwsUtils.getEmxSbCreds;
+import static forest.colver.datatransfer.aws.AwsUtils.getS3Client;
 import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
 import static forest.colver.datatransfer.aws.S3Operations.s3DeleteVersion;
 import static forest.colver.datatransfer.aws.S3Operations.s3List;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListDeleteMarkers;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListVersions;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessagesWithPayloadLike;
-import static forest.colver.datatransfer.aws.Utils.awsResponseValidation;
-import static forest.colver.datatransfer.aws.Utils.getEmxNpCreds;
-import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
-import static forest.colver.datatransfer.aws.Utils.getS3Client;
-import static forest.colver.datatransfer.config.Utils.writeFile;
+import static forest.colver.datatransfer.config.ConfigUtils.writeFile;
 import static forest.colver.datatransfer.messaging.Environment.PROD;
 import static forest.colver.datatransfer.messaging.JmsBrowse.browseAndCountSpecificMessages;
 import static forest.colver.datatransfer.messaging.JmsBrowse.browseForSpecificMessage;
 import static forest.colver.datatransfer.messaging.JmsBrowse.copySpecificMessages;
-import static forest.colver.datatransfer.messaging.Utils.getJmsMsgPayload;
+import static forest.colver.datatransfer.messaging.JmsUtils.getJmsMsgPayload;
 
 import forest.colver.datatransfer.messaging.Environment;
 import forest.colver.datatransfer.messaging.JmsConsume;

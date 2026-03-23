@@ -1,7 +1,7 @@
 package forest.colver.datatransfer.messaging;
 
-import static forest.colver.datatransfer.config.Utils.getPassword;
-import static forest.colver.datatransfer.config.Utils.getUsername;
+import static forest.colver.datatransfer.config.ConfigUtils.getPassword;
+import static forest.colver.datatransfer.config.ConfigUtils.getUsername;
 import static forest.colver.datatransfer.messaging.DisplayUtils.createStringFromMessage;
 
 import jakarta.jms.JMSException;

@@ -1,9 +1,9 @@
 package forest.colver.datatransfer.sftp;
 
-import static forest.colver.datatransfer.sftp.Utils.*;
-import static forest.colver.datatransfer.sftp.Utils.connectChannelSftp;
-import static forest.colver.datatransfer.sftp.Utils.getKeySession;
-import static forest.colver.datatransfer.sftp.Utils.getPwSession;
+import static forest.colver.datatransfer.sftp.SftpUtils.*;
+import static forest.colver.datatransfer.sftp.SftpUtils.connectChannelSftp;
+import static forest.colver.datatransfer.sftp.SftpUtils.getKeySession;
+import static forest.colver.datatransfer.sftp.SftpUtils.getPwSession;
 
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSchException;

@@ -1,15 +1,15 @@
 package forest.colver.datatransfer.hybrid;
 
+import static forest.colver.datatransfer.aws.AwsUtils.convertSqsMessageAttributesToStrings;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsConsumeOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
-import static forest.colver.datatransfer.aws.Utils.convertSqsMessageAttributesToStrings;
-import static forest.colver.datatransfer.config.Utils.getPassword;
-import static forest.colver.datatransfer.config.Utils.getUsername;
+import static forest.colver.datatransfer.config.ConfigUtils.getPassword;
+import static forest.colver.datatransfer.config.ConfigUtils.getUsername;
 import static forest.colver.datatransfer.messaging.JmsConsume.consumeOneMessage;
 import static forest.colver.datatransfer.messaging.JmsSend.sendMessageAutoAck;
-import static forest.colver.datatransfer.messaging.Utils.createTextMessage;
-import static forest.colver.datatransfer.messaging.Utils.extractMsgProperties;
-import static forest.colver.datatransfer.messaging.Utils.getJmsMsgPayload;
+import static forest.colver.datatransfer.messaging.JmsUtils.createTextMessage;
+import static forest.colver.datatransfer.messaging.JmsUtils.extractMsgProperties;
+import static forest.colver.datatransfer.messaging.JmsUtils.getJmsMsgPayload;
 import static jakarta.jms.JMSContext.CLIENT_ACKNOWLEDGE;
 
 import forest.colver.datatransfer.messaging.Environment;

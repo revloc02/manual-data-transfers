@@ -1,17 +1,17 @@
 package forest.colver.datatransfer.it;
 
+import static forest.colver.datatransfer.aws.AwsUtils.S3_INTERNAL_VERSIONED;
+import static forest.colver.datatransfer.aws.AwsUtils.getEmxNpCreds;
+import static forest.colver.datatransfer.aws.AwsUtils.getEmxSbCreds;
+import static forest.colver.datatransfer.aws.AwsUtils.getS3Client;
 import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
 import static forest.colver.datatransfer.aws.S3Operations.s3List;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListDeleteMarkers;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListResponse;
 import static forest.colver.datatransfer.aws.S3Operations.s3ListVersions;
 import static forest.colver.datatransfer.aws.S3Operations.s3Put;
-import static forest.colver.datatransfer.aws.Utils.S3_INTERNAL_VERSIONED;
-import static forest.colver.datatransfer.aws.Utils.getEmxNpCreds;
-import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
-import static forest.colver.datatransfer.aws.Utils.getS3Client;
-import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
-import static forest.colver.datatransfer.config.Utils.getTimeStampFilename;
+import static forest.colver.datatransfer.config.ConfigUtils.getDefaultPayload;
+import static forest.colver.datatransfer.config.ConfigUtils.getTimeStampFilename;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.awaitility.Awaitility.await;
