@@ -19,6 +19,8 @@ import static forest.colver.datatransfer.messaging.JmsUtils.getJmsMsgPayload;
 
 import forest.colver.datatransfer.messaging.Environment;
 import forest.colver.datatransfer.messaging.JmsConsume;
+import forest.colver.datatransfer.messaging.JmsSend;
+import forest.colver.datatransfer.messaging.JmsUtils;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import java.io.IOException;
@@ -29,6 +31,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.s3.model.GetObjectTaggingRequest;
@@ -71,6 +74,33 @@ public class CommonTasks {
       Environment env, String selector, String toQueue) {
     // Example selector: traceparent='00-ab1cd1673eca0818d440923099cb9123-6a72088af80545d8-01'
     copySpecificMessages(env, "emx-replay-cache", selector, toQueue);
+  }
+
+  /**
+   * Meant for sending a JMS message to an EMX Qpid queue.
+   *
+   * <p>Example usage:
+   *
+   * <pre>{@code
+   * var properties =
+   *     Map.of("name", "filename",
+   *         "datatype", "finance.payment.eft",
+   *         "targetSystem", "ext-equity-bank");
+   * var body = ConfigUtils.readFile("src/test/resources/1test.txt", StandardCharsets.UTF_8);
+   * CommonTasks.injectQpidMessage(Environment.PROD, "forest-test", body, properties);
+   * }</pre>
+   *
+   * @param env The environment where the queue is located (e.g., DEV, TEST, STAGE, PROD).
+   * @param queue The name of the Qpid queue to send the message to.
+   * @param body The message body/payload as a String.
+   * @param properties A map of JMS properties to set on the message (e.g., name, datatype,
+   *     targetSystem).
+   */
+  public static void injectQpidMessage(
+      Environment env, String queue, String body, Map<String, String> properties) {
+    var message = JmsUtils.createTextMessage(body, properties);
+    JmsSend.sendMessageAutoAck(env, queue, message);
+    LOG.info("Injected message to Env={}, queue={}", env.name(), queue);
   }
 
   /**
