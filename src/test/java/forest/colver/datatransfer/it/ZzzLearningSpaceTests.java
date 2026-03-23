@@ -23,6 +23,7 @@ import forest.colver.datatransfer.messaging.DisplayUtils;
 import forest.colver.datatransfer.messaging.Environment;
 import forest.colver.datatransfer.messaging.JmsBrowse;
 import forest.colver.datatransfer.messaging.JmsSend;
+import forest.colver.datatransfer.messaging.JmsUtils;
 import jakarta.jms.JMSException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -247,9 +248,9 @@ class ZzzLearningSpaceTests {
             "forest-test",
             "traceparent='00-18d4cd7e866a81038fd621d78e21be14-d998fea593265831'");
     LOG.info("=============== message received ===================");
-    var headers = Utils.extractMsgProperties(message);
+    var headers = JmsUtils.extractMsgProperties(message);
     headers.put("datatype", "temple.recommend.update");
-    var newMessage = Utils.createTextMessage(message.getBody(String.class), headers);
+    var newMessage = JmsUtils.createTextMessage(message.getBody(String.class), headers);
     LOG.info(DisplayUtils.createStringFromMessage(newMessage));
     JmsSend.sendMessageAutoAck(Environment.PROD, "temple-entry-emxonramp-prod", newMessage);
   }
