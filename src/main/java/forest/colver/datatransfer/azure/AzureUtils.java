@@ -1,6 +1,6 @@
 package forest.colver.datatransfer.azure;
 
-import static forest.colver.datatransfer.config.Utils.userCreds;
+import static forest.colver.datatransfer.config.ConfigUtils.userCreds;
 
 import com.azure.core.util.BinaryData;
 import com.azure.messaging.servicebus.ServiceBusMessage;
@@ -17,9 +17,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Azure specific utils */
-public class Utils {
+public class AzureUtils {
 
-  private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AzureUtils.class);
 
   // Azure personal sandbox resources, currently Azure sandboxes are not working because they are
   // not allowing creation of a Resource Group

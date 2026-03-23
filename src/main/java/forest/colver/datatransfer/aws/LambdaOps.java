@@ -1,6 +1,6 @@
 package forest.colver.datatransfer.aws;
 
-import static forest.colver.datatransfer.aws.Utils.getLambdaClient;
+import static forest.colver.datatransfer.aws.AwsUtils.getLambdaClient;
 
 import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;

@@ -1,12 +1,12 @@
 package forest.colver.datatransfer;
 
-import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
-import static forest.colver.datatransfer.config.Utils.getPassword;
-import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
-import static forest.colver.datatransfer.config.Utils.getUsername;
+import static forest.colver.datatransfer.config.ConfigUtils.getDefaultPayload;
+import static forest.colver.datatransfer.config.ConfigUtils.getPassword;
+import static forest.colver.datatransfer.config.ConfigUtils.getTimeStampFormatted;
+import static forest.colver.datatransfer.config.ConfigUtils.getUsername;
 import static forest.colver.datatransfer.it.MessagingIntTests.createMessage;
 import static forest.colver.datatransfer.messaging.Environment.STAGE;
-import static forest.colver.datatransfer.messaging.Utils.createTextMessage;
+import static forest.colver.datatransfer.messaging.JmsUtils.createTextMessage;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import forest.colver.datatransfer.messaging.MessageDisplayer;

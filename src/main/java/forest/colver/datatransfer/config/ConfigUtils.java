@@ -16,9 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** General utils */
-public class Utils {
+public class ConfigUtils {
 
-  private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ConfigUtils.class);
 
   public static final long TIMESTAMP = Instant.now().toEpochMilli();
   public static final String TIME_STAMP_FORMATTED =

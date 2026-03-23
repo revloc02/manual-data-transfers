@@ -1,9 +1,9 @@
 package forest.colver.datatransfer.hybrid;
 
+import static forest.colver.datatransfer.aws.AwsUtils.getS3Client;
 import static forest.colver.datatransfer.aws.S3Operations.s3Consume;
 import static forest.colver.datatransfer.aws.S3Operations.s3Get;
 import static forest.colver.datatransfer.aws.S3Operations.s3List;
-import static forest.colver.datatransfer.aws.Utils.getS3Client;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobPut;
 
 import java.io.IOException;

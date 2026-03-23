@@ -1,8 +1,8 @@
 package forest.colver.datatransfer.messaging;
 
-import static forest.colver.datatransfer.messaging.Utils.extractJmsHeaders;
-import static forest.colver.datatransfer.messaging.Utils.extractMsgProperties;
-import static forest.colver.datatransfer.messaging.Utils.getJmsMsgPayload;
+import static forest.colver.datatransfer.messaging.JmsUtils.extractJmsHeaders;
+import static forest.colver.datatransfer.messaging.JmsUtils.extractMsgProperties;
+import static forest.colver.datatransfer.messaging.JmsUtils.getJmsMsgPayload;
 
 import jakarta.jms.BytesMessage;
 import jakarta.jms.MapMessage;

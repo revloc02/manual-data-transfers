@@ -1,5 +1,8 @@
 package forest.colver.datatransfer.it;
 
+import static forest.colver.datatransfer.aws.AwsUtils.EMX_SANDBOX_TEST_SQS1;
+import static forest.colver.datatransfer.aws.AwsUtils.S3_INTERNAL;
+import static forest.colver.datatransfer.aws.AwsUtils.getEmxSbCreds;
 import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
 import static forest.colver.datatransfer.aws.S3Operations.s3Head;
 import static forest.colver.datatransfer.aws.S3Operations.s3List;
@@ -10,12 +13,9 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadMessages;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
-import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
-import static forest.colver.datatransfer.aws.Utils.S3_INTERNAL;
-import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
-import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
-import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
-import static forest.colver.datatransfer.config.Utils.readFile;
+import static forest.colver.datatransfer.config.ConfigUtils.getDefaultPayload;
+import static forest.colver.datatransfer.config.ConfigUtils.getTimeStampFormatted;
+import static forest.colver.datatransfer.config.ConfigUtils.readFile;
 import static forest.colver.datatransfer.hybrid.SqsAndS3.copyOneSqsToS3;
 import static forest.colver.datatransfer.hybrid.SqsAndS3.copyS3ObjectToSqs;
 import static forest.colver.datatransfer.hybrid.SqsAndS3.moveOneSqsToS3;

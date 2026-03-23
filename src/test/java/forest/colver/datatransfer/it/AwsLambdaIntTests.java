@@ -1,5 +1,8 @@
 package forest.colver.datatransfer.it;
 
+import static forest.colver.datatransfer.aws.AwsUtils.EMX_SANDBOX_TEST_SQS1;
+import static forest.colver.datatransfer.aws.AwsUtils.S3_SOURCE_CACHE;
+import static forest.colver.datatransfer.aws.AwsUtils.getEmxSbCreds;
 import static forest.colver.datatransfer.aws.LambdaOps.lambdaInvoke;
 import static forest.colver.datatransfer.aws.S3Operations.s3Delete;
 import static forest.colver.datatransfer.aws.S3Operations.s3Put;
@@ -7,10 +10,7 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsDeleteMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsPurge;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
-import static forest.colver.datatransfer.aws.Utils.EMX_SANDBOX_TEST_SQS1;
-import static forest.colver.datatransfer.aws.Utils.S3_SOURCE_CACHE;
-import static forest.colver.datatransfer.aws.Utils.getEmxSbCreds;
-import static forest.colver.datatransfer.config.Utils.readFile;
+import static forest.colver.datatransfer.config.ConfigUtils.readFile;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 

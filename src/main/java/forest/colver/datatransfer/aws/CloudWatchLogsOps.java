@@ -1,6 +1,6 @@
 package forest.colver.datatransfer.aws;
 
-import static forest.colver.datatransfer.aws.Utils.getCloudWatchLogsClient;
+import static forest.colver.datatransfer.aws.AwsUtils.getCloudWatchLogsClient;
 
 import java.util.ArrayList;
 import java.util.List;

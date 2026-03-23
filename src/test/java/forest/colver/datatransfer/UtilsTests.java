@@ -1,15 +1,15 @@
 package forest.colver.datatransfer;
 
-import static forest.colver.datatransfer.config.Utils.deleteFile;
-import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
-import static forest.colver.datatransfer.config.Utils.readFile;
-import static forest.colver.datatransfer.config.Utils.writeFile;
+import static forest.colver.datatransfer.config.ConfigUtils.deleteFile;
+import static forest.colver.datatransfer.config.ConfigUtils.getDefaultPayload;
+import static forest.colver.datatransfer.config.ConfigUtils.readFile;
+import static forest.colver.datatransfer.config.ConfigUtils.writeFile;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 
-/** Unit tests for config Utils. */
+/** Unit tests for ConfigUtils. */
 public class UtilsTests {
 
   @Test

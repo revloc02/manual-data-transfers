@@ -1,7 +1,7 @@
 package forest.colver.datatransfer;
 
-import static forest.colver.datatransfer.aws.Utils.convertSqsMessageAttributesToStrings;
-import static forest.colver.datatransfer.aws.Utils.createSqsMessageAttributes;
+import static forest.colver.datatransfer.aws.AwsUtils.convertSqsMessageAttributesToStrings;
+import static forest.colver.datatransfer.aws.AwsUtils.createSqsMessageAttributes;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;

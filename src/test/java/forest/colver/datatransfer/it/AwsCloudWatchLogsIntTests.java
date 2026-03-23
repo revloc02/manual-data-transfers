@@ -1,10 +1,10 @@
 package forest.colver.datatransfer.it;
 
+import static forest.colver.datatransfer.aws.AwsUtils.getPersonalSbCreds;
 import static forest.colver.datatransfer.aws.CloudWatchLogsOps.putCWLogEvents;
-import static forest.colver.datatransfer.aws.Utils.getPersonalSbCreds;
-import static forest.colver.datatransfer.config.Utils.getRandomNumber;
-import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
-import static forest.colver.datatransfer.config.Utils.getUuid;
+import static forest.colver.datatransfer.config.ConfigUtils.getRandomNumber;
+import static forest.colver.datatransfer.config.ConfigUtils.getTimeStampFormatted;
+import static forest.colver.datatransfer.config.ConfigUtils.getUuid;
 
 import java.time.Instant;
 import java.util.ArrayList;

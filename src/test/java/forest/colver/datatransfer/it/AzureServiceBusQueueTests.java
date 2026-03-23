@@ -1,5 +1,14 @@
 package forest.colver.datatransfer.it;
 
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_FOREST_QUEUE;
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_FOREST_QUEUE2;
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_FOREST_QUEUE_WITH_DLQ;
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_FOREST_QUEUE_WITH_FORWARD;
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_FOREST_TTL_QUEUE;
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_NAMESPACE;
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY;
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY;
+import static forest.colver.datatransfer.azure.AzureUtils.createIMessage;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsume;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbCopy;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbCopyAll;
@@ -11,17 +20,8 @@ import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbRead
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbSend;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.connectAsbQ;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.messageCount;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE2;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE_WITH_DLQ;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_QUEUE_WITH_FORWARD;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_FOREST_TTL_QUEUE;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY;
-import static forest.colver.datatransfer.azure.Utils.createIMessage;
-import static forest.colver.datatransfer.config.Utils.defaultPayload;
-import static forest.colver.datatransfer.config.Utils.getTimeStampFormatted;
+import static forest.colver.datatransfer.config.ConfigUtils.defaultPayload;
+import static forest.colver.datatransfer.config.ConfigUtils.getTimeStampFormatted;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 

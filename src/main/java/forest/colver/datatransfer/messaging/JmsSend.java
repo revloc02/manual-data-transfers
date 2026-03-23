@@ -1,11 +1,11 @@
 package forest.colver.datatransfer.messaging;
 
-import static forest.colver.datatransfer.config.Utils.TIME_STAMP_FORMATTED;
-import static forest.colver.datatransfer.config.Utils.getDefaultPayload;
-import static forest.colver.datatransfer.config.Utils.getPassword;
-import static forest.colver.datatransfer.config.Utils.getUsername;
+import static forest.colver.datatransfer.config.ConfigUtils.TIME_STAMP_FORMATTED;
+import static forest.colver.datatransfer.config.ConfigUtils.getDefaultPayload;
+import static forest.colver.datatransfer.config.ConfigUtils.getPassword;
+import static forest.colver.datatransfer.config.ConfigUtils.getUsername;
 import static forest.colver.datatransfer.messaging.Environment.STAGE;
-import static forest.colver.datatransfer.messaging.Utils.createTextMessage;
+import static forest.colver.datatransfer.messaging.JmsUtils.createTextMessage;
 import static jakarta.jms.JMSContext.AUTO_ACKNOWLEDGE;
 
 import jakarta.jms.Message;

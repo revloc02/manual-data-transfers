@@ -1,5 +1,8 @@
 package forest.colver.datatransfer.it;
 
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_SA_CONN_STR;
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_SA_FOREST_TEST_BLOB2_SAS;
+import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_SA_FOREST_TEST_BLOB_SAS;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobCopy;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobDelete;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobDeleteSas;
@@ -9,9 +12,6 @@ import static forest.colver.datatransfer.azure.BlobStorageOperations.blobListSas
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobMove;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobPut;
 import static forest.colver.datatransfer.azure.BlobStorageOperations.blobPutSas;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_SA_CONN_STR;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_SA_FOREST_TEST_BLOB2_SAS;
-import static forest.colver.datatransfer.azure.Utils.EMX_SANDBOX_SA_FOREST_TEST_BLOB_SAS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
