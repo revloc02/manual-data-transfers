@@ -109,8 +109,7 @@ public class ConfigUtils {
   }
 
   public static String getUuid() {
-    var uuid = randomUUID().toString();
-    return uuid;
+    return randomUUID().toString();
   }
 
   public static int getRandomNumber(int min, int max) {
