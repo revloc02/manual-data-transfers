@@ -13,6 +13,7 @@ import jakarta.jms.ObjectMessage;
 import jakarta.jms.StreamMessage;
 import jakarta.jms.TextMessage;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Map;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.slf4j.Logger;
@@ -94,7 +95,7 @@ public class JmsUtils {
    * @return A HashMap of the custom properties.
    */
   public static Map<String, String> extractMsgProperties(Message message) {
-    Map<String, String> properties = new java.util.HashMap<>(Map.of());
+    Map<String, String> properties = new HashMap<>();
     try {
       for (Enumeration<String> e = message.getPropertyNames(); e.hasMoreElements(); ) {
         var s = e.nextElement();
@@ -114,7 +115,7 @@ public class JmsUtils {
    * @return A HashMap of the JMS properties.
    */
   public static Map<String, String> extractJmsHeaders(Message message) {
-    Map<String, String> jmsHeaders = new java.util.HashMap<>(Map.of());
+    Map<String, String> jmsHeaders = new HashMap<>();
     try {
       jmsHeaders.put("JMSMessageID", message.getJMSMessageID());
       jmsHeaders.put("JMSPriority", String.valueOf(message.getJMSPriority()));
