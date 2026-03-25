@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
 import software.amazon.awssdk.awscore.AwsResponse;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.cloudwatchlogs.CloudWatchLogsClient;
 import software.amazon.awssdk.services.lambda.LambdaClient;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -88,15 +87,12 @@ public class AwsUtils {
   }
 
   public static S3Client getS3Client(AwsCredentialsProvider awsCredentialsProvider) {
-    return S3Client.builder()
-        .region(Region.US_EAST_1)
-        .credentialsProvider(awsCredentialsProvider)
-        .build();
+    return S3Client.builder().region(US_EAST_1).credentialsProvider(awsCredentialsProvider).build();
   }
 
   public static LambdaClient getLambdaClient(AwsCredentialsProvider awsCredentialsProvider) {
     return LambdaClient.builder()
-        .region(Region.US_EAST_1)
+        .region(US_EAST_1)
         .credentialsProvider(awsCredentialsProvider)
         .build();
   }
@@ -104,7 +100,7 @@ public class AwsUtils {
   public static CloudWatchLogsClient getCloudWatchLogsClient(
       AwsCredentialsProvider awsCredentialsProvider) {
     return CloudWatchLogsClient.builder()
-        .region(Region.US_EAST_1)
+        .region(US_EAST_1)
         .credentialsProvider(awsCredentialsProvider)
         .build();
   }
