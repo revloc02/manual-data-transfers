@@ -24,6 +24,11 @@ public class JmsUtils {
 
   private static final Logger LOG = LoggerFactory.getLogger(JmsUtils.class);
 
+  private JmsUtils() {
+    // https://rules.sonarsource.com/java/RSPEC-1118/
+    throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
+  }
+
   /**
    * Retrieves the payload of the message as a String. The message type is checked, and then the
    * payload is extracted accordingly.

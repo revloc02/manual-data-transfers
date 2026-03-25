@@ -14,6 +14,11 @@ public class DisplayUtils {
   private static final Logger LOG = LoggerFactory.getLogger(DisplayUtils.class);
   private static final int DEFAULT_PAYLOAD_OUTPUT_LEN = 100;
 
+  private DisplayUtils() {
+    // https://rules.sonarsource.com/java/RSPEC-1118/
+    throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
+  }
+
   public static String stringFromMessage(Message message) {
     var md = new MessageDisplayer(message);
     return md.createString();

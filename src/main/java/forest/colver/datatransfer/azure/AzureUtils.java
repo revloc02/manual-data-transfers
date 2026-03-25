@@ -21,6 +21,11 @@ public class AzureUtils {
 
   private static final Logger LOG = LoggerFactory.getLogger(AzureUtils.class);
 
+  private AzureUtils() {
+    // https://rules.sonarsource.com/java/RSPEC-1118/
+    throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
+  }
+
   // Azure personal sandbox resources, currently Azure sandboxes are not working because they are
   // not allowing creation of a Resource Group
   public static final String EMX_SANDBOX_FOREST_QUEUE = "forest-test-servicebus-queue";

@@ -22,6 +22,11 @@ public class AwsUtils {
 
   private static final Logger LOG = LoggerFactory.getLogger(AwsUtils.class);
 
+  private AwsUtils() {
+    // https://rules.sonarsource.com/java/RSPEC-1118/
+    throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
+  }
+
   public static Map<String, String> personalSandboxRole;
   public static final String PERSONAL_SANDBOX_KEY_ID =
       userCreds.getProperty("aws-access-personal-sandbox.access-key-id");

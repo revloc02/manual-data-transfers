@@ -20,6 +20,11 @@ public class ConfigUtils {
 
   private static final Logger LOG = LoggerFactory.getLogger(ConfigUtils.class);
 
+  private ConfigUtils() {
+    // https://rules.sonarsource.com/java/RSPEC-1118/
+    throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
+  }
+
   public static final long TIMESTAMP = Instant.now().toEpochMilli();
   public static final String TIME_STAMP_FORMATTED =
       new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss.SSS").format(new Date());
