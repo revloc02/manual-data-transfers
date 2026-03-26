@@ -44,6 +44,10 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 public class CommonTasks {
 
   private static final Logger LOG = LoggerFactory.getLogger(CommonTasks.class);
+  private static final DateTimeFormatter MESSAGE_FILENAME_FORMATTER =
+      DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss-SSS");
+  private static final DateTimeFormatter TIME_ONLY_FORMATTER =
+      DateTimeFormatter.ofPattern("HH:mm:ss").withZone(ZoneId.systemDefault());
 
   /**
    * Retrieves a message from the Prod Qpid Replay Caches and saves it as a file to the local
@@ -160,8 +164,7 @@ public class CommonTasks {
 
     return String.format(
         "message-%04d-%s.txt",
-        messageCount,
-        DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss-SSS").format(LocalDateTime.now()));
+        messageCount, MESSAGE_FILENAME_FORMATTER.format(LocalDateTime.now()));
   }
 
   /** Helper method to sanitize filenames by replacing unsafe characters. */
@@ -348,10 +351,7 @@ public class CommonTasks {
             s3Delete(s3Client, bucket, object.key());
           }
         }
-        var now =
-            DateTimeFormatter.ofPattern("HH:mm:ss")
-                .withZone(ZoneId.systemDefault())
-                .format(Instant.now());
+        var now = TIME_ONLY_FORMATTER.format(Instant.now());
         LOG.info(
             "Timestamp={} count={} deleted={} key={}",
             now,
