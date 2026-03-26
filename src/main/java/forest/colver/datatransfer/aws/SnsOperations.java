@@ -13,12 +13,12 @@ import software.amazon.awssdk.services.sns.model.PublishResponse;
 
 public class SnsOperations {
 
+  private static final Logger LOG = LoggerFactory.getLogger(SnsOperations.class);
+
   private SnsOperations() {
     // https://rules.sonarsource.com/java/RSPEC-1118/
     throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
   }
-
-  private static final Logger LOG = LoggerFactory.getLogger(SnsOperations.class);
 
   public static Map<String, String> getSnsTopicAttributes(
       AwsCredentialsProvider awsCp, String topicArn) {

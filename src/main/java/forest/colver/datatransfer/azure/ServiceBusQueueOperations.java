@@ -16,12 +16,12 @@ import org.slf4j.LoggerFactory;
 
 public class ServiceBusQueueOperations {
 
+  private static final Logger LOG = LoggerFactory.getLogger(ServiceBusQueueOperations.class);
+
   private ServiceBusQueueOperations() {
     // https://rules.sonarsource.com/java/RSPEC-1118/
     throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
   }
-
-  private static final Logger LOG = LoggerFactory.getLogger(ServiceBusQueueOperations.class);
 
   /**
    * Azure Service Bus Send message.

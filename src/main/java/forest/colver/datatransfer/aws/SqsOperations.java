@@ -26,12 +26,12 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 /** Contains several common SQS operations for sending and receiving data from them. */
 public class SqsOperations {
 
+  private static final Logger LOG = LoggerFactory.getLogger(SqsOperations.class);
+
   private SqsOperations() {
     // https://rules.sonarsource.com/java/RSPEC-1118/
     throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
   }
-
-  private static final Logger LOG = LoggerFactory.getLogger(SqsOperations.class);
 
   /** Overloaded method that sends in an empty Map of messages properties. */
   public static void sqsSend(AwsCredentialsProvider awsCp, String queueName, String payload) {

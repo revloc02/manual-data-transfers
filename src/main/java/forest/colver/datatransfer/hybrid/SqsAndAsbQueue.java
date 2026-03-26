@@ -25,12 +25,12 @@ import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 
 public class SqsAndAsbQueue {
 
+  private static final Logger LOG = LoggerFactory.getLogger(SqsAndAsbQueue.class);
+
   private SqsAndAsbQueue() {
     // https://rules.sonarsource.com/java/RSPEC-1118/
     throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
   }
-
-  private static final Logger LOG = LoggerFactory.getLogger(SqsAndAsbQueue.class);
 
   public static void moveOneSqsToAsbQueue(
       AwsCredentialsProvider awsCreds, String sqs, ConnectionStringBuilder azureConnStr) {

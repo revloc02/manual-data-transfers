@@ -15,12 +15,12 @@ import org.slf4j.LoggerFactory;
  * experiment, but I think this will end up being the better way to interact with Azure Service Bus.
  */
 public class ServiceBusOperations {
+  private static final Logger LOG = LoggerFactory.getLogger(ServiceBusOperations.class);
+
   private ServiceBusOperations() {
     // https://rules.sonarsource.com/java/RSPEC-1118/
     throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
   }
-
-  private static final Logger LOG = LoggerFactory.getLogger(ServiceBusOperations.class);
 
   public static void asbSendMessageToQueue(
       String connectionString, String queueName, ServiceBusMessage message) {
