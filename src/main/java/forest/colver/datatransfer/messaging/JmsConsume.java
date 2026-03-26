@@ -16,12 +16,12 @@ import org.slf4j.LoggerFactory;
 
 public class JmsConsume {
 
+  private static final Logger LOG = LoggerFactory.getLogger(JmsConsume.class);
+
   private JmsConsume() {
     // https://rules.sonarsource.com/java/RSPEC-1118/
     throw new UnsupportedOperationException("This is a utility class and cannot be instantiated.");
   }
-
-  private static final Logger LOG = LoggerFactory.getLogger(JmsConsume.class);
 
   /**
    * Deletes all messages from the queue.
