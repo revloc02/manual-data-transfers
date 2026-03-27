@@ -20,7 +20,7 @@ public enum Environment {
   TQPROD(TQ_PROD),
   LOCALHOST("amqp://localhost:5672");
 
-  private String url;
+  private final String url;
 
   Environment(String url) {
     this.url = url;
