@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +56,12 @@ public class MessagingIntTests {
     var messageProps =
         Map.of("timestamp", getTimeStampFormatted(), "key2", "value2", "key3", "value3");
     return createTextMessage(getDefaultPayload(), messageProps);
+  }
+
+  @BeforeEach
+  void setUp() {
+    purgeQueue(STAGE, "forest-test");
+    purgeQueue(STAGE, "forest-test2");
   }
 
   @Test
@@ -398,7 +405,6 @@ public class MessagingIntTests {
   @Test
   void testDeleteSomeMessages() {
     var queueName = "forest-test";
-    purgeQueue(STAGE, queueName); // start clean
 
     var numMsgs = 50;
     var uuids = generateUniqueStrings(numMsgs);
@@ -441,7 +447,6 @@ public class MessagingIntTests {
   void testCopySpecificMessages() {
     var env = STAGE;
     var fromQueue = "forest-test2";
-    purgeQueue(env, fromQueue);
 
     // send some messages
     var num = 7;
@@ -454,7 +459,6 @@ public class MessagingIntTests {
 
     // copy specific messages over
     var toQueue = "forest-test";
-    purgeQueue(env, toQueue);
     copySpecificMessages(STAGE, fromQueue, "specificKey='specificValue'", toQueue);
 
     // check the queue depth on the new queue
@@ -493,7 +497,6 @@ public class MessagingIntTests {
   @Test
   void testCompetingConsumer() throws ExecutionException, InterruptedException, JMSException {
     var queueName = "forest-test";
-    purgeQueue(STAGE, queueName);
 
     var numMsgs = 500;
     // create a bunch of message payloads
@@ -525,8 +528,6 @@ public class MessagingIntTests {
   @Test
   void testSendMultithreading() {
     var queueName = "forest-test";
-    // prep
-    purgeQueue(STAGE, queueName);
 
     var numMsgs = 1_000; // 1000 messages runs in about 20 sec
     // create a bunch of message payloads
