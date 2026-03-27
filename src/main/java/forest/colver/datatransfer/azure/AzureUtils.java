@@ -10,7 +10,6 @@ import com.microsoft.azure.servicebus.MessageBodyType;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -84,7 +83,7 @@ public class AzureUtils {
   }
 
   public static IMessage createIMessage(String payload) {
-    return createIMessage(payload, Collections.emptyMap());
+    return createIMessage(payload, Map.of());
   }
 
   public static ServiceBusMessage createServiceBusMessage(
