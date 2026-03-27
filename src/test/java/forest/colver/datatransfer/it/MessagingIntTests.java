@@ -137,7 +137,11 @@ public class MessagingIntTests {
       sendMessageAutoAck(env, fromQueueName, createMessage());
     }
     moveAllMessages(env, fromQueueName, toQueueName);
-    var deleted = deleteAllMessagesFromQueue(env, toQueueName);
+
+    // check both queues for correct number of messages
+    var deleted = deleteAllMessagesFromQueue(env, fromQueueName);
+    assertThat(deleted).isZero();
+    deleted = deleteAllMessagesFromQueue(env, toQueueName);
     assertThat(deleted).isEqualTo(numMessages);
   }
 
