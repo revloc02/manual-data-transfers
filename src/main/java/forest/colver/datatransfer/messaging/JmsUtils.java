@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 public class JmsUtils {
 
   private static final Logger LOG = LoggerFactory.getLogger(JmsUtils.class);
+  public static final long RECEIVE_TIMEOUT = 5_000L;
 
   private JmsUtils() {
     // https://rules.sonarsource.com/java/RSPEC-1118/

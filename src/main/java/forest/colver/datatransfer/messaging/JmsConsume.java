@@ -3,6 +3,7 @@ package forest.colver.datatransfer.messaging;
 import static forest.colver.datatransfer.config.ConfigUtils.getPassword;
 import static forest.colver.datatransfer.config.ConfigUtils.getUsername;
 import static forest.colver.datatransfer.messaging.DisplayUtils.createStringFromMessage;
+import static forest.colver.datatransfer.messaging.JmsUtils.RECEIVE_TIMEOUT;
 import static jakarta.jms.JMSContext.CLIENT_ACKNOWLEDGE;
 
 import jakarta.jms.JMSConsumer;
@@ -38,7 +39,7 @@ public class JmsConsume {
       try (var consumer = ctx.createConsumer(queue)) {
         Message message;
         do {
-          message = consumer.receive(3_000);
+          message = consumer.receive(RECEIVE_TIMEOUT);
           if (message != null) {
             counter++;
             message.acknowledge();
@@ -166,7 +167,7 @@ public class JmsConsume {
     try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {
       var fromQ = ctx.createQueue(fromQueueName);
       try (var consumer = ctx.createConsumer(fromQ, selector)) {
-        message = consumer.receive(5_000L);
+        message = consumer.receive(RECEIVE_TIMEOUT);
         LOG.info(
             "Consumed from Queue={}:{}, Message->{}",
             env.name(),
@@ -191,7 +192,7 @@ public class JmsConsume {
     try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {
       var fromQ = ctx.createQueue(fromQueueName);
       try (var consumer = ctx.createConsumer(fromQ)) {
-        message = consumer.receive(5_000L);
+        message = consumer.receive(RECEIVE_TIMEOUT);
         if (message != null) message.acknowledge();
       } catch (JMSException e) {
         LOG.error("Failed to consume message from queue: {}:{}", env.name(), fromQueueName, e);
@@ -206,7 +207,7 @@ public class JmsConsume {
     try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {
       var fromQ = ctx.createQueue(fromQueueName);
       try (var consumer = ctx.createConsumer(fromQ, selector)) {
-        var message = consumer.receive(5_000L);
+        var message = consumer.receive(RECEIVE_TIMEOUT);
         var toQ = ctx.createQueue(toQueueName);
         ctx.createProducer().send(toQ, message);
         message.acknowledge();
@@ -236,7 +237,7 @@ public class JmsConsume {
     try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {
       var fromQ = ctx.createQueue(fromQueueName);
       try (var consumer = ctx.createConsumer(fromQ)) {
-        var message = consumer.receive(5_000L);
+        var message = consumer.receive(RECEIVE_TIMEOUT);
         var toQ = ctx.createQueue(toQueueName);
         ctx.createProducer().send(toQ, message);
         message.acknowledge();
@@ -326,7 +327,7 @@ public class JmsConsume {
     var counter = 0;
     Message message;
     while (moreMessages) {
-      message = consumer.receive(2_000L);
+      message = consumer.receive(RECEIVE_TIMEOUT);
       if (message != null) {
         counter++;
         producer.send(toQueue, message);
@@ -349,7 +350,7 @@ public class JmsConsume {
         var toQ = ctx.createQueue(toQueueName);
         Message message;
         for (var i = 0; i < amount; i++) {
-          message = consumer.receive(2_000L);
+          message = consumer.receive(RECEIVE_TIMEOUT);
           if (message != null) {
             counter++;
             ctx.createProducer().send(toQ, message);

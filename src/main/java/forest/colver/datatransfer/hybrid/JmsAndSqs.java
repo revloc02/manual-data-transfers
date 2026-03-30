@@ -7,6 +7,7 @@ import static forest.colver.datatransfer.config.ConfigUtils.getPassword;
 import static forest.colver.datatransfer.config.ConfigUtils.getUsername;
 import static forest.colver.datatransfer.messaging.JmsConsume.consumeOneMessage;
 import static forest.colver.datatransfer.messaging.JmsSend.sendMessageAutoAck;
+import static forest.colver.datatransfer.messaging.JmsUtils.RECEIVE_TIMEOUT;
 import static forest.colver.datatransfer.messaging.JmsUtils.createTextMessage;
 import static forest.colver.datatransfer.messaging.JmsUtils.extractMsgProperties;
 import static forest.colver.datatransfer.messaging.JmsUtils.getJmsMsgPayload;
@@ -113,7 +114,7 @@ public class JmsAndSqs {
     var counter = 0;
     var moreMessages = true;
     while (moreMessages) {
-      var message = consumer.receive(2_000L);
+      var message = consumer.receive(RECEIVE_TIMEOUT);
       if (message != null) {
         counter++;
         sqsSend(awsCreds, sqs, getJmsMsgPayload(message), extractMsgProperties(message));
