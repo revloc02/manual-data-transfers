@@ -1,5 +1,6 @@
 package forest.colver.datatransfer.aws;
 
+import static forest.colver.datatransfer.aws.AwsUtils.SQS_WAIT_TIME_SECONDS;
 import static forest.colver.datatransfer.aws.AwsUtils.awsResponseValidation;
 import static forest.colver.datatransfer.aws.AwsUtils.createSqsMessageAttributes;
 import static forest.colver.datatransfer.aws.AwsUtils.getSqsClient;
@@ -104,7 +105,7 @@ public class SqsOperations {
     try (var sqsClient = getSqsClient(awsCP)) {
       var receiveMessageRequest =
           ReceiveMessageRequest.builder()
-              .waitTimeSeconds(2)
+              .waitTimeSeconds(SQS_WAIT_TIME_SECONDS)
               .messageAttributeNames("All")
               .attributeNames(QueueAttributeName.ALL)
               .queueUrl(qUrl(sqsClient, queueName))
@@ -147,7 +148,7 @@ public class SqsOperations {
     try (var sqsClient = getSqsClient(awsCP)) {
       var receiveMessageRequest =
           ReceiveMessageRequest.builder()
-              .waitTimeSeconds(2)
+              .waitTimeSeconds(SQS_WAIT_TIME_SECONDS)
               .messageAttributeNames("All")
               .attributeNames(QueueAttributeName.ALL)
               .queueUrl(qUrl(sqsClient, queueName))
@@ -178,7 +179,7 @@ public class SqsOperations {
     try (var sqsClient = getSqsClient(awsCP)) {
       var receiveMessageRequest =
           ReceiveMessageRequest.builder()
-              .waitTimeSeconds(2)
+              .waitTimeSeconds(SQS_WAIT_TIME_SECONDS)
               .queueUrl(qUrl(sqsClient, queueName))
               .maxNumberOfMessages(1)
               .visibilityTimeout(0) // default 30 sec
@@ -216,7 +217,7 @@ public class SqsOperations {
         do {
           var receiveMessageRequest =
               ReceiveMessageRequest.builder()
-                  .waitTimeSeconds(2)
+                  .waitTimeSeconds(SQS_WAIT_TIME_SECONDS)
                   .queueUrl(qUrl(sqsClient, queueName))
                   .maxNumberOfMessages(10)
                   .build();
@@ -387,7 +388,7 @@ public class SqsOperations {
           // receive 10 messages, setting the visibility timeout
           var receiveMessageRequest =
               ReceiveMessageRequest.builder()
-                  .waitTimeSeconds(2)
+                  .waitTimeSeconds(SQS_WAIT_TIME_SECONDS)
                   .messageAttributeNames("All")
                   .attributeNames(QueueAttributeName.ALL)
                   .queueUrl(qUrl(sqsClient, fromSqs))
@@ -463,7 +464,7 @@ public class SqsOperations {
         // receive
         var receiveMessageRequest =
             ReceiveMessageRequest.builder()
-                .waitTimeSeconds(2)
+                .waitTimeSeconds(SQS_WAIT_TIME_SECONDS)
                 .messageAttributeNames("All")
                 .attributeNames(QueueAttributeName.ALL)
                 .queueUrl(qUrl(sqsClient, fromSqs))
@@ -516,7 +517,7 @@ public class SqsOperations {
           // receive 10 messages
           var receiveMessageRequest =
               ReceiveMessageRequest.builder()
-                  .waitTimeSeconds(2)
+                  .waitTimeSeconds(SQS_WAIT_TIME_SECONDS)
                   .messageAttributeNames("All")
                   .attributeNames(QueueAttributeName.ALL)
                   .queueUrl(qUrl(sqsClient, fromSqs))
@@ -594,7 +595,7 @@ public class SqsOperations {
           // receive 10 messages
           var receiveMessageRequest =
               ReceiveMessageRequest.builder()
-                  .waitTimeSeconds(2)
+                  .waitTimeSeconds(SQS_WAIT_TIME_SECONDS)
                   .messageAttributeNames("All")
                   .attributeNames(QueueAttributeName.ALL)
                   .queueUrl(qUrl(sqsClient, fromSqs))
@@ -688,7 +689,7 @@ public class SqsOperations {
         do {
           var receiveMessageRequest =
               ReceiveMessageRequest.builder()
-                  .waitTimeSeconds(2)
+                  .waitTimeSeconds(SQS_WAIT_TIME_SECONDS)
                   .messageAttributeNames("All")
                   .attributeNames(QueueAttributeName.ALL)
                   .queueUrl(qUrl(sqsClient, sqs))

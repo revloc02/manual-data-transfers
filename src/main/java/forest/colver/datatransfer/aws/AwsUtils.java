@@ -21,6 +21,7 @@ import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 public class AwsUtils {
 
   private static final Logger LOG = LoggerFactory.getLogger(AwsUtils.class);
+  public static final int SQS_WAIT_TIME_SECONDS = 2;
 
   private AwsUtils() {
     // https://rules.sonarsource.com/java/RSPEC-1118/
