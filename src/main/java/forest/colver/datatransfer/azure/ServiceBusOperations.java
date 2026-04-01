@@ -1,12 +1,13 @@
 package forest.colver.datatransfer.azure;
 
+import static forest.colver.datatransfer.azure.AzureUtils.ASB_RECEIVE_TIMEOUT;
+
 import com.azure.messaging.servicebus.ServiceBusClientBuilder;
 import com.azure.messaging.servicebus.ServiceBusMessage;
 import com.azure.messaging.servicebus.ServiceBusReceivedMessage;
 import com.azure.messaging.servicebus.ServiceBusReceiverClient;
 import com.azure.messaging.servicebus.ServiceBusSenderClient;
 import com.azure.messaging.servicebus.models.ServiceBusReceiveMode;
-import java.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +69,7 @@ public class ServiceBusOperations {
             .queueName(queueName)
             .receiveMode(ServiceBusReceiveMode.PEEK_LOCK)
             .buildClient()) {
-      var message = receiver.receiveMessages(1, Duration.ofSeconds(1)).stream().findFirst();
+      var message = receiver.receiveMessages(1, ASB_RECEIVE_TIMEOUT).stream().findFirst();
       LOG.info("Message read from queue: {}", queueName);
       return message.orElse(null);
     }
@@ -105,7 +106,7 @@ public class ServiceBusOperations {
             .receiveMode(ServiceBusReceiveMode.RECEIVE_AND_DELETE)
             .buildClient()) {
       while (receiver.peekMessage() != null) {
-        var messages = receiver.receiveMessages(10, Duration.ofSeconds(1));
+        var messages = receiver.receiveMessages(10, ASB_RECEIVE_TIMEOUT);
         if (messages != null && messages.stream().findAny().isPresent()) {
           long messageCount = messages.stream().count();
           LOG.info("asbPurge received {} messages, purging...", messageCount);

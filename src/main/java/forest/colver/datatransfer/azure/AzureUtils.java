@@ -9,6 +9,7 @@ import com.microsoft.azure.servicebus.Message;
 import com.microsoft.azure.servicebus.MessageBodyType;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,7 @@ import org.slf4j.LoggerFactory;
 public class AzureUtils {
 
   private static final Logger LOG = LoggerFactory.getLogger(AzureUtils.class);
+  public static final Duration ASB_RECEIVE_TIMEOUT = Duration.ofSeconds(1);
 
   private AzureUtils() {
     // https://rules.sonarsource.com/java/RSPEC-1118/

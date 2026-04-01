@@ -1,5 +1,7 @@
 package forest.colver.datatransfer.azure;
 
+import static forest.colver.datatransfer.azure.AzureUtils.ASB_RECEIVE_TIMEOUT;
+
 import com.microsoft.azure.servicebus.ClientFactory;
 import com.microsoft.azure.servicebus.IMessage;
 import com.microsoft.azure.servicebus.IMessageReceiver;
@@ -10,7 +12,6 @@ import com.microsoft.azure.servicebus.primitives.ConnectionStringBuilder;
 import com.microsoft.azure.servicebus.primitives.ServiceBusException;
 import java.io.IOException;
 import java.net.URI;
-import java.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +70,7 @@ public class ServiceBusQueueOperations {
       IMessageReceiver iMessageReceiver =
           ClientFactory.createMessageReceiverFromConnectionStringBuilder(
               connectionStringBuilder, ReceiveMode.PEEKLOCK);
-      message = iMessageReceiver.receive(Duration.ofSeconds(1));
+      message = iMessageReceiver.receive(ASB_RECEIVE_TIMEOUT);
       iMessageReceiver.abandon(
           message.getLockToken()); // make message available for other consumers
     } catch (InterruptedException e) {
@@ -94,7 +95,7 @@ public class ServiceBusQueueOperations {
       IMessageReceiver iMessageReceiver =
           ClientFactory.createMessageReceiverFromConnectionStringBuilder(
               connectionStringBuilder, ReceiveMode.PEEKLOCK);
-      message = iMessageReceiver.receive(Duration.ofSeconds(1));
+      message = iMessageReceiver.receive(ASB_RECEIVE_TIMEOUT);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       LOG.error("An error occurred in asbReadWithPeeklock: {}", e.getMessage(), e);
@@ -115,7 +116,7 @@ public class ServiceBusQueueOperations {
       IMessageReceiver iMessageReceiver =
           ClientFactory.createMessageReceiverFromConnectionStringBuilder(
               connectionStringBuilder, ReceiveMode.RECEIVEANDDELETE);
-      message = iMessageReceiver.receive(Duration.ofSeconds(1));
+      message = iMessageReceiver.receive(ASB_RECEIVE_TIMEOUT);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       LOG.error("An error occurred in asbConsume: {}", e.getMessage(), e);
@@ -136,7 +137,7 @@ public class ServiceBusQueueOperations {
       IMessageReceiver iMessageReceiver =
           ClientFactory.createMessageReceiverFromConnectionStringBuilder(
               connectionStringBuilder, ReceiveMode.PEEKLOCK);
-      var message = iMessageReceiver.receive(Duration.ofSeconds(1));
+      var message = iMessageReceiver.receive(ASB_RECEIVE_TIMEOUT);
       iMessageReceiver.deadLetterAsync(message.getLockToken());
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
@@ -149,7 +150,7 @@ public class ServiceBusQueueOperations {
   public static void asbMove(ConnectionStringBuilder fromCsb, ConnectionStringBuilder toCsb) {
     var receiver = getReceiver(fromCsb);
     try {
-      var message = receiver.receive(Duration.ofSeconds(1));
+      var message = receiver.receive(ASB_RECEIVE_TIMEOUT);
       if (message != null) {
         asbSend(toCsb, message);
         receiver.completeAsync(message.getLockToken()); // delete the message
