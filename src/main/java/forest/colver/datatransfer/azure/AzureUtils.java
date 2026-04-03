@@ -21,6 +21,7 @@ public class AzureUtils {
 
   private static final Logger LOG = LoggerFactory.getLogger(AzureUtils.class);
   public static final Duration ASB_RECEIVE_TIMEOUT = Duration.ofSeconds(1);
+  public static final int ASB_MAX_BATCH_SIZE = 10;
 
   private AzureUtils() {
     // https://rules.sonarsource.com/java/RSPEC-1118/

@@ -1,5 +1,6 @@
 package forest.colver.datatransfer.azure;
 
+import static forest.colver.datatransfer.azure.AzureUtils.ASB_MAX_BATCH_SIZE;
 import static forest.colver.datatransfer.azure.AzureUtils.ASB_RECEIVE_TIMEOUT;
 
 import com.microsoft.azure.servicebus.ClientFactory;
@@ -211,7 +212,7 @@ public class ServiceBusQueueOperations {
           ClientFactory.createMessageReceiverFromConnectionStringBuilder(
               connectionStringBuilder, ReceiveMode.RECEIVEANDDELETE);
       while (iMessageReceiver.peek() != null) {
-        var messages = iMessageReceiver.receiveBatch(10);
+        var messages = iMessageReceiver.receiveBatch(ASB_MAX_BATCH_SIZE);
         if (messages != null && !messages.isEmpty()) {
           LOG.info("asbQueuePurge received {} messages, purging...", messages.size());
           counter += messages.size();

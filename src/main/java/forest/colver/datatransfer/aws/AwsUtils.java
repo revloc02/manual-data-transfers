@@ -22,6 +22,7 @@ public class AwsUtils {
 
   private static final Logger LOG = LoggerFactory.getLogger(AwsUtils.class);
   public static final int SQS_WAIT_TIME_SECONDS = 2;
+  public static final int SQS_MAX_BATCH_SIZE = 10;
 
   private AwsUtils() {
     // https://rules.sonarsource.com/java/RSPEC-1118/

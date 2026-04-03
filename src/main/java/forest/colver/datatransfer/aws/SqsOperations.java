@@ -1,5 +1,6 @@
 package forest.colver.datatransfer.aws;
 
+import static forest.colver.datatransfer.aws.AwsUtils.SQS_MAX_BATCH_SIZE;
 import static forest.colver.datatransfer.aws.AwsUtils.SQS_WAIT_TIME_SECONDS;
 import static forest.colver.datatransfer.aws.AwsUtils.awsResponseValidation;
 import static forest.colver.datatransfer.aws.AwsUtils.createSqsMessageAttributes;
@@ -133,7 +134,7 @@ public class SqsOperations {
    */
   public static ReceiveMessageResponse sqsReadMessages(
       AwsCredentialsProvider awsCP, String queueName) {
-    return sqsReadMessages(awsCP, queueName, 10, 0);
+    return sqsReadMessages(awsCP, queueName, SQS_MAX_BATCH_SIZE, 0);
   }
 
   /**
@@ -219,7 +220,7 @@ public class SqsOperations {
               ReceiveMessageRequest.builder()
                   .waitTimeSeconds(SQS_WAIT_TIME_SECONDS)
                   .queueUrl(qUrl(sqsClient, queueName))
-                  .maxNumberOfMessages(10)
+                  .maxNumberOfMessages(SQS_MAX_BATCH_SIZE)
                   .build();
           var response = sqsClient.receiveMessage(receiveMessageRequest);
           if (response.messages().isEmpty()) {
@@ -392,7 +393,7 @@ public class SqsOperations {
                   .messageAttributeNames("All")
                   .attributeNames(QueueAttributeName.ALL)
                   .queueUrl(qUrl(sqsClient, fromSqs))
-                  .maxNumberOfMessages(10)
+                  .maxNumberOfMessages(SQS_MAX_BATCH_SIZE)
                   .visibilityTimeout(visibilityTimeout) // default 30 sec
                   .build();
           var response = sqsClient.receiveMessage(receiveMessageRequest);
@@ -468,7 +469,7 @@ public class SqsOperations {
                 .messageAttributeNames("All")
                 .attributeNames(QueueAttributeName.ALL)
                 .queueUrl(qUrl(sqsClient, fromSqs))
-                .maxNumberOfMessages(10)
+                .maxNumberOfMessages(SQS_MAX_BATCH_SIZE)
                 .visibilityTimeout(3) // default 30 sec
                 .build();
         var response = sqsClient.receiveMessage(receiveMessageRequest);
@@ -521,7 +522,7 @@ public class SqsOperations {
                   .messageAttributeNames("All")
                   .attributeNames(QueueAttributeName.ALL)
                   .queueUrl(qUrl(sqsClient, fromSqs))
-                  .maxNumberOfMessages(10)
+                  .maxNumberOfMessages(SQS_MAX_BATCH_SIZE)
                   .visibilityTimeout(visibilityTimeout) // default 30 sec
                   .build();
           var response = sqsClient.receiveMessage(receiveMessageRequest);
@@ -599,7 +600,7 @@ public class SqsOperations {
                   .messageAttributeNames("All")
                   .attributeNames(QueueAttributeName.ALL)
                   .queueUrl(qUrl(sqsClient, fromSqs))
-                  .maxNumberOfMessages(10)
+                  .maxNumberOfMessages(SQS_MAX_BATCH_SIZE)
                   .visibilityTimeout(visibilityTimeout) // default 30 sec
                   .build();
           var response = sqsClient.receiveMessage(receiveMessageRequest);
@@ -693,7 +694,7 @@ public class SqsOperations {
                   .messageAttributeNames("All")
                   .attributeNames(QueueAttributeName.ALL)
                   .queueUrl(qUrl(sqsClient, sqs))
-                  .maxNumberOfMessages(10)
+                  .maxNumberOfMessages(SQS_MAX_BATCH_SIZE)
                   .visibilityTimeout(visibilityTimeout) // default 30 sec
                   .build();
           var response = sqsClient.receiveMessage(receiveMessageRequest);
