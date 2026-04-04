@@ -47,7 +47,7 @@ public class DisplayUtils {
     } catch (JMSException e) {
       LOG.error("Failed to extract payload from TextMessage", e);
     }
-    appendPayoadString(payload, payloadOutputTrunc, sb);
+    appendPayloadString(payload, payloadOutputTrunc, sb);
     return sb;
   }
 
@@ -67,7 +67,7 @@ public class DisplayUtils {
     } catch (JMSException e) {
       LOG.error("Failed to extract payload from BytesMessage", e);
     }
-    appendPayoadString(new String(bytes), payloadOutputTrunc, sb);
+    appendPayloadString(new String(bytes), payloadOutputTrunc, sb);
     return sb;
   }
 
@@ -98,7 +98,8 @@ public class DisplayUtils {
     return sb.toString();
   }
 
-  private static void appendPayoadString(String payload, int payloadOutputTrunc, StringBuilder sb) {
+  private static void appendPayloadString(
+      String payload, int payloadOutputTrunc, StringBuilder sb) {
     sb.append(
         String.format(
             "Payload (truncated to "
