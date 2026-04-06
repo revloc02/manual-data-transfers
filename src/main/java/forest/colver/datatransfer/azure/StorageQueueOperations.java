@@ -23,7 +23,7 @@ public class StorageQueueOperations {
     try {
       queueClient.sendMessage(messageText);
     } catch (QueueStorageException e) {
-      LOG.error("An error occurred while sending the message: {}", e.getMessage(), e);
+      LOG.error("An error occurred while sending the message", e);
     }
   }
 
@@ -44,7 +44,7 @@ public class StorageQueueOperations {
       PeekedMessageItem peekedMessageItem = queueClient.peekMessage();
       body = peekedMessageItem.getBody().toString();
     } catch (QueueStorageException e) {
-      LOG.error("An error occurred while peeking at the message: {}", e.getMessage(), e);
+      LOG.error("An error occurred while peeking at the message", e);
     }
     return body;
   }
@@ -61,7 +61,7 @@ public class StorageQueueOperations {
         LOG.warn("No visible messages in {} queue", queueName);
       }
     } catch (QueueStorageException e) {
-      LOG.error("An error occurred while receiving the message: {}", e.getMessage(), e);
+      LOG.error("An error occurred while receiving the message", e);
     }
     return message;
   }
@@ -73,7 +73,7 @@ public class StorageQueueOperations {
     try {
       queueDepth = queueClient.getProperties().getApproximateMessagesCount();
     } catch (QueueStorageException e) {
-      LOG.error("An error occurred while getting message properties: {}", e.getMessage(), e);
+      LOG.error("An error occurred while getting message properties", e);
     }
     return queueDepth;
   }
@@ -84,7 +84,7 @@ public class StorageQueueOperations {
     try {
       queueClient.clearMessages();
     } catch (QueueStorageException e) {
-      LOG.error("An error occurred while clearing messages: {}", e.getMessage(), e);
+      LOG.error("An error occurred while clearing messages", e);
     }
     LOG.info("Purged {}", queueName);
   }
@@ -98,7 +98,7 @@ public class StorageQueueOperations {
         queueClient.sendMessage(payload);
       }
     } catch (QueueStorageException e) {
-      LOG.error("An error occurred while sending messages: {}", e.getMessage(), e);
+      LOG.error("An error occurred while sending messages", e);
     }
   }
 
@@ -135,7 +135,7 @@ public class StorageQueueOperations {
       message = queueClient.receiveMessage(); // default visibilityTimeout=30 seconds
       asqSend(connectStr, queue2, String.valueOf(message.getBody()));
     } catch (QueueStorageException e) {
-      LOG.error("An error occurred while copying the message: {}", e.getMessage(), e);
+      LOG.error("An error occurred while copying the message", e);
     }
   }
 }

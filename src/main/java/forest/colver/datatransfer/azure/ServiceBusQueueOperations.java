@@ -38,9 +38,9 @@ public class ServiceBusQueueOperations {
       iMessageSender.send(message);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      LOG.error("An error occurred in asbSend: {}", e.getMessage(), e);
+      LOG.error("An error occurred in asbSend", e);
     } catch (ServiceBusException e) {
-      LOG.error("An error occurred in asbSend: {}", e.getMessage(), e);
+      LOG.error("An error occurred in asbSend", e);
     }
   }
 
@@ -50,7 +50,7 @@ public class ServiceBusQueueOperations {
           connectionStringBuilder, ReceiveMode.PEEKLOCK);
     } catch (InterruptedException | ServiceBusException e) {
       Thread.currentThread().interrupt();
-      LOG.error("An error occurred in getReceiver: {}", e.getMessage(), e);
+      LOG.error("An error occurred in getReceiver", e);
     }
     return null;
   }
@@ -76,9 +76,9 @@ public class ServiceBusQueueOperations {
           message.getLockToken()); // make message available for other consumers
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      LOG.error("An error occurred in asbRead: {}", e.getMessage(), e);
+      LOG.error("An error occurred in asbRead", e);
     } catch (ServiceBusException e) {
-      LOG.error("An error occurred in asbRead: {}", e.getMessage(), e);
+      LOG.error("An error occurred in asbRead", e);
     }
     return message;
   }
@@ -99,9 +99,9 @@ public class ServiceBusQueueOperations {
       message = iMessageReceiver.receive(ASB_RECEIVE_TIMEOUT);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      LOG.error("An error occurred in asbReadWithPeeklock: {}", e.getMessage(), e);
+      LOG.error("An error occurred in asbReadWithPeeklock", e);
     } catch (ServiceBusException e) {
-      LOG.error("An error occurred in asbReadWithPeeklock: {}", e.getMessage(), e);
+      LOG.error("An error occurred in asbReadWithPeeklock", e);
     }
     return message;
   }
@@ -120,9 +120,9 @@ public class ServiceBusQueueOperations {
       message = iMessageReceiver.receive(ASB_RECEIVE_TIMEOUT);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      LOG.error("An error occurred in asbConsume: {}", e.getMessage(), e);
+      LOG.error("An error occurred in asbConsume", e);
     } catch (ServiceBusException e) {
-      LOG.error("An error occurred in asbConsume: {}", e.getMessage(), e);
+      LOG.error("An error occurred in asbConsume", e);
     }
     LOG.info("=====Consumed message from ASB queue: {}", connectionStringBuilder.getEntityPath());
     return message;
@@ -142,9 +142,9 @@ public class ServiceBusQueueOperations {
       iMessageReceiver.deadLetterAsync(message.getLockToken());
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      LOG.error("An error occurred in asbDlq: {}", e.getMessage(), e);
+      LOG.error("An error occurred in asbDlq", e);
     } catch (ServiceBusException e) {
-      LOG.error("An error occurred in asbDlq: {}", e.getMessage(), e);
+      LOG.error("An error occurred in asbDlq", e);
     }
   }
 
@@ -161,7 +161,7 @@ public class ServiceBusQueueOperations {
       }
     } catch (InterruptedException | ServiceBusException e) {
       Thread.currentThread().interrupt();
-      LOG.error("An error occurred in asbMove: {}", e.getMessage(), e);
+      LOG.error("An error occurred in asbMove", e);
     }
   }
 
@@ -220,13 +220,13 @@ public class ServiceBusQueueOperations {
       }
     } catch (InterruptedException | ServiceBusException e) {
       Thread.currentThread().interrupt();
-      LOG.error("An error occurred in asbQueuePurge: {}", e.getMessage(), e);
+      LOG.error("An error occurred in asbQueuePurge", e);
     } finally {
       if (iMessageReceiver != null) {
         try {
           iMessageReceiver.close();
         } catch (ServiceBusException e) {
-          LOG.error("Failed to close IMessageReceiver: {}", e.getMessage(), e);
+          LOG.error("Failed to close IMessageReceiver", e);
         }
       }
     }
@@ -261,14 +261,14 @@ public class ServiceBusQueueOperations {
           mcd.getTransferDeadLetterMessageCount());
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      LOG.error("An error occurred in messageCount: {}", e.getMessage(), e);
+      LOG.error("An error occurred in messageCount", e);
     } catch (ServiceBusException e) {
-      LOG.error("An error occurred in messageCount: {}", e.getMessage(), e);
+      LOG.error("An error occurred in messageCount", e);
     } finally {
       try {
         client.close();
       } catch (IOException e) {
-        LOG.error("Failed to close ManagementClient: {}", e.getMessage(), e);
+        LOG.error("Failed to close ManagementClient", e);
       }
     }
     return messageCount;

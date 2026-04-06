@@ -39,7 +39,7 @@ public class BlobStorageOperations {
           .getBlockBlobClient()
           .upload(dataStream, contents.length());
     } catch (IOException e) {
-      LOG.error("An error occurred while uploading the blob: {}", e.getMessage(), e);
+      LOG.error("An error occurred while uploading the blob", e);
     }
   }
 
@@ -55,7 +55,7 @@ public class BlobStorageOperations {
           .getBlockBlobClient()
           .upload(dataStream, contents.length());
     } catch (IOException e) {
-      LOG.error("An error occurred while uploading the blob: {}", e.getMessage(), e);
+      LOG.error("An error occurred while uploading the blob", e);
     }
   }
 
@@ -72,7 +72,7 @@ public class BlobStorageOperations {
       var blobContainerClient = blobServiceClient.getBlobContainerClient(containerName);
       blobContainerClient.getBlobClient(filename).getBlockBlobClient().downloadStream(dataStream);
     } catch (IOException e) {
-      LOG.error("An error occurred while retrieving the blob: {}", e.getMessage(), e);
+      LOG.error("An error occurred while retrieving the blob", e);
     }
     LOG.info("BLOBGET: The object {} was retrieved from {}.", filename, containerName);
     return dataStream;
@@ -97,7 +97,7 @@ public class BlobStorageOperations {
       var blobContainerClient = blobServiceClient.getBlobContainerClient(containerName);
       blobContainerClient.getBlobClient(filename).getBlockBlobClient().downloadStream(dataStream);
     } catch (IOException e) {
-      LOG.error("An error occurred while retrieving the blob: {}", e.getMessage(), e);
+      LOG.error("An error occurred while retrieving the blob", e);
     }
     LOG.info("BLOBGETSAS: The object {} was retrieved from {}.", filename, containerName);
     return dataStream;
