@@ -266,7 +266,10 @@ public class CommonTasks {
       // Delete old object versions
       var versions = s3ListVersions(s3Client, bucket, objectKey);
       for (var version : versions) {
-        if (version.lastModified().isBefore(oneWeekAgo)) {
+        if (version.key().endsWith("/")) { // directory
+          skipped++;
+          LOG.info("DIRECTORY (version): {}", version.key());
+        } else if (version.lastModified().isBefore(oneWeekAgo)) {
           LOG.info(
               "VERSION key={}; versionId={}; lastModified={}",
               version.key(),
@@ -283,7 +286,10 @@ public class CommonTasks {
       // Delete old delete markers
       var deleteMarkers = s3ListDeleteMarkers(s3Client, bucket, objectKey);
       for (var marker : deleteMarkers) {
-        if (marker.lastModified().isBefore(oneWeekAgo)) {
+        if (marker.key().endsWith("/")) { // directory
+          skipped++;
+          LOG.info("DIRECTORY (delete marker): {}", marker.key());
+        } else if (marker.lastModified().isBefore(oneWeekAgo)) {
           LOG.info(
               "DELETE MARKER key={}; versionId={}; lastModified={}",
               marker.key(),
