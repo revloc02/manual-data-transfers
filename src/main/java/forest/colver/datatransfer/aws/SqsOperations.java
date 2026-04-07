@@ -638,7 +638,7 @@ public class SqsOperations {
       SqsClient sqsClient,
       int counter) {
     for (var message : response.messages()) {
-      // check each one for selector stuff
+      // check each message's payload content
       if (message.body().contains(payloadLike)) {
         sqsMoveMessage(sqsClient, fromSqs, toSqs, message);
         counter++;
@@ -730,7 +730,7 @@ public class SqsOperations {
       ReceiveMessageResponse response,
       int counter) {
     for (var message : response.messages()) {
-      // check each one for selector stuff
+      // check each message's payload content
       if (message.body().contains(payloadLike)) {
         sqsDeleteMessage(awsCP, sqs, message);
         counter++;
