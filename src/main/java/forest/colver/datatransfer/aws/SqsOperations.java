@@ -444,7 +444,7 @@ public class SqsOperations {
       if (message != null) {
         counter++;
         sqsSend(awsCP, toSqs, message.body(), message.attributesAsStrings());
-        LOG.info("Moved from SQS={} to SQS={}, counter={}", fromSqs, toSqs, counter);
+        LOG.info("Moved message #{} from SQS={} to SQS={}", counter, fromSqs, toSqs);
       } else {
         moreMessages = false;
       }
