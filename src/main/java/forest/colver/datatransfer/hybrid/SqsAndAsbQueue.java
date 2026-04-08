@@ -41,7 +41,7 @@ public class SqsAndAsbQueue {
           new HashMap<>(convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
       asbSend(azureConnStr, createIMessage(sqsMsg.body(), properties));
     } else {
-      LOG.error("ERROR: SQS message was null.");
+      LOG.error("SQS message was null.");
     }
   }
 
@@ -114,7 +114,7 @@ public class SqsAndAsbQueue {
           new HashMap<>(convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
       asbSend(azureConnStr, createIMessage(sqsMsg.body(), properties));
     } else {
-      LOG.error("ERROR: SQS message was null.");
+      LOG.error("SQS message was null.");
     }
   }
 
@@ -124,7 +124,7 @@ public class SqsAndAsbQueue {
     if (iMessage != null) {
       sendIMessageToSqs(iMessage, awsCreds, sqs);
     } else {
-      LOG.error("ERROR: ASB queue IMessage was null.");
+      LOG.error("ASB queue IMessage was null.");
     }
   }
 

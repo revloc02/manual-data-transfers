@@ -53,7 +53,7 @@ public class JmsAndSqs {
               sqsMsg.body(), convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
       sendMessageAutoAck(env, queue, message);
     } else {
-      LOG.error("ERROR: SQS message was null.");
+      LOG.error("SQS message was null.");
     }
   }
 

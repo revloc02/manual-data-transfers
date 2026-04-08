@@ -107,7 +107,7 @@ public class StorageQueueOperations {
     if (message != null) {
       asqSend(connectStr, queue2, String.valueOf(message.getBody()));
     } else {
-      LOG.error("ERROR: message is null.");
+      LOG.error("message is null.");
     }
   }
 
@@ -117,7 +117,7 @@ public class StorageQueueOperations {
       if (message != null) {
         asqSend(connectStr, queue2, String.valueOf(message.getBody()));
       } else {
-        LOG.error("ERROR: message is null.");
+        LOG.error("message is null.");
       }
     }
   }

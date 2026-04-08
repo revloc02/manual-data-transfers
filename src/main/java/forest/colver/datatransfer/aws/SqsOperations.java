@@ -299,7 +299,7 @@ public class SqsOperations {
           Integer.parseInt(
               response.attributes().get(QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES));
     } else {
-      LOG.error("ERROR: SQS queue attributes is null.");
+      LOG.error("SQS queue attributes is null.");
     }
     return numMsgs;
   }

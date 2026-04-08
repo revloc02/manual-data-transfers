@@ -32,7 +32,7 @@ public class SqsAndS3 {
           sqsMsg.body(),
           convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
     } else {
-      LOG.error("ERROR: SQS message was null.");
+      LOG.error("SQS message was null.");
     }
   }
 
@@ -49,7 +49,7 @@ public class SqsAndS3 {
           sqsMsg.body(),
           convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
     } else {
-      LOG.error("ERROR: SQS message was null.");
+      LOG.error("SQS message was null.");
     }
   }
 
