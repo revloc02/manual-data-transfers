@@ -58,7 +58,7 @@ public class SqsOperations {
               .build();
       var response = sqsClient.sendMessage(sendMessageRequest);
       awsResponseValidation(response);
-      LOG.info("SQSSEND: messageId={} was put on the SQS: {}.", response.messageId(), queueName);
+      LOG.info("SQS_SEND: messageId={} was put on the SQS: {}.", response.messageId(), queueName);
     }
   }
 
@@ -77,7 +77,7 @@ public class SqsOperations {
               .build();
       var response = sqsClient.sendMessage(sendMessageRequest);
       awsResponseValidation(response);
-      LOG.info("SQSSEND: The payload '{}' was put on the SQS: {}.", payload, queueName);
+      LOG.info("SQS_SEND: The payload '{}' was put on the SQS: {}.", payload, queueName);
     }
   }
 
@@ -90,7 +90,7 @@ public class SqsOperations {
     var msg = sqsReadOneMessage(awsCP, queueName);
     if (msg != null) {
       sqsDeleteMessage(awsCP, queueName, msg);
-      LOG.info("======== SQSCONSUME: Consumed a message from SQS: {}.=======", queueName);
+      LOG.info("======== SQS_CONSUME: Consumed a message from SQS: {}.=======", queueName);
     }
     return msg;
   }
@@ -187,7 +187,7 @@ public class SqsOperations {
               .build();
       var response = sqsClient.receiveMessage(receiveMessageRequest);
       awsResponseValidation(response);
-      LOG.info("SQSDOWNLOAD: Read message from {}.", queueName);
+      LOG.info("SQS_DOWNLOAD: Read message from {}.", queueName);
       writeFile(fullyQualifiedFilename, response.messages().get(0).body().getBytes());
     }
   }
@@ -199,7 +199,7 @@ public class SqsOperations {
           PurgeQueueRequest.builder().queueUrl(qUrl(sqsClient, queueName)).build();
       var response = sqsClient.purgeQueue(purgeQueueRequest);
       awsResponseValidation(response);
-      LOG.info("SQSPURGE: The SQS {} has been purged.", queueName);
+      LOG.info("SQS_PURGE: The SQS {} has been purged.", queueName);
     }
   }
 
@@ -240,7 +240,7 @@ public class SqsOperations {
           depth,
           depthLimit);
     }
-    LOG.info("SQSCLEAR: The SQS {} has been cleared of {} messages.", queueName, counter);
+    LOG.info("SQS_CLEAR: The SQS {} has been cleared of {} messages.", queueName, counter);
   }
 
   /** Displays the data and message properties of SQS messages. */

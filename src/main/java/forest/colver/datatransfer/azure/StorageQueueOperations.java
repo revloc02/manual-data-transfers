@@ -55,7 +55,7 @@ public class StorageQueueOperations {
         new QueueClientBuilder().connectionString(connectStr).queueName(queueName).buildClient();
     try {
       message = queueClient.receiveMessage();
-      if (null != message) {
+      if (message != null) {
         queueClient.deleteMessage(message.getMessageId(), message.getPopReceipt());
       } else {
         LOG.warn("No visible messages in {} queue", queueName);
