@@ -4,10 +4,18 @@ Format Terraform code using `terraform fmt`.
 
 Format Java code using `mvn com.spotify.fmt:fmt-maven-plugin:format validate`.
 
-## Integration Tests
+## Tests
 
-The integration tests are not meant to be generally run to verify code changes. They require specific credentials to
-make connections to various services and those credentials are not always available.
+Unit tests are in `src/test/java/forest/colver/datatransfer/` (root package) and can be run anytime:
+```
+mvn test -Dexcludes="**/it/**"
+```
+
+Integration tests are in the `it/` sub-package and require credentials. Never run all integration tests. When the user
+says it is okay to run integration tests, run only the ones relevant to the changed code:
+```
+mvn test -Dtest="RelevantIntTestClass"
+```
 
 ## Git
 
