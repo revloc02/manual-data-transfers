@@ -34,15 +34,14 @@ public class SqsAndAsbQueue {
 
   public static void moveOneSqsToAsbQueue(
       AwsCredentialsProvider awsCreds, String sqs, ConnectionStringBuilder azureConnStr) {
-    var sqsMsg = sqsConsumeOneMessage(awsCreds, sqs);
-    if (sqsMsg != null) {
-      // send body and properties to ASB queue
-      Map<String, Object> properties =
-          new HashMap<>(convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
-      asbSend(azureConnStr, createIMessage(sqsMsg.body(), properties));
-    } else {
-      LOG.error("SQS message was null.");
-    }
+    sqsConsumeOneMessage(awsCreds, sqs)
+        .ifPresentOrElse(
+            sqsMsg -> {
+              Map<String, Object> properties =
+                  new HashMap<>(convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
+              asbSend(azureConnStr, createIMessage(sqsMsg.body(), properties));
+            },
+            () -> LOG.error("SQS message was null."));
   }
 
   public static void moveOneAsbQueueToSqs(
@@ -53,24 +52,20 @@ public class SqsAndAsbQueue {
 
   public static void moveAllSqsToAsbQueue(
       AwsCredentialsProvider awsCreds, String sqs, ConnectionStringBuilder azureConnStr) {
-    var moreMessages = true;
     var counter = 0;
-    while (moreMessages) {
-      var sqsMsg = sqsConsumeOneMessage(awsCreds, sqs);
-      if (sqsMsg != null) {
-        counter++;
-        // send body and properties to ASB queue
-        Map<String, Object> properties =
-            new HashMap<>(convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
-        asbSend(azureConnStr, createIMessage(sqsMsg.body(), properties));
-        LOG.info(
-            "Moved from SQS={} to ASB-Queue={}; counter={}",
-            sqs,
-            azureConnStr.getEntityPath(),
-            counter);
-      } else {
-        moreMessages = false;
-      }
+    var sqsMsg = sqsConsumeOneMessage(awsCreds, sqs);
+    while (sqsMsg.isPresent()) {
+      counter++;
+      var msg = sqsMsg.get();
+      Map<String, Object> properties =
+          new HashMap<>(convertSqsMessageAttributesToStrings(msg.messageAttributes()));
+      asbSend(azureConnStr, createIMessage(msg.body(), properties));
+      LOG.info(
+          "Moved from SQS={} to ASB-Queue={}; counter={}",
+          sqs,
+          azureConnStr.getEntityPath(),
+          counter);
+      sqsMsg = sqsConsumeOneMessage(awsCreds, sqs);
     }
     LOG.info(
         "Moved {} messages from SQS={} to ASB-Queue={}.",
@@ -107,15 +102,14 @@ public class SqsAndAsbQueue {
 
   public static void copyOneSqsToAsbQueue(
       AwsCredentialsProvider awsCreds, String sqs, ConnectionStringBuilder azureConnStr) {
-    var sqsMsg = sqsReadOneMessage(awsCreds, sqs);
-    if (sqsMsg != null) {
-      // send body and properties to ASB queue
-      Map<String, Object> properties =
-          new HashMap<>(convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
-      asbSend(azureConnStr, createIMessage(sqsMsg.body(), properties));
-    } else {
-      LOG.error("SQS message was null.");
-    }
+    sqsReadOneMessage(awsCreds, sqs)
+        .ifPresentOrElse(
+            msg -> {
+              Map<String, Object> properties =
+                  new HashMap<>(convertSqsMessageAttributesToStrings(msg.messageAttributes()));
+              asbSend(azureConnStr, createIMessage(msg.body(), properties));
+            },
+            () -> LOG.error("SQS message was null."));
   }
 
   public static void copyOneAsbQueueToSqs(

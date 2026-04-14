@@ -59,13 +59,14 @@ class AwsSnsIntTests {
 
     // check the data
     var msg = sqsReadOneMessage(creds, SQS);
-    LOG.info("msg.body():{}", msg.body());
-    var jo = new JSONObject(msg.body());
+    assertThat(msg).isPresent();
+    LOG.info("msg.body():{}", msg.get().body());
+    var jo = new JSONObject(msg.get().body());
     assertThat(jo.getString("Type")).isEqualTo("Notification");
     assertThat(jo.getString("TopicArn")).isEqualTo(SNS_ARN_TEMP);
     assertThat(jo.getString("Message")).isEqualTo(message);
 
     // cleanup
-    sqsDeleteMessage(creds, SQS, msg);
+    sqsDeleteMessage(creds, SQS, msg.get());
   }
 }

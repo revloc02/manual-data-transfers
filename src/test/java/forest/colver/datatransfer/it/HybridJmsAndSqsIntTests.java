@@ -55,13 +55,14 @@ public class HybridJmsAndSqsIntTests {
 
     // check that it arrived
     var msg = sqsReadOneMessage(creds, SQS1);
-    assertThat(msg.body()).isEqualTo(payload);
-    assertThat(msg.hasMessageAttributes()).isEqualTo(true);
-    assertThat(msg.messageAttributes().get("key2").stringValue()).isEqualTo("value2");
-    assertThat(msg.messageAttributes().get("key3").stringValue()).isEqualTo("value3");
+    assertThat(msg).isPresent();
+    assertThat(msg.get().body()).isEqualTo(payload);
+    assertThat(msg.get().hasMessageAttributes()).isEqualTo(true);
+    assertThat(msg.get().messageAttributes().get("key2").stringValue()).isEqualTo("value2");
+    assertThat(msg.get().messageAttributes().get("key3").stringValue()).isEqualTo("value3");
 
     // cleanup
-    sqsDeleteMessage(creds, SQS1, msg);
+    sqsDeleteMessage(creds, SQS1, msg.get());
   }
 
   @Test
@@ -123,9 +124,10 @@ public class HybridJmsAndSqsIntTests {
     // check that each arrived on the SQS
     for (var i = 0; i < numMessagesToMove; i++) {
       var response = sqsConsumeOneMessage(creds, SQS1);
-      assertThat(response.body()).isEqualTo(payload);
-      assertThat(response.hasMessageAttributes()).isEqualTo(true);
-      assertThat(response.messageAttributes().get("specificKey").stringValue())
+      assertThat(response).isPresent();
+      assertThat(response.get().body()).isEqualTo(payload);
+      assertThat(response.get().hasMessageAttributes()).isEqualTo(true);
+      assertThat(response.get().messageAttributes().get("specificKey").stringValue())
           .isEqualTo("specificValue");
     }
 
@@ -193,7 +195,8 @@ public class HybridJmsAndSqsIntTests {
     // check that each arrived on the SQS
     for (var i = 0; i < numMsg; i++) {
       var response = sqsConsumeOneMessage(creds, SQS1);
-      assertThat(response.body()).contains("Default Payload:");
+      assertThat(response).isPresent();
+      assertThat(response.get().body()).contains("Default Payload:");
     }
 
     // cleanup and check that the Qpid queue had zero message left on it

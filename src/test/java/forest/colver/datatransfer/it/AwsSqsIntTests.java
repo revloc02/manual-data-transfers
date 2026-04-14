@@ -27,13 +27,13 @@ import static forest.colver.datatransfer.config.ConfigUtils.getDefaultPayload;
 import static forest.colver.datatransfer.config.ConfigUtils.getTimeStampFormatted;
 import static forest.colver.datatransfer.config.ConfigUtils.getUuid;
 import static forest.colver.datatransfer.config.ConfigUtils.readFile;
-import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +47,17 @@ class AwsSqsIntTests {
   private static final String SQS1 = EMX_SANDBOX_TEST_SQS1;
   private static final String SQS2 = EMX_SANDBOX_TEST_SQS2;
 
-  /** A helper method to ensure an SQS queue has been emptied of all messages. */
+  @BeforeEach
+  void setUp() {
+    var creds = getEmxSbCreds();
+    clearSqs(creds, SQS1);
+    clearSqs(creds, SQS2);
+  }
+
+  /**
+   * A helper method to drain (not {@link forest.colver.datatransfer.aws.SqsOperations#sqsPurge}) an
+   * SQS queue of all messages.
+   */
   private void clearSqs(AwsCredentialsProvider creds, String sqs) {
     sqsClear(creds, sqs);
     // assert the sqs was cleared
@@ -175,14 +185,14 @@ class AwsSqsIntTests {
 
     // verify the message is on the other sqs
     var toQMsg = sqsReadOneMessage(creds, SQS2);
-    assert toQMsg != null;
-    assertThat(toQMsg.body()).isEqualTo(payload);
+    assertThat(toQMsg).isPresent();
+    assertThat(toQMsg.get().body()).isEqualTo(payload);
 
     // cleanup
     // remove message from source sqs
-    sqsDeleteMessage(creds, SQS1, requireNonNull(sqsReadOneMessage(creds, SQS1)));
+    sqsDeleteMessage(creds, SQS1, sqsReadOneMessage(creds, SQS1).orElseThrow());
     // remove message from target sqs
-    sqsDeleteMessage(creds, SQS2, toQMsg);
+    sqsDeleteMessage(creds, SQS2, toQMsg.get());
   }
 
   @Test
@@ -193,11 +203,15 @@ class AwsSqsIntTests {
     var payload = "message with payload only, no MessageAttributes";
     sqsSend(creds, SQS1, payload);
     // check that it arrived
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .until(() -> sqsDepth(creds, SQS1) >= 1);
     var msg = sqsReadOneMessage(creds, SQS1);
-    assert msg != null;
-    assertThat(msg.body()).isEqualTo(payload);
+    assertThat(msg).isPresent();
+    assertThat(msg.get().body()).isEqualTo(payload);
     // cleanup
-    sqsDeleteMessage(creds, SQS1, msg);
+    sqsDeleteMessage(creds, SQS1, msg.get());
   }
 
   /** Sends a {@link software.amazon.awssdk.services.sqs.model.Message Message} to an SQS. */
@@ -224,11 +238,11 @@ class AwsSqsIntTests {
 
     // check the payload
     var msg = sqsReadOneMessage(creds, SQS1);
-    assert msg != null;
-    assertThat(msg.body()).isEqualTo(payload);
+    assertThat(msg).isPresent();
+    assertThat(msg.get().body()).isEqualTo(payload);
 
     // cleanup
-    sqsDeleteMessage(creds, SQS1, msg);
+    sqsDeleteMessage(creds, SQS1, msg.get());
   }
 
   @Test
@@ -245,7 +259,8 @@ class AwsSqsIntTests {
         .until(() -> sqsDepth(creds, SQS1) >= 1);
     // consume the message
     var message = sqsConsumeOneMessage(creds, SQS1);
-    assertThat(message.body()).isEqualTo(payload);
+    assertThat(message).isPresent();
+    assertThat(message.get().body()).isEqualTo(payload);
     // assert the sqs was cleared
     await()
         .pollInterval(Duration.ofSeconds(10))
@@ -271,14 +286,14 @@ class AwsSqsIntTests {
 
     // check the payload and properties
     var msg = sqsReadOneMessage(creds, SQS1);
-    assert msg != null;
-    assertThat(msg.body()).isEqualTo(payload);
-    assertThat(msg.hasMessageAttributes()).isTrue();
-    assertThat(msg.messageAttributes().get("key2").stringValue()).isEqualTo("value2");
-    assertThat(msg.messageAttributes().get("key3").stringValue()).isEqualTo("value3");
+    assertThat(msg).isPresent();
+    assertThat(msg.get().body()).isEqualTo(payload);
+    assertThat(msg.get().hasMessageAttributes()).isTrue();
+    assertThat(msg.get().messageAttributes().get("key2").stringValue()).isEqualTo("value2");
+    assertThat(msg.get().messageAttributes().get("key3").stringValue()).isEqualTo("value3");
 
     // cleanup
-    sqsDeleteMessage(creds, SQS1, msg);
+    sqsDeleteMessage(creds, SQS1, msg.get());
   }
 
   @Test
@@ -306,11 +321,11 @@ class AwsSqsIntTests {
 
     // verify the message is on the other sqs
     var toQMsg = sqsReadOneMessage(creds, SQS2);
-    assert toQMsg != null;
-    assertThat(toQMsg.body()).isEqualTo(payload);
+    assertThat(toQMsg).isPresent();
+    assertThat(toQMsg.get().body()).isEqualTo(payload);
 
     // cleanup
-    sqsDeleteMessage(creds, SQS2, toQMsg);
+    sqsDeleteMessage(creds, SQS2, toQMsg.get());
   }
 
   @Test
@@ -631,8 +646,8 @@ class AwsSqsIntTests {
         .untilAsserted(() -> assertThat(sqsDepth(creds, SQS1)).isOne());
     // now delete
     var message = sqsReadOneMessage(creds, SQS1);
-    assert message != null;
-    sqsDeleteMessage(creds, SQS1, message);
+    assertThat(message).isPresent();
+    sqsDeleteMessage(creds, SQS1, message.get());
     // check the SQS is empty
     await()
         .pollInterval(Duration.ofSeconds(3))
@@ -644,14 +659,14 @@ class AwsSqsIntTests {
   void testReadOneMessageWhenNoneExists() {
     var creds = getEmxSbCreds();
     var message = sqsReadOneMessage(creds, SQS1);
-    assertThat(message).isNull();
+    assertThat(message).isEmpty();
   }
 
   @Test
   void testConsumeOneMessageWhenNoneExists() {
     var creds = getEmxSbCreds();
     var message = sqsConsumeOneMessage(creds, SQS1);
-    assertThat(message).isNull();
+    assertThat(message).isEmpty();
   }
 
   @Test

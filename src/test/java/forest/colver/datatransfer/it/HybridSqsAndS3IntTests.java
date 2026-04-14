@@ -170,14 +170,15 @@ public class HybridSqsAndS3IntTests {
 
     // check the payload
     var msg = sqsReadOneMessage(creds, SQS1);
-    assertThat(msg.body()).isEqualTo(getDefaultPayload());
+    assertThat(msg).isPresent();
+    assertThat(msg.get().body()).isEqualTo(getDefaultPayload());
 
     // verify the S3 object is gone
     objects = s3List(creds, S3_INTERNAL, objectKey);
     assertThat(objects.size()).isZero();
 
     // cleanup
-    sqsDeleteMessage(creds, SQS1, msg);
+    sqsDeleteMessage(creds, SQS1, msg.get());
   }
 
   @Test
@@ -231,14 +232,15 @@ public class HybridSqsAndS3IntTests {
 
     // check the payload
     var msg = sqsReadOneMessage(creds, SQS1);
-    assertThat(msg.body()).isEqualTo(getDefaultPayload());
+    assertThat(msg).isPresent();
+    assertThat(msg.get().body()).isEqualTo(getDefaultPayload());
 
     // verify the S3 object is still there
     objects = s3List(creds, S3_INTERNAL, objectKey);
     assertThat(objects.size()).isOne();
 
     // cleanup
-    sqsDeleteMessage(creds, SQS1, msg);
+    sqsDeleteMessage(creds, SQS1, msg.get());
     s3Delete(creds, S3_INTERNAL, objectKey);
   }
 

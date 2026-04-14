@@ -46,15 +46,16 @@ public class JmsAndSqs {
 
   public static void moveOneSqsToJms(
       AwsCredentialsProvider awsCreds, String sqs, Environment env, String queue) {
-    var sqsMsg = sqsConsumeOneMessage(awsCreds, sqs);
-    if (sqsMsg != null) {
-      TextMessage message =
-          createTextMessage(
-              sqsMsg.body(), convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
-      sendMessageAutoAck(env, queue, message);
-    } else {
-      LOG.error("SQS message was null.");
-    }
+    sqsConsumeOneMessage(awsCreds, sqs)
+        .ifPresentOrElse(
+            sqsMsg -> {
+              TextMessage message =
+                  createTextMessage(
+                      sqsMsg.body(),
+                      convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
+              sendMessageAutoAck(env, queue, message);
+            },
+            () -> LOG.error("SQS message was null."));
   }
 
   public static void moveAllSpecificMessagesFromJmsToSqs(
@@ -129,20 +130,16 @@ public class JmsAndSqs {
 
   public static void moveAllMessagesFromSqsToJms(
       AwsCredentialsProvider awsCreds, String sqs, Environment env, String queue) {
-    var moreMessages = true;
     var counter = 0;
-    while (moreMessages) {
-      var sqsMsg = sqsConsumeOneMessage(awsCreds, sqs);
-      if (sqsMsg != null) {
-        counter++;
-        TextMessage message =
-            createTextMessage(
-                sqsMsg.body(), convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
-        sendMessageAutoAck(env, queue, message);
-        LOG.info("Moved from SQS={} to, Queue={}:{} counter={}", sqs, env.name(), queue, counter);
-      } else {
-        moreMessages = false;
-      }
+    var sqsMsg = sqsConsumeOneMessage(awsCreds, sqs);
+    while (sqsMsg.isPresent()) {
+      counter++;
+      var m = sqsMsg.get();
+      TextMessage message =
+          createTextMessage(m.body(), convertSqsMessageAttributesToStrings(m.messageAttributes()));
+      sendMessageAutoAck(env, queue, message);
+      LOG.info("Moved from SQS={} to, Queue={}:{} counter={}", sqs, env.name(), queue, counter);
+      sqsMsg = sqsConsumeOneMessage(awsCreds, sqs);
     }
     LOG.info("Moved {} messages from SQS={} to, Queue={}:{}.", counter, sqs, env.name(), queue);
   }

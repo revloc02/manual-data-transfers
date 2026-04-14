@@ -22,35 +22,31 @@ public class SqsAndS3 {
   /** Retrieve next message from an SQS and deliver it to an S3. */
   public static void moveOneSqsToS3(
       AwsCredentialsProvider awsCreds, String sqs, String bucket, String objectKey) {
-    var sqsMsg = sqsConsumeOneMessage(awsCreds, sqs);
-    if (sqsMsg != null) {
-      // send body and properties to s3
-      s3Put(
-          awsCreds,
-          bucket,
-          objectKey,
-          sqsMsg.body(),
-          convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
-    } else {
-      LOG.error("SQS message was null.");
-    }
+    sqsConsumeOneMessage(awsCreds, sqs)
+        .ifPresentOrElse(
+            sqsMsg ->
+                s3Put(
+                    awsCreds,
+                    bucket,
+                    objectKey,
+                    sqsMsg.body(),
+                    convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes())),
+            () -> LOG.error("SQS message was null."));
   }
 
   /** Copy (read) next message from an SQS and save it to an S3. */
   public static void copyOneSqsToS3(
       AwsCredentialsProvider awsCreds, String sqs, String bucket, String objectKey) {
-    var sqsMsg = sqsReadOneMessage(awsCreds, sqs);
-    if (sqsMsg != null) {
-      // send body and properties to s3
-      s3Put(
-          awsCreds,
-          bucket,
-          objectKey,
-          sqsMsg.body(),
-          convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
-    } else {
-      LOG.error("SQS message was null.");
-    }
+    sqsReadOneMessage(awsCreds, sqs)
+        .ifPresentOrElse(
+            msg ->
+                s3Put(
+                    awsCreds,
+                    bucket,
+                    objectKey,
+                    msg.body(),
+                    convertSqsMessageAttributesToStrings(msg.messageAttributes())),
+            () -> LOG.error("SQS message was null."));
   }
 
   /**

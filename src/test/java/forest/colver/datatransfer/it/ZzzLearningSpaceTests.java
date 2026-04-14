@@ -208,10 +208,10 @@ class ZzzLearningSpaceTests {
     sqsSend(creds, sqs, payload);
     // check that it arrived
     var msg = sqsReadOneMessage(creds, sqs);
-    assert msg != null;
-    assertThat(msg.body()).isEqualTo(payload);
+    assertThat(msg).isPresent();
+    assertThat(msg.get().body()).isEqualTo(payload);
     // cleanup
-    sqsDeleteMessage(creds, sqs, msg);
+    sqsDeleteMessage(creds, sqs, msg.get());
   }
 
   // Gets a UUID and then logs the String hashCode of it, so I know what it looks like

@@ -51,8 +51,8 @@ class AwsLambdaIntTests {
 
     // The S3 object placement triggered the bridge lambda, which sent a message, so verify that...
     var messageResp = sqsReadOneMessage(creds, SQS1);
-    assert messageResp != null;
-    assertThat(messageResp.body())
+    assertThat(messageResp).isPresent();
+    assertThat(messageResp.get().body())
         .contains("\"key\": \"ext-aiko1/outbound/dev/flox/dd/1test.txt\"");
 
     // ...and then clean up the message, so we can test invoking the Lambda directly
@@ -72,11 +72,12 @@ class AwsLambdaIntTests {
 
     // ...and ensure the SQS got the new message.
     messageResp = sqsReadOneMessage(creds, SQS1);
-    assertThat(messageResp.body())
+    assertThat(messageResp).isPresent();
+    assertThat(messageResp.get().body())
         .contains("\"key\": \"ext-aiko1/outbound/dev/flox/dd/1test.txt\"");
 
     // Cleanup the queue and the s3.
-    sqsDeleteMessage(creds, SQS1, messageResp);
+    sqsDeleteMessage(creds, SQS1, messageResp.get());
     s3Delete(creds, S3_SOURCE_CACHE, objectKey);
   }
 }

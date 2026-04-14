@@ -97,13 +97,14 @@ class HybridSqsAndAsbQueueIntTests {
 
     // check that it arrived
     var msg = sqsReadOneMessage(awsCreds, SQS1);
-    assert msg != null;
-    assertThat(msg.body()).isEqualTo(defaultPayload);
-    assertThat(msg.hasMessageAttributes()).isTrue();
-    assertThat(msg.messageAttributes().get("specificKey").stringValue()).isEqualTo("specificValue");
+    assertThat(msg).isPresent();
+    assertThat(msg.get().body()).isEqualTo(defaultPayload);
+    assertThat(msg.get().hasMessageAttributes()).isTrue();
+    assertThat(msg.get().messageAttributes().get("specificKey").stringValue())
+        .isEqualTo("specificValue");
 
     // cleanup
-    sqsDeleteMessage(awsCreds, SQS1, msg);
+    sqsDeleteMessage(awsCreds, SQS1, msg.get());
   }
 
   @Test
@@ -193,8 +194,7 @@ class HybridSqsAndAsbQueueIntTests {
 
     // clean up
     asbConsume(asbCreds);
-    var msg = sqsReadOneMessage(awsCreds, SQS1);
-    sqsDeleteMessage(awsCreds, SQS1, msg);
+    sqsDeleteMessage(awsCreds, SQS1, sqsReadOneMessage(awsCreds, SQS1).orElseThrow());
   }
 
   @Test
@@ -213,13 +213,14 @@ class HybridSqsAndAsbQueueIntTests {
 
     // check that it arrived on SQS
     var msg = sqsReadOneMessage(awsCreds, SQS1);
-    assert msg != null;
-    assertThat(msg.body()).isEqualTo(defaultPayload);
-    assertThat(msg.hasMessageAttributes()).isTrue();
-    assertThat(msg.messageAttributes().get("specificKey").stringValue()).isEqualTo("specificValue");
+    assertThat(msg).isPresent();
+    assertThat(msg.get().body()).isEqualTo(defaultPayload);
+    assertThat(msg.get().hasMessageAttributes()).isTrue();
+    assertThat(msg.get().messageAttributes().get("specificKey").stringValue())
+        .isEqualTo("specificValue");
 
     // cleanup
-    sqsDeleteMessage(awsCreds, SQS1, msg);
+    sqsDeleteMessage(awsCreds, SQS1, msg.get());
     asbConsume(asbCreds);
   }
 

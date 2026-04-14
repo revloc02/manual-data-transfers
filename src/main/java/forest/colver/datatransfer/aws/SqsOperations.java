@@ -9,6 +9,7 @@ import static forest.colver.datatransfer.aws.AwsUtils.sqsCalcVisTimeout;
 import static forest.colver.datatransfer.config.ConfigUtils.writeFile;
 
 import java.util.Map;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
@@ -86,12 +87,14 @@ public class SqsOperations {
    *
    * @return A Message.
    */
-  public static Message sqsConsumeOneMessage(AwsCredentialsProvider awsCP, String queueName) {
+  public static Optional<Message> sqsConsumeOneMessage(
+      AwsCredentialsProvider awsCP, String queueName) {
     var msg = sqsReadOneMessage(awsCP, queueName);
-    if (msg != null) {
-      sqsDeleteMessage(awsCP, queueName, msg);
-      LOG.info("======== SQS_CONSUME: Consumed a message from SQS: {}.=======", queueName);
-    }
+    msg.ifPresent(
+        m -> {
+          sqsDeleteMessage(awsCP, queueName, m);
+          LOG.info("SQS_CONSUME: Consumed a message from SQS: {}.", queueName);
+        });
     return msg;
   }
 
@@ -102,7 +105,8 @@ public class SqsOperations {
    * used if possible. This method has been used in a lot of unit tests, but that does not mean it
    * is better.
    */
-  public static Message sqsReadOneMessage(AwsCredentialsProvider awsCP, String queueName) {
+  public static Optional<Message> sqsReadOneMessage(
+      AwsCredentialsProvider awsCP, String queueName) {
     try (var sqsClient = getSqsClient(awsCP)) {
       var receiveMessageRequest =
           ReceiveMessageRequest.builder()
@@ -117,12 +121,11 @@ public class SqsOperations {
       awsResponseValidation(response);
       if (response.messages().isEmpty()) {
         LOG.info("SQS_READ_ONE_MESSAGE: {} has NO messages.", queueName);
-        // another option: throw new RuntimeException with same log message
-        return null; // I'm still not sure this choice was best
+        return Optional.empty();
       } else {
         LOG.info("SQS_READ_ONE_MESSAGE: {} has a message.", queueName);
         displayMessageAttributes(response);
-        return response.messages().get(0);
+        return Optional.of(response.messages().get(0));
       }
     }
   }
@@ -351,13 +354,13 @@ public class SqsOperations {
 
   /** Move a message from one SQS queue to another. */
   public static void sqsMove(AwsCredentialsProvider awsCP, String fromSqs, String toSqs) {
-    var message = sqsConsumeOneMessage(awsCP, fromSqs);
-    if (message != null) {
-      sqsSend(awsCP, toSqs, message.body(), message.attributesAsStrings());
-      LOG.info("Moved message from {} to {}", fromSqs, toSqs);
-    } else {
-      LOG.warn("No message to move from {}", fromSqs);
-    }
+    sqsConsumeOneMessage(awsCP, fromSqs)
+        .ifPresentOrElse(
+            message -> {
+              sqsSend(awsCP, toSqs, message.body(), message.attributesAsStrings());
+              LOG.info("Moved message from {} to {}", fromSqs, toSqs);
+            },
+            () -> LOG.warn("No message to move from {}", fromSqs));
   }
 
   /**
@@ -437,17 +440,13 @@ public class SqsOperations {
    */
   public static void sqsMoveAllVerbose(AwsCredentialsProvider awsCP, String fromSqs, String toSqs) {
     var counter = 0;
-    var moreMessages = true;
-    Message message;
-    while (moreMessages) {
+    var message = sqsConsumeOneMessage(awsCP, fromSqs);
+    while (message.isPresent()) {
+      counter++;
+      var m = message.get();
+      sqsSend(awsCP, toSqs, m.body(), m.attributesAsStrings());
+      LOG.info("Moved message #{} from SQS={} to SQS={}", counter, fromSqs, toSqs);
       message = sqsConsumeOneMessage(awsCP, fromSqs);
-      if (message != null) {
-        counter++;
-        sqsSend(awsCP, toSqs, message.body(), message.attributesAsStrings());
-        LOG.info("Moved message #{} from SQS={} to SQS={}", counter, fromSqs, toSqs);
-      } else {
-        moreMessages = false;
-      }
     }
     LOG.info("Moved {} messages.", counter);
   }
