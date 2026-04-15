@@ -31,7 +31,7 @@ public class SqsAndS3 {
                     objectKey,
                     sqsMsg.body(),
                     convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes())),
-            () -> LOG.error("SQS message was null."));
+            () -> LOG.error("No SQS message available."));
   }
 
   /** Copy (read) next message from an SQS and save it to an S3. */
@@ -46,7 +46,7 @@ public class SqsAndS3 {
                     objectKey,
                     msg.body(),
                     convertSqsMessageAttributesToStrings(msg.messageAttributes())),
-            () -> LOG.error("SQS message was null."));
+            () -> LOG.error("No SQS message available."));
   }
 
   /**

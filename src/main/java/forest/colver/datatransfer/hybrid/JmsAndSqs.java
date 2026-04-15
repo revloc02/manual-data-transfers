@@ -55,7 +55,7 @@ public class JmsAndSqs {
                       convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
               sendMessageAutoAck(env, queue, message);
             },
-            () -> LOG.error("SQS message was null."));
+            () -> LOG.error("No SQS message available."));
   }
 
   public static void moveAllSpecificMessagesFromJmsToSqs(

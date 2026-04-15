@@ -41,7 +41,7 @@ public class SqsAndAsbQueue {
                   new HashMap<>(convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
               asbSend(azureConnStr, createIMessage(sqsMsg.body(), properties));
             },
-            () -> LOG.error("SQS message was null."));
+            () -> LOG.error("No SQS message available."));
   }
 
   public static void moveOneAsbQueueToSqs(
@@ -109,7 +109,7 @@ public class SqsAndAsbQueue {
                   new HashMap<>(convertSqsMessageAttributesToStrings(msg.messageAttributes()));
               asbSend(azureConnStr, createIMessage(msg.body(), properties));
             },
-            () -> LOG.error("SQS message was null."));
+            () -> LOG.error("No SQS message available."));
   }
 
   public static void copyOneAsbQueueToSqs(
