@@ -15,10 +15,10 @@ import static forest.colver.datatransfer.messaging.Environment.PROD;
 import static forest.colver.datatransfer.messaging.JmsBrowse.browseAndCountSpecificMessages;
 import static forest.colver.datatransfer.messaging.JmsBrowse.browseForSpecificMessage;
 import static forest.colver.datatransfer.messaging.JmsBrowse.copySpecificMessages;
+import static forest.colver.datatransfer.messaging.JmsConsume.consumeOneMessage;
 import static forest.colver.datatransfer.messaging.JmsUtils.getJmsMsgPayload;
 
 import forest.colver.datatransfer.messaging.Environment;
-import forest.colver.datatransfer.messaging.JmsConsume;
 import forest.colver.datatransfer.messaging.JmsSend;
 import forest.colver.datatransfer.messaging.JmsUtils;
 import jakarta.jms.JMSException;
@@ -131,7 +131,7 @@ public class CommonTasks {
     }
 
     int messageCount = 0;
-    var message = JmsConsume.consumeOneMessage(env, queue);
+    var message = consumeOneMessage(env, queue);
     while (message.isPresent()) {
       messageCount++;
       var m = message.get();
@@ -141,7 +141,7 @@ public class CommonTasks {
 
       writeFile(filePath.toString(), payload.getBytes());
       LOG.info("Wrote file: {}", filePath);
-      message = JmsConsume.consumeOneMessage(env, queue);
+      message = consumeOneMessage(env, queue);
     }
     LOG.info("DONE: Downloaded {} messages from queue: {}", messageCount, queue);
   }
