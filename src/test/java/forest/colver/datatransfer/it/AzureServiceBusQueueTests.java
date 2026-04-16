@@ -68,7 +68,7 @@ class AzureServiceBusQueueTests {
         .untilAsserted(() -> assertThat(messageCount(CREDS)).isEqualTo(1));
 
     LOG.info("...read that message...");
-    var message = asbRead(CREDS);
+    var message = asbRead(CREDS).orElseThrow();
 
     LOG.info("...check the message...");
     var body = new String(message.getMessageBody().getBinaryData().get(0));
@@ -106,7 +106,7 @@ class AzureServiceBusQueueTests {
         .untilAsserted(() -> assertThat(messageCount(toCreds)).isEqualTo(1));
 
     LOG.info("...check the message...");
-    var message = asbRead(toCreds);
+    var message = asbRead(toCreds).orElseThrow();
     var body = new String(message.getMessageBody().getBinaryData().get(0));
     assertThat(body).isEqualTo(defaultPayload);
     assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
@@ -134,7 +134,7 @@ class AzureServiceBusQueueTests {
         .untilAsserted(() -> assertThat(messageCount(CREDS)).isEqualTo(1));
 
     LOG.info("...retrieve that message...");
-    var message = asbConsume(CREDS);
+    var message = asbConsume(CREDS).orElseThrow();
     assertThat(messageCount(CREDS)).isZero();
 
     LOG.info("...check the message...");
@@ -202,7 +202,7 @@ class AzureServiceBusQueueTests {
         .untilAsserted(() -> assertThat(messageCount(credsQwDlq)).isZero());
 
     LOG.info("...check the DLQ message...");
-    var message = asbConsume(credsQwDlq_Dlq);
+    var message = asbConsume(credsQwDlq_Dlq).orElseThrow();
     var body = new String(message.getMessageBody().getBinaryData().get(0));
     assertThat(body).isEqualTo(defaultPayload);
     assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
@@ -255,7 +255,7 @@ class AzureServiceBusQueueTests {
 
     LOG.info("...check the message in the DLQ...");
     // check the DLQ message
-    var message = asbConsume(credsTtlQueueDlq);
+    var message = asbConsume(credsTtlQueueDlq).orElseThrow();
     var body = new String(message.getMessageBody().getBinaryData().get(0));
     assertThat(body).isEqualTo(defaultPayload);
     assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
@@ -293,7 +293,7 @@ class AzureServiceBusQueueTests {
         .untilAsserted(() -> assertThat(messageCount(credsQueWithForward)).isZero());
 
     LOG.info("...check the message on the destination queue...");
-    var message = asbRead(toCreds);
+    var message = asbRead(toCreds).orElseThrow();
     var body = new String(message.getMessageBody().getBinaryData().get(0));
     assertThat(body).isEqualTo(defaultPayload);
     assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
@@ -361,7 +361,7 @@ class AzureServiceBusQueueTests {
         .untilAsserted(() -> assertThat(messageCount(toCreds)).isEqualTo(1));
 
     LOG.info("...check the message...");
-    var message = asbRead(toCreds);
+    var message = asbRead(toCreds).orElseThrow();
     var body = new String(message.getMessageBody().getBinaryData().get(0));
     assertThat(body).isEqualTo(defaultPayload);
     assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");

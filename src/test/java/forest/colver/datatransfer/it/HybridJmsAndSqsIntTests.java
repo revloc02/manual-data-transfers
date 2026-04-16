@@ -90,7 +90,7 @@ public class HybridJmsAndSqsIntTests {
     assertThat(messages.hasMessages()).isFalse();
 
     // check that it arrived
-    var message = consumeOneMessage(STAGE, queue);
+    var message = consumeOneMessage(STAGE, queue).orElseThrow();
     assertThat(((TextMessage) message).getText()).contains(payload);
     assertThat(message.getStringProperty("key2")).isEqualTo("value2");
     assertThat(message.getStringProperty("key3")).isEqualTo("value3");
@@ -168,7 +168,7 @@ public class HybridJmsAndSqsIntTests {
 
     // check that they arrived
     for (var i = 0; i < numMsgs; i++) {
-      var message = consumeOneMessage(STAGE, queue);
+      var message = consumeOneMessage(STAGE, queue).orElseThrow();
       assertThat(((TextMessage) message).getText()).contains(payload);
       assertThat(message.getStringProperty("key2")).isEqualTo("value2");
       assertThat(message.getStringProperty("key3")).isEqualTo("value3");

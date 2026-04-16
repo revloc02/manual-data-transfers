@@ -11,6 +11,7 @@ import jakarta.jms.JMSException;
 import jakarta.jms.JMSProducer;
 import jakarta.jms.Message;
 import jakarta.jms.Queue;
+import java.util.Optional;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -186,7 +187,7 @@ public class JmsConsume {
     return message;
   }
 
-  public static Message consumeOneMessage(Environment env, String fromQueueName) {
+  public static Optional<Message> consumeOneMessage(Environment env, String fromQueueName) {
     Message message = null;
     var cf = new JmsConnectionFactory(env.url());
     try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {
@@ -198,7 +199,7 @@ public class JmsConsume {
         LOG.error("Failed to consume message from queue: {}:{}", env.name(), fromQueueName, e);
       }
     }
-    return message;
+    return Optional.ofNullable(message);
   }
 
   public static void moveSpecificMessage(

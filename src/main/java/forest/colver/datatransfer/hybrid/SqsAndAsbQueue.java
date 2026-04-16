@@ -46,8 +46,10 @@ public class SqsAndAsbQueue {
 
   public static void moveOneAsbQueueToSqs(
       ConnectionStringBuilder azureConnStr, AwsCredentialsProvider awsCreds, String sqs) {
-    IMessage iMessage = asbConsume(azureConnStr);
-    sendIMessageToSqs(iMessage, awsCreds, sqs);
+    asbConsume(azureConnStr)
+        .ifPresentOrElse(
+            iMessage -> sendIMessageToSqs(iMessage, awsCreds, sqs),
+            () -> LOG.error("No ASB message available."));
   }
 
   public static void moveAllSqsToAsbQueue(
@@ -76,22 +78,17 @@ public class SqsAndAsbQueue {
 
   public static void moveAllAsbQueueToSqs(
       ConnectionStringBuilder azureConnStr, String sqs, AwsCredentialsProvider awsCreds) {
-    var moreMessages = true;
     var counter = 0;
-    while (moreMessages) {
-      var iMessage = asbConsume(azureConnStr);
-      if (iMessage != null) {
-        counter++;
-        // send body and properties to SQS
-        sendIMessageToSqs(iMessage, awsCreds, sqs);
-        LOG.info(
-            "Moved from ASB-Queue={} to SQS={}; counter={}",
-            azureConnStr.getEntityPath(),
-            sqs,
-            counter);
-      } else {
-        moreMessages = false;
-      }
+    var iMessage = asbConsume(azureConnStr);
+    while (iMessage.isPresent()) {
+      counter++;
+      sendIMessageToSqs(iMessage.get(), awsCreds, sqs);
+      LOG.info(
+          "Moved from ASB-Queue={} to SQS={}; counter={}",
+          azureConnStr.getEntityPath(),
+          sqs,
+          counter);
+      iMessage = asbConsume(azureConnStr);
     }
     LOG.info(
         "Moved {} messages from ASB-Queue={} to SQS={}.",
@@ -114,12 +111,10 @@ public class SqsAndAsbQueue {
 
   public static void copyOneAsbQueueToSqs(
       ConnectionStringBuilder azureConnStr, AwsCredentialsProvider awsCreds, String sqs) {
-    var iMessage = asbRead(azureConnStr);
-    if (iMessage != null) {
-      sendIMessageToSqs(iMessage, awsCreds, sqs);
-    } else {
-      LOG.error("ASB queue IMessage was null.");
-    }
+    asbRead(azureConnStr)
+        .ifPresentOrElse(
+            iMessage -> sendIMessageToSqs(iMessage, awsCreds, sqs),
+            () -> LOG.error("No ASB message available."));
   }
 
   public static int copyAllSqsToAsbQueue(

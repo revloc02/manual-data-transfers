@@ -70,7 +70,7 @@ class HybridSqsAndAsbQueueIntTests {
     moveOneSqsToAsbQueue(awsCreds, SQS1, asbCreds);
 
     // read that message
-    var message = asbRead(asbCreds);
+    var message = asbRead(asbCreds).orElseThrow();
 
     // check it
     var body = new String(message.getMessageBody().getBinaryData().get(0));
@@ -184,7 +184,7 @@ class HybridSqsAndAsbQueueIntTests {
     copyOneSqsToAsbQueue(awsCreds, SQS1, asbCreds);
 
     // read that message
-    var message = asbRead(asbCreds);
+    var message = asbRead(asbCreds).orElseThrow();
 
     // check it
     var body = new String(message.getMessageBody().getBinaryData().get(0));

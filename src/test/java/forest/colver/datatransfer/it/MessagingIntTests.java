@@ -80,7 +80,7 @@ public class MessagingIntTests {
     var env = STAGE;
     var fromQueueName = "forest-test";
     sendDefaultMessage();
-    var message = consumeOneMessage(env, fromQueueName);
+    var message = consumeOneMessage(env, fromQueueName).orElseThrow();
     LOG.info(
         "Consumed from Host={} Queue={}, Message->{}",
         env.name(),
@@ -95,7 +95,7 @@ public class MessagingIntTests {
     var env = STAGE;
     var queueName = "forest-test";
     sendMessageAutoAck(env, queueName, createMessage());
-    var message = consumeOneMessage(env, queueName);
+    var message = consumeOneMessage(env, queueName).orElseThrow();
     assertThat(((TextMessage) message).getText()).contains("Default Payload");
     assertThat(message.getStringProperty("key2")).isEqualTo("value2");
     assertThat(message.getStringProperty("key3")).isEqualTo("value3");
@@ -185,7 +185,7 @@ public class MessagingIntTests {
     moveSpecificMessage(env, fromQueueName, "specificKey='specificValue'", toQueueName);
 
     // check the moved message
-    var message = consumeOneMessage(STAGE, toQueueName);
+    var message = consumeOneMessage(STAGE, toQueueName).orElseThrow();
     assertThat(((TextMessage) message).getText()).contains("Default Payload");
     assertThat(message.getStringProperty("specificKey")).isEqualTo("specificValue");
 
@@ -512,7 +512,8 @@ public class MessagingIntTests {
     var es = Executors.newFixedThreadPool(threads);
     List<Future<TextMessage>> futuresList = new ArrayList<>();
     for (var task = 0; task < numMsgs; task++) {
-      futuresList.add(es.submit(() -> (TextMessage) consumeOneMessage(STAGE, queueName)));
+      futuresList.add(
+          es.submit(() -> (TextMessage) consumeOneMessage(STAGE, queueName).orElseThrow()));
     }
     LOG.info("Tasks submitted: futuresList.size={}", futuresList.size());
 

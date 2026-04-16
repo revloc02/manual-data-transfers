@@ -13,6 +13,7 @@ import com.microsoft.azure.servicebus.primitives.ConnectionStringBuilder;
 import com.microsoft.azure.servicebus.primitives.ServiceBusException;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,22 +66,24 @@ public class ServiceBusQueueOperations {
    * This method reads a message off of the queue, and then immediately abandons the lock on the
    * message and makes it available for any other consumers to access that message.
    */
-  public static IMessage asbRead(ConnectionStringBuilder connectionStringBuilder) {
+  public static Optional<IMessage> asbRead(ConnectionStringBuilder connectionStringBuilder) {
     IMessage message = null;
     try {
       IMessageReceiver iMessageReceiver =
           ClientFactory.createMessageReceiverFromConnectionStringBuilder(
               connectionStringBuilder, ReceiveMode.PEEKLOCK);
       message = iMessageReceiver.receive(ASB_RECEIVE_TIMEOUT);
-      iMessageReceiver.abandon(
-          message.getLockToken()); // make message available for other consumers
+      if (message != null) {
+        iMessageReceiver.abandon(
+            message.getLockToken()); // make message available for other consumers
+      }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       LOG.error("An error occurred in asbRead", e);
     } catch (ServiceBusException e) {
       LOG.error("An error occurred in asbRead", e);
     }
-    return message;
+    return Optional.ofNullable(message);
   }
 
   // todo: I tried this version of asbRead and got a null when I tried to get the message body, so
@@ -111,7 +114,7 @@ public class ServiceBusQueueOperations {
    * deletes the message after retrieving it--simply consuming the message without any thought of
    * processing it first.
    */
-  public static IMessage asbConsume(ConnectionStringBuilder connectionStringBuilder) {
+  public static Optional<IMessage> asbConsume(ConnectionStringBuilder connectionStringBuilder) {
     IMessage message = null;
     try {
       IMessageReceiver iMessageReceiver =
@@ -125,7 +128,7 @@ public class ServiceBusQueueOperations {
       LOG.error("An error occurred in asbConsume", e);
     }
     LOG.info("=====Consumed message from ASB queue: {}", connectionStringBuilder.getEntityPath());
-    return message;
+    return Optional.ofNullable(message);
   }
 
   /**
@@ -172,7 +175,9 @@ public class ServiceBusQueueOperations {
   }
 
   public static void asbCopy(ConnectionStringBuilder fromCsb, ConnectionStringBuilder toCsb) {
-    asbSend(toCsb, asbRead(fromCsb));
+    asbRead(fromCsb)
+        .ifPresentOrElse(
+            message -> asbSend(toCsb, message), () -> LOG.error("No ASB message available."));
   }
 
   // todo: this won't work because there needs to be a visibility timeout

@@ -16,7 +16,6 @@ import static jakarta.jms.JMSContext.CLIENT_ACKNOWLEDGE;
 import forest.colver.datatransfer.messaging.Environment;
 import jakarta.jms.JMSConsumer;
 import jakarta.jms.JMSException;
-import jakarta.jms.Message;
 import jakarta.jms.TextMessage;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.slf4j.Logger;
@@ -38,10 +37,11 @@ public class JmsAndSqs {
    */
   public static void moveOneJmsToSqs(
       Environment qpidEnv, String qpidQ, AwsCredentialsProvider awsCreds, String sqs) {
-    Message msg = consumeOneMessage(qpidEnv, qpidQ);
-
     // SQS messages are limited to 10 attributes of up to 256 characters each
-    sqsSend(awsCreds, sqs, getJmsMsgPayload(msg), extractMsgProperties(msg));
+    consumeOneMessage(qpidEnv, qpidQ)
+        .ifPresentOrElse(
+            msg -> sqsSend(awsCreds, sqs, getJmsMsgPayload(msg), extractMsgProperties(msg)),
+            () -> LOG.error("No JMS message available."));
   }
 
   public static void moveOneSqsToJms(

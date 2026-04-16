@@ -130,16 +130,18 @@ public class CommonTasks {
       throw new RuntimeException("Failed to create directory: " + baseDir, e);
     }
 
-    Message message;
     int messageCount = 0;
-    while ((message = JmsConsume.consumeOneMessage(env, queue)) != null) {
+    var message = JmsConsume.consumeOneMessage(env, queue);
+    while (message.isPresent()) {
       messageCount++;
-      var payload = getJmsMsgPayload(message);
-      var filename = generateFilename(message, messageCount);
+      var m = message.get();
+      var payload = getJmsMsgPayload(m);
+      var filename = generateFilename(m, messageCount);
       var filePath = baseDir.resolve(filename);
 
       writeFile(filePath.toString(), payload.getBytes());
       LOG.info("Wrote file: {}", filePath);
+      message = JmsConsume.consumeOneMessage(env, queue);
     }
     LOG.info("DONE: Downloaded {} messages from queue: {}", messageCount, queue);
   }
