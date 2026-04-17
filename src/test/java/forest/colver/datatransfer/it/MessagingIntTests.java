@@ -350,7 +350,7 @@ public class MessagingIntTests {
     sendMessageAutoAck(env, queue, createTextMessage(getDefaultPayload(), messageProps));
 
     // consume the specific message and check it
-    var message = consumeSpecificMessage(env, queue, "specificKey='specificValue'");
+    var message = consumeSpecificMessage(env, queue, "specificKey='specificValue'").orElseThrow();
     assertThat(message.getStringProperty("specificKey")).isEqualTo("specificValue");
 
     // ensure that there was one 1 message left

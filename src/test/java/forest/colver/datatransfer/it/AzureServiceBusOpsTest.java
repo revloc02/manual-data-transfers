@@ -52,7 +52,8 @@ class AzureServiceBusOpsTest {
 
     LOG.info("...read that message from the queue...");
     var message =
-        asbReadMessage(EMX_SANDBOX_ASB_FOREST_TEST_QUEUE_CONN_STR, EMX_SANDBOX_FOREST_QUEUE);
+        asbReadMessage(EMX_SANDBOX_ASB_FOREST_TEST_QUEUE_CONN_STR, EMX_SANDBOX_FOREST_QUEUE)
+            .orElseThrow();
 
     LOG.info("...check the message...");
     var body = message.getBody().toString();
@@ -91,7 +92,8 @@ class AzureServiceBusOpsTest {
             () -> assertThat(messageCount(EMX_SANDBOX_ASB_FOREST_TEST_SUB_QUEUE_CONN_STR)).isOne());
 
     LOG.info("...read that message from the queue...");
-    var message = asbReadMessage(EMX_SANDBOX_ASB_FOREST_TEST_SUB_QUEUE_CONN_STR, queue);
+    var message =
+        asbReadMessage(EMX_SANDBOX_ASB_FOREST_TEST_SUB_QUEUE_CONN_STR, queue).orElseThrow();
 
     LOG.info("...check the message...");
     var body = message.getBody().toString();

@@ -161,7 +161,7 @@ public class JmsConsume {
     }
   }
 
-  public static Message consumeSpecificMessage(
+  public static Optional<Message> consumeSpecificMessage(
       Environment env, String fromQueueName, String selector) {
     Message message = null;
     var cf = new JmsConnectionFactory(env.url());
@@ -169,12 +169,14 @@ public class JmsConsume {
       var fromQ = ctx.createQueue(fromQueueName);
       try (var consumer = ctx.createConsumer(fromQ, selector)) {
         message = consumer.receive(RECEIVE_TIMEOUT);
-        LOG.info(
-            "Consumed from Queue={}:{}, Message->{}",
-            env.name(),
-            fromQueueName,
-            createStringFromMessage(message));
-        message.acknowledge();
+        if (message != null) {
+          LOG.info(
+              "Consumed from Queue={}:{}, Message->{}",
+              env.name(),
+              fromQueueName,
+              createStringFromMessage(message));
+          message.acknowledge();
+        }
       } catch (JMSException e) {
         LOG.error(
             "Failed to consume specific message from queue: {}:{} with selector: {}",
@@ -184,7 +186,7 @@ public class JmsConsume {
             e);
       }
     }
-    return message;
+    return Optional.ofNullable(message);
   }
 
   public static Optional<Message> consumeOneMessage(Environment env, String fromQueueName) {

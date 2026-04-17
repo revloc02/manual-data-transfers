@@ -9,6 +9,7 @@ import com.azure.messaging.servicebus.ServiceBusReceivedMessage;
 import com.azure.messaging.servicebus.ServiceBusReceiverClient;
 import com.azure.messaging.servicebus.ServiceBusSenderClient;
 import com.azure.messaging.servicebus.models.ServiceBusReceiveMode;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,9 +60,9 @@ public class ServiceBusOperations {
    *
    * @param connectionString The connection string to the Service Bus namespace.
    * @param queueName The name of the queue.
-   * @return The message, or null if no message is available.
+   * @return The message, or empty if no message is available.
    */
-  public static ServiceBusReceivedMessage asbReadMessage(
+  public static Optional<ServiceBusReceivedMessage> asbReadMessage(
       String connectionString, String queueName) {
     try (ServiceBusReceiverClient receiver =
         new ServiceBusClientBuilder()
@@ -72,7 +73,7 @@ public class ServiceBusOperations {
             .buildClient()) {
       var message = receiver.receiveMessages(1, ASB_RECEIVE_TIMEOUT).stream().findFirst();
       LOG.info("Message read from queue: {}", queueName);
-      return message.orElse(null);
+      return message;
     }
   }
 

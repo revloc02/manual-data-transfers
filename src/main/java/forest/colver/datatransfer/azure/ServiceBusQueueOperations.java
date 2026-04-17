@@ -93,7 +93,8 @@ public class ServiceBusQueueOperations {
    * This method will read a message, and then it will not be available for any other consumers for
    * 60 sec, as the message is locked by the queue.
    */
-  public static IMessage asbReadWithPeeklock(ConnectionStringBuilder connectionStringBuilder) {
+  public static Optional<IMessage> asbReadWithPeeklock(
+      ConnectionStringBuilder connectionStringBuilder) {
     IMessage message = null;
     try {
       IMessageReceiver iMessageReceiver =
@@ -106,7 +107,7 @@ public class ServiceBusQueueOperations {
     } catch (ServiceBusException e) {
       LOG.error("An error occurred in asbReadWithPeeklock", e);
     }
-    return message;
+    return Optional.ofNullable(message);
   }
 
   /**
@@ -197,10 +198,8 @@ public class ServiceBusQueueOperations {
     if (depth < maxDepth) {
       while (depth > 0) {
         LOG.info("depth={}", depth);
-        var message = asbReadWithPeeklock(fromCsb);
-        if (message != null) {
-          asbSend(toCsb, asbReadWithPeeklock(fromCsb));
-        }
+        asbReadWithPeeklock(fromCsb)
+            .ifPresent(message -> asbSend(toCsb, asbReadWithPeeklock(fromCsb).orElseThrow()));
         depth = messageCount(fromCsb);
       }
     } else {
