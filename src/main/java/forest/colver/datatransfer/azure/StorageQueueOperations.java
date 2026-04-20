@@ -5,6 +5,7 @@ import com.azure.storage.queue.models.PeekedMessageItem;
 import com.azure.storage.queue.models.QueueMessageItem;
 import com.azure.storage.queue.models.QueueStorageException;
 import java.util.List;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +50,7 @@ public class StorageQueueOperations {
     return body;
   }
 
-  public static QueueMessageItem asqConsume(String connectStr, String queueName) {
+  public static Optional<QueueMessageItem> asqConsume(String connectStr, String queueName) {
     QueueMessageItem message = null;
     var queueClient =
         new QueueClientBuilder().connectionString(connectStr).queueName(queueName).buildClient();
@@ -63,7 +64,7 @@ public class StorageQueueOperations {
     } catch (QueueStorageException e) {
       LOG.error("An error occurred while receiving the message", e);
     }
-    return message;
+    return Optional.ofNullable(message);
   }
 
   public static int asqQueueDepth(String connectStr, String queueName) {
@@ -103,22 +104,16 @@ public class StorageQueueOperations {
   }
 
   public static void asqMove(String connectStr, String queue1, String queue2) {
-    var message = asqConsume(connectStr, queue1);
-    if (message != null) {
-      asqSend(connectStr, queue2, String.valueOf(message.getBody()));
-    } else {
-      LOG.error("message is null.");
-    }
+    asqConsume(connectStr, queue1)
+        .ifPresentOrElse(
+            message -> asqSend(connectStr, queue2, String.valueOf(message.getBody())),
+            () -> LOG.error("No ASQ message available."));
   }
 
   public static void asqMoveAll(String connectStr, String queue1, String queue2) {
     while (asqQueueDepth(connectStr, queue1) > 0) {
-      var message = asqConsume(connectStr, queue1);
-      if (message != null) {
-        asqSend(connectStr, queue2, String.valueOf(message.getBody()));
-      } else {
-        LOG.error("message is null.");
-      }
+      asqConsume(connectStr, queue1)
+          .ifPresent(message -> asqSend(connectStr, queue2, String.valueOf(message.getBody())));
     }
   }
 

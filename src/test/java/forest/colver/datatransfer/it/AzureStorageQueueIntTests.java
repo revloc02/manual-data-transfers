@@ -18,6 +18,7 @@ import com.azure.storage.queue.models.QueueMessageItem;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -53,7 +54,7 @@ public class AzureStorageQueueIntTests {
     assertThat(asqPeek(CONNECT_STR, QUEUE_NAME)).isEqualTo(PAYLOAD);
 
     // consume the message
-    var message = asqConsume(CONNECT_STR, QUEUE_NAME);
+    var message = asqConsume(CONNECT_STR, QUEUE_NAME).orElseThrow();
     assertThat(message.getBody()).hasToString(PAYLOAD);
   }
 
@@ -89,16 +90,16 @@ public class AzureStorageQueueIntTests {
 
     var threads = 30;
     var es = Executors.newFixedThreadPool(threads);
-    List<Future<QueueMessageItem>> futuresList = new ArrayList<>();
+    List<Future<Optional<QueueMessageItem>>> futuresList = new ArrayList<>();
     for (var task = 0; task < numMsgs; task++) {
       futuresList.add(es.submit(() -> asqConsume(CONNECT_STR, QUEUE_NAME)));
     }
     LOG.info("Tasks submitted: futuresList.size={}", futuresList.size());
 
-    for (Future<QueueMessageItem> future : futuresList) {
+    for (Future<Optional<QueueMessageItem>> future : futuresList) {
       // remember, future.get() blocks execution until the task is complete
-      uuids.remove(future.get().getBody().toString());
-      LOG.info("removed {}", future.get().getBody());
+      uuids.remove(future.get().orElseThrow().getBody().toString());
+      LOG.info("removed {}", future.get().orElseThrow().getBody());
     }
     assertThat(uuids).isEmpty();
   }
