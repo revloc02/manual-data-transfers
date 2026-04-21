@@ -68,7 +68,7 @@ public class CommonTasks {
     //    name                 = gtmbancoindustrialACH20230411123003061.xml
     //    targetSystem         = ext-banco-industrial
 
-    var message = browseForSpecificMessage(PROD, "emx-replay-cache", selector);
+    var message = browseForSpecificMessage(PROD, "emx-replay-cache", selector).orElseThrow();
     var payload = getJmsMsgPayload(message);
     writeFile(fullyQualifiedPath, payload.getBytes());
   }

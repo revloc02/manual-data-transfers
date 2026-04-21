@@ -203,7 +203,7 @@ public class MessagingIntTests {
     sendMultipleSameMessage(env, queueName, createMessage(), 3);
 
     // check
-    var message = browseNextMessage(STAGE, queueName);
+    var message = browseNextMessage(STAGE, queueName).orElseThrow();
     assertThat(((TextMessage) message).getText()).contains("Default Payload");
 
     // cleanup
@@ -226,7 +226,8 @@ public class MessagingIntTests {
     }
 
     // check
-    var message = browseForSpecificMessage(STAGE, queueName, "specificKey='specificValue'");
+    var message =
+        browseForSpecificMessage(STAGE, queueName, "specificKey='specificValue'").orElseThrow();
     assertThat(((TextMessage) message).getText()).contains("Default Payload");
     assertThat(message.getStringProperty("specificKey")).isEqualTo("specificValue");
 

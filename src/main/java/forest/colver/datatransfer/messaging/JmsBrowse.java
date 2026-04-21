@@ -9,6 +9,7 @@ import jakarta.jms.Message;
 import jakarta.jms.TextMessage;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.Optional;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +19,7 @@ public class JmsBrowse {
   private static final Logger LOG = LoggerFactory.getLogger(JmsBrowse.class);
 
   /** Retrieves the next message from the queue. */
-  public static Message browseNextMessage(Environment env, String queueName) {
+  public static Optional<Message> browseNextMessage(Environment env, String queueName) {
     Message message = null;
     var cf = new JmsConnectionFactory(env.url());
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
@@ -26,28 +27,30 @@ public class JmsBrowse {
       Enumeration msgs;
       try (var browser = ctx.createBrowser(q)) {
         msgs = browser.getEnumeration();
-        message = (Message) msgs.nextElement();
-        LOG.info(
-            "Next message BROWSED Host={}, Queue={}, Message->{}",
-            env.name(),
-            queueName,
-            createStringFromMessage(message));
-        var msgCount =
-            Collections.list(msgs).size()
-                + 1; // note that this statement empties msgs Enumeration series
-        LOG.info("Queue={}:{}; MessageCountFromSelector={}\n", env.name(), queueName, msgCount);
+        if (msgs.hasMoreElements()) {
+          message = (Message) msgs.nextElement();
+          LOG.info(
+              "Next message BROWSED Host={}, Queue={}, Message->{}",
+              env.name(),
+              queueName,
+              createStringFromMessage(message));
+          var msgCount =
+              Collections.list(msgs).size()
+                  + 1; // note that this statement empties msgs Enumeration series
+          LOG.info("Queue={}:{}; MessageCountFromSelector={}\n", env.name(), queueName, msgCount);
+        }
       } catch (JMSException e) {
         LOG.error("Failed to browse next message from queue: {}:{}", env.name(), queueName, e);
       }
     }
-    return message;
+    return Optional.ofNullable(message);
   }
 
   /**
    * Copies a message from a queue and returns the Message object. Retrieved Message also remains on
    * the queue.
    */
-  public static Message browseForSpecificMessage(
+  public static Optional<Message> browseForSpecificMessage(
       Environment env, String queueName, String selector) {
     Message message = null;
     var cf = new JmsConnectionFactory(env.url());
@@ -56,14 +59,16 @@ public class JmsBrowse {
       Enumeration msgs;
       try (var browser = ctx.createBrowser(q, selector)) {
         msgs = browser.getEnumeration();
-        message = (Message) msgs.nextElement();
-        LOG.info(
-            "Next message BROWSED Host={}, Queue={}, Message->{}",
-            env.name(),
-            queueName,
-            createStringFromMessage(message));
-        var msgCount = Collections.list(msgs).size() + 1; // this empties msgs Enumeration series
-        LOG.info("Queue={}:{}; MessageCountFromSelector={}\n", env.name(), queueName, msgCount);
+        if (msgs.hasMoreElements()) {
+          message = (Message) msgs.nextElement();
+          LOG.info(
+              "Next message BROWSED Host={}, Queue={}, Message->{}",
+              env.name(),
+              queueName,
+              createStringFromMessage(message));
+          var msgCount = Collections.list(msgs).size() + 1; // this empties msgs Enumeration series
+          LOG.info("Queue={}:{}; MessageCountFromSelector={}\n", env.name(), queueName, msgCount);
+        }
       } catch (JMSException e) {
         LOG.error(
             "Failed to browse for specific message from queue: {}:{} with selector: {}",
@@ -73,7 +78,7 @@ public class JmsBrowse {
             e);
       }
     }
-    return message;
+    return Optional.ofNullable(message);
   }
 
   /**

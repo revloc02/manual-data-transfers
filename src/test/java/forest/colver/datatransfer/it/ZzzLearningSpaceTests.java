@@ -244,9 +244,10 @@ class ZzzLearningSpaceTests {
   void addJmsHeaderToMessage() throws JMSException {
     var message =
         JmsBrowse.browseForSpecificMessage(
-            Environment.PROD,
-            "forest-test",
-            "traceparent='00-18d4cd7e866a81038fd621d78e21be14-d998fea593265831'");
+                Environment.PROD,
+                "forest-test",
+                "traceparent='00-18d4cd7e866a81038fd621d78e21be14-d998fea593265831'")
+            .orElseThrow();
     LOG.info("=============== message received ===================");
     var headers = JmsUtils.extractMsgProperties(message);
     headers.put("datatype", "temple.recommend.update");
