@@ -198,8 +198,7 @@ public class ServiceBusQueueOperations {
     if (depth < maxDepth) {
       while (depth > 0) {
         LOG.info("depth={}", depth);
-        asbReadWithPeeklock(fromCsb)
-            .ifPresent(message -> asbSend(toCsb, asbReadWithPeeklock(fromCsb).orElseThrow()));
+        asbReadWithPeeklock(fromCsb).ifPresent(message -> asbSend(toCsb, message));
         depth = messageCount(fromCsb);
       }
     } else {
