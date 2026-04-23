@@ -45,15 +45,17 @@ public class ServiceBusQueueOperations {
     }
   }
 
-  public static IMessageReceiver getReceiver(ConnectionStringBuilder connectionStringBuilder) {
+  public static Optional<IMessageReceiver> getReceiver(
+      ConnectionStringBuilder connectionStringBuilder) {
     try {
-      return ClientFactory.createMessageReceiverFromConnectionStringBuilder(
-          connectionStringBuilder, ReceiveMode.PEEKLOCK);
+      return Optional.of(
+          ClientFactory.createMessageReceiverFromConnectionStringBuilder(
+              connectionStringBuilder, ReceiveMode.PEEKLOCK));
     } catch (InterruptedException | ServiceBusException e) {
       Thread.currentThread().interrupt();
       LOG.error("An error occurred in getReceiver", e);
     }
-    return null;
+    return Optional.empty();
   }
 
   // todo: okay, okay...I have some things to learn about receiving messages.
@@ -153,20 +155,27 @@ public class ServiceBusQueueOperations {
   }
 
   public static void asbMove(ConnectionStringBuilder fromCsb, ConnectionStringBuilder toCsb) {
-    var receiver = getReceiver(fromCsb);
-    try {
-      var message = receiver.receive(ASB_RECEIVE_TIMEOUT);
-      if (message != null) {
-        asbSend(toCsb, message);
-        receiver.completeAsync(message.getLockToken()); // delete the message
-        LOG.info("Message moved from {} to {}", fromCsb.getEntityPath(), toCsb.getEntityPath());
-      } else {
-        LOG.warn("No message to move from {}", fromCsb.getEntityPath());
-      }
-    } catch (InterruptedException | ServiceBusException e) {
-      Thread.currentThread().interrupt();
-      LOG.error("An error occurred in asbMove", e);
-    }
+    getReceiver(fromCsb)
+        .ifPresentOrElse(
+            receiver -> {
+              try {
+                var message = receiver.receive(ASB_RECEIVE_TIMEOUT);
+                if (message != null) {
+                  asbSend(toCsb, message);
+                  receiver.completeAsync(message.getLockToken()); // delete the message
+                  LOG.info(
+                      "Message moved from {} to {}",
+                      fromCsb.getEntityPath(),
+                      toCsb.getEntityPath());
+                } else {
+                  LOG.warn("No message to move from {}", fromCsb.getEntityPath());
+                }
+              } catch (InterruptedException | ServiceBusException e) {
+                Thread.currentThread().interrupt();
+                LOG.error("An error occurred in asbMove", e);
+              }
+            },
+            () -> LOG.error("Could not get receiver for {}", fromCsb.getEntityPath()));
   }
 
   public static void asbMoveAll(ConnectionStringBuilder fromCsb, ConnectionStringBuilder toCsb) {
