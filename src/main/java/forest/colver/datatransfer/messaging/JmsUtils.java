@@ -141,18 +141,17 @@ public class JmsUtils {
   }
 
   public static TextMessage createTextMessage(String body, Map<String, String> properties) {
-    TextMessage message = null;
     var cf = new JmsConnectionFactory(getUsername(), getPassword(), STAGE.url());
     try (var ctx = cf.createContext()) {
-      message = ctx.createTextMessage(body);
+      var message = ctx.createTextMessage(body);
       if (properties != null) {
         for (Map.Entry<String, String> entry : properties.entrySet()) {
           message.setStringProperty(entry.getKey(), entry.getValue());
         }
       }
+      return message;
     } catch (JMSException e) {
-      LOG.error("Failed to create text message with properties", e);
+      throw new RuntimeException("Failed to create text message with properties", e);
     }
-    return message;
   }
 }
