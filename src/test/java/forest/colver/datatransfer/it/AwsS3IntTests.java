@@ -764,13 +764,7 @@ class AwsS3IntTests {
     }
   }
 
-  // todo: this warning will soon no longer be true. Clean it up and make it a JavaDoc.
-  /**
-   * WARNING: This test leaves versioned objects on the bucket that are not cleaned up. Back when I
-   * wrote this, putting more than 1000 files on this Internal S3 bucket was benign. But since then
-   * object versioning has been turned on for this bucket, and now this test leaves behind a bunch
-   * of versioned objects with delete markers.
-   */
+  /** Tests counting all objects across multiple S3 list pages (more than 1000 objects). */
   @Test
   void testS3CountAll() {
     var creds = getEmxSbCreds();
