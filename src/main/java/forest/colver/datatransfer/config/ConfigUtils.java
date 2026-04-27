@@ -132,9 +132,10 @@ public class ConfigUtils {
     try {
       FileReader reader = new FileReader(path);
       credentials.load(reader);
-    } catch (Exception var3) {
-      System.out.println(
-          "File not found from path given OR properties in file are not properly formatted (ex. emx.username=myuser)\nDefault path is %HOME%/.emx/credentials.properties");
+    } catch (IOException e) {
+      LOG.error(
+          "File not found from path given OR properties in file are not properly formatted (ex. emx.username=myuser)\nDefault path is %HOME%/.emx/credentials.properties",
+          e);
     }
     return credentials;
   }
