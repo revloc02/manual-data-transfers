@@ -24,11 +24,11 @@ public class JmsBrowse {
     var cf = new JmsConnectionFactory(env.url());
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
       var q = ctx.createQueue(queueName);
-      Enumeration msgs;
       try (var browser = ctx.createBrowser(q)) {
-        msgs = browser.getEnumeration();
+        @SuppressWarnings("unchecked")
+        var msgs = (Enumeration<Message>) browser.getEnumeration();
         if (msgs.hasMoreElements()) {
-          message = (Message) msgs.nextElement();
+          message = msgs.nextElement();
           LOG.info(
               "Next message BROWSED Host={}, Queue={}, Message->{}",
               env.name(),
@@ -56,11 +56,11 @@ public class JmsBrowse {
     var cf = new JmsConnectionFactory(env.url());
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
       var q = ctx.createQueue(queueName);
-      Enumeration msgs;
       try (var browser = ctx.createBrowser(q, selector)) {
-        msgs = browser.getEnumeration();
+        @SuppressWarnings("unchecked")
+        var msgs = (Enumeration<Message>) browser.getEnumeration();
         if (msgs.hasMoreElements()) {
-          message = (Message) msgs.nextElement();
+          message = msgs.nextElement();
           LOG.info(
               "Next message BROWSED Host={}, Queue={}, Message->{}",
               env.name(),
@@ -95,9 +95,9 @@ public class JmsBrowse {
     var msgCount = 0;
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
       var q = ctx.createQueue(queueName);
-      Enumeration msgs;
       try (var browser = ctx.createBrowser(q, selector)) {
-        msgs = browser.getEnumeration();
+        @SuppressWarnings("unchecked")
+        var msgs = (Enumeration<Message>) browser.getEnumeration();
         msgCount = Collections.list(msgs).size();
         LOG.info("Queue={}:{}; MessageCountFromSelector={}\n", env.name(), queueName, msgCount);
       } catch (JMSException e) {
@@ -124,9 +124,9 @@ public class JmsBrowse {
     var cf = new JmsConnectionFactory(env.url());
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
       var q = ctx.createQueue(queueName);
-      Enumeration msgs;
       try (var browser = ctx.createBrowser(q)) {
-        msgs = browser.getEnumeration();
+        @SuppressWarnings("unchecked")
+        var msgs = (Enumeration<Message>) browser.getEnumeration();
         var messages = Collections.list(msgs);
         for (var msg : messages) {
           var payload = ((TextMessage) msg).getText();
@@ -143,9 +143,9 @@ public class JmsBrowse {
     var queueDepth = 0;
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
       var q = ctx.createQueue(queueName);
-      Enumeration msgs;
       try (var browser = ctx.createBrowser(q)) {
-        msgs = browser.getEnumeration();
+        @SuppressWarnings("unchecked")
+        var msgs = (Enumeration<Message>) browser.getEnumeration();
         queueDepth = Collections.list(msgs).size();
         LOG.info("Queue={}:{} Depth={}", env.name(), queueName, queueDepth);
       } catch (JMSException e) {
@@ -161,12 +161,12 @@ public class JmsBrowse {
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
       var fromQ = ctx.createQueue(fromQName);
       var toQ = ctx.createQueue(toQName);
-      Enumeration msgs;
       int count = 0;
       try (var browser = ctx.createBrowser(fromQ, selector)) {
-        msgs = browser.getEnumeration();
+        @SuppressWarnings("unchecked")
+        var msgs = (Enumeration<Message>) browser.getEnumeration();
         while (msgs.hasMoreElements()) {
-          var message = (Message) msgs.nextElement();
+          var message = msgs.nextElement();
           ctx.createProducer().send(toQ, message);
           count++;
           LOG.info(
@@ -198,12 +198,12 @@ public class JmsBrowse {
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
       var fromQ = ctx.createQueue(fromQName);
       var toQ = ctx.createQueue(toQName);
-      Enumeration msgs;
       int count = 0;
       try (var browser = ctx.createBrowser(fromQ)) {
-        msgs = browser.getEnumeration();
+        @SuppressWarnings("unchecked")
+        var msgs = (Enumeration<Message>) browser.getEnumeration();
         while (msgs.hasMoreElements()) {
-          var message = (Message) msgs.nextElement();
+          var message = msgs.nextElement();
           ctx.createProducer().send(toQ, message);
           count++;
           LOG.info(
@@ -235,14 +235,14 @@ public class JmsBrowse {
     try (var fromCtx = fromCf.createContext(getUsername(), getPassword())) {
       var fromQ = fromCtx.createQueue(fromQName);
       var toQ = fromCtx.createQueue(toQName);
-      Enumeration msgs;
       int count = 0;
       try (var browser = fromCtx.createBrowser(fromQ)) {
-        msgs = browser.getEnumeration();
+        @SuppressWarnings("unchecked")
+        var msgs = (Enumeration<Message>) browser.getEnumeration();
         var toCf = new JmsConnectionFactory(toEnv.url());
         try (var toCtx = toCf.createContext(getUsername(), getPassword())) {
           while (msgs.hasMoreElements()) {
-            var message = (Message) msgs.nextElement();
+            var message = msgs.nextElement();
             toCtx.createProducer().send(toQ, message);
             count++;
             LOG.info(
