@@ -20,7 +20,6 @@ public class JmsBrowse {
 
   /** Retrieves the next message from the queue. */
   public static Optional<Message> browseNextMessage(Environment env, String queueName) {
-    Message message = null;
     var cf = new JmsConnectionFactory(env.url());
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
       var q = ctx.createQueue(queueName);
@@ -28,7 +27,7 @@ public class JmsBrowse {
         @SuppressWarnings("unchecked")
         var msgs = (Enumeration<Message>) browser.getEnumeration();
         if (msgs.hasMoreElements()) {
-          message = msgs.nextElement();
+          var message = msgs.nextElement();
           LOG.info(
               "Next message BROWSED Host={}, Queue={}, Message->{}",
               env.name(),
@@ -38,12 +37,13 @@ public class JmsBrowse {
               Collections.list(msgs).size()
                   + 1; // note that this statement empties msgs Enumeration series
           LOG.info("Queue={}:{}; MessageCountFromSelector={}\n", env.name(), queueName, msgCount);
+          return Optional.of(message);
         }
       } catch (JMSException e) {
         LOG.error("Failed to browse next message from queue: {}:{}", env.name(), queueName, e);
       }
     }
-    return Optional.ofNullable(message);
+    return Optional.empty();
   }
 
   /**
@@ -52,7 +52,6 @@ public class JmsBrowse {
    */
   public static Optional<Message> browseForSpecificMessage(
       Environment env, String queueName, String selector) {
-    Message message = null;
     var cf = new JmsConnectionFactory(env.url());
     try (var ctx = cf.createContext(getUsername(), getPassword())) {
       var q = ctx.createQueue(queueName);
@@ -60,7 +59,7 @@ public class JmsBrowse {
         @SuppressWarnings("unchecked")
         var msgs = (Enumeration<Message>) browser.getEnumeration();
         if (msgs.hasMoreElements()) {
-          message = msgs.nextElement();
+          var message = msgs.nextElement();
           LOG.info(
               "Next message BROWSED Host={}, Queue={}, Message->{}",
               env.name(),
@@ -68,6 +67,7 @@ public class JmsBrowse {
               createStringFromMessage(message));
           var msgCount = Collections.list(msgs).size() + 1; // this empties msgs Enumeration series
           LOG.info("Queue={}:{}; MessageCountFromSelector={}\n", env.name(), queueName, msgCount);
+          return Optional.of(message);
         }
       } catch (JMSException e) {
         LOG.error(
@@ -78,7 +78,7 @@ public class JmsBrowse {
             e);
       }
     }
-    return Optional.ofNullable(message);
+    return Optional.empty();
   }
 
   /**

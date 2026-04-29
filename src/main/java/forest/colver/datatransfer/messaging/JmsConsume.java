@@ -163,12 +163,11 @@ public class JmsConsume {
 
   public static Optional<Message> consumeSpecificMessage(
       Environment env, String fromQueueName, String selector) {
-    Message message = null;
     var cf = new JmsConnectionFactory(env.url());
     try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {
       var fromQ = ctx.createQueue(fromQueueName);
       try (var consumer = ctx.createConsumer(fromQ, selector)) {
-        message = consumer.receive(RECEIVE_TIMEOUT);
+        var message = consumer.receive(RECEIVE_TIMEOUT);
         if (message != null) {
           LOG.info(
               "Consumed from Queue={}:{}, Message->{}",
@@ -176,6 +175,7 @@ public class JmsConsume {
               fromQueueName,
               createStringFromMessage(message));
           message.acknowledge();
+          return Optional.of(message);
         }
       } catch (JMSException e) {
         LOG.error(
@@ -186,22 +186,24 @@ public class JmsConsume {
             e);
       }
     }
-    return Optional.ofNullable(message);
+    return Optional.empty();
   }
 
   public static Optional<Message> consumeOneMessage(Environment env, String fromQueueName) {
-    Message message = null;
     var cf = new JmsConnectionFactory(env.url());
     try (var ctx = cf.createContext(getUsername(), getPassword(), CLIENT_ACKNOWLEDGE)) {
       var fromQ = ctx.createQueue(fromQueueName);
       try (var consumer = ctx.createConsumer(fromQ)) {
-        message = consumer.receive(RECEIVE_TIMEOUT);
-        if (message != null) message.acknowledge();
+        var message = consumer.receive(RECEIVE_TIMEOUT);
+        if (message != null) {
+          message.acknowledge();
+          return Optional.of(message);
+        }
       } catch (JMSException e) {
         LOG.error("Failed to consume message from queue: {}:{}", env.name(), fromQueueName, e);
       }
     }
-    return Optional.ofNullable(message);
+    return Optional.empty();
   }
 
   public static void moveSpecificMessage(

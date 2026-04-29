@@ -69,15 +69,15 @@ public class ServiceBusQueueOperations {
    * message and makes it available for any other consumers to access that message.
    */
   public static Optional<IMessage> asbRead(ConnectionStringBuilder connectionStringBuilder) {
-    IMessage message = null;
     try {
       IMessageReceiver iMessageReceiver =
           ClientFactory.createMessageReceiverFromConnectionStringBuilder(
               connectionStringBuilder, ReceiveMode.PEEKLOCK);
-      message = iMessageReceiver.receive(ASB_RECEIVE_TIMEOUT);
+      var message = iMessageReceiver.receive(ASB_RECEIVE_TIMEOUT);
       if (message != null) {
         iMessageReceiver.abandon(
             message.getLockToken()); // make message available for other consumers
+        return Optional.of(message);
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
@@ -85,7 +85,7 @@ public class ServiceBusQueueOperations {
     } catch (ServiceBusException e) {
       LOG.error("An error occurred in asbRead", e);
     }
-    return Optional.ofNullable(message);
+    return Optional.empty();
   }
 
   // todo: I tried this version of asbRead and got a null when I tried to get the message body, so
@@ -97,19 +97,18 @@ public class ServiceBusQueueOperations {
    */
   public static Optional<IMessage> asbReadWithPeeklock(
       ConnectionStringBuilder connectionStringBuilder) {
-    IMessage message = null;
     try {
       IMessageReceiver iMessageReceiver =
           ClientFactory.createMessageReceiverFromConnectionStringBuilder(
               connectionStringBuilder, ReceiveMode.PEEKLOCK);
-      message = iMessageReceiver.receive(ASB_RECEIVE_TIMEOUT);
+      return Optional.ofNullable(iMessageReceiver.receive(ASB_RECEIVE_TIMEOUT));
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       LOG.error("An error occurred in asbReadWithPeeklock", e);
     } catch (ServiceBusException e) {
       LOG.error("An error occurred in asbReadWithPeeklock", e);
     }
-    return Optional.ofNullable(message);
+    return Optional.empty();
   }
 
   /**
@@ -118,20 +117,20 @@ public class ServiceBusQueueOperations {
    * processing it first.
    */
   public static Optional<IMessage> asbConsume(ConnectionStringBuilder connectionStringBuilder) {
-    IMessage message = null;
     try {
       IMessageReceiver iMessageReceiver =
           ClientFactory.createMessageReceiverFromConnectionStringBuilder(
               connectionStringBuilder, ReceiveMode.RECEIVEANDDELETE);
-      message = iMessageReceiver.receive(ASB_RECEIVE_TIMEOUT);
+      var message = iMessageReceiver.receive(ASB_RECEIVE_TIMEOUT);
+      LOG.info("=====Consumed message from ASB queue: {}", connectionStringBuilder.getEntityPath());
+      return Optional.ofNullable(message);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       LOG.error("An error occurred in asbConsume", e);
     } catch (ServiceBusException e) {
       LOG.error("An error occurred in asbConsume", e);
     }
-    LOG.info("=====Consumed message from ASB queue: {}", connectionStringBuilder.getEntityPath());
-    return Optional.ofNullable(message);
+    return Optional.empty();
   }
 
   /**
