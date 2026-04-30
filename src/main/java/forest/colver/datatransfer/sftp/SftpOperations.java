@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 public class SftpOperations {
 
-  static final Logger LOG = LoggerFactory.getLogger(SftpOperations.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SftpOperations.class);
 
   private SftpOperations() {
     // https://rules.sonarsource.com/java/RSPEC-1118/
