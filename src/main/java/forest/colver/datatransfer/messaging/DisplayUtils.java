@@ -1,11 +1,16 @@
 package forest.colver.datatransfer.messaging;
 
+import static forest.colver.datatransfer.messaging.JmsUtils.extractJmsHeaders;
+import static forest.colver.datatransfer.messaging.JmsUtils.extractMsgProperties;
+import static forest.colver.datatransfer.messaging.JmsUtils.getJmsMsgPayload;
+
 import jakarta.jms.BytesMessage;
-import jakarta.jms.JMSException;
+import jakarta.jms.MapMessage;
 import jakarta.jms.Message;
+import jakarta.jms.ObjectMessage;
 import jakarta.jms.StreamMessage;
 import jakarta.jms.TextMessage;
-import java.util.Enumeration;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,14 +25,34 @@ public class DisplayUtils {
   }
 
   public static String stringFromMessage(Message message) {
-    var md = new MessageDisplayer(message);
-    return md.createString();
+    return stringFromMessage(message, DEFAULT_PAYLOAD_OUTPUT_LEN, false);
   }
 
   public static String stringFromMessage(
       Message message, int payloadOutputTrunc, boolean listJmsProps) {
-    var md = new MessageDisplayer(message);
-    return md.createString(payloadOutputTrunc, listJmsProps);
+    var sb = new StringBuilder("\n");
+    sb.append("Message Type: ").append(resolveMessageType(message)).append("\n");
+
+    var tab = "  ";
+    var fmt = "%s%s%-20s = %s%n";
+    if (listJmsProps) {
+      var jmsHeaders = extractJmsHeaders(message);
+      sb.append(tab).append("JMS Properties:\n");
+      for (Map.Entry<String, String> entry : jmsHeaders.entrySet()) {
+        sb.append(String.format(fmt, tab, tab, entry.getKey(), entry.getValue()));
+      }
+    }
+
+    var customProps = extractMsgProperties(message);
+    sb.append(tab).append("Custom Properties:\n");
+    for (Map.Entry<String, String> entry : customProps.entrySet()) {
+      sb.append(String.format(fmt, tab, tab, entry.getKey(), entry.getValue()));
+    }
+
+    var payload = getJmsMsgPayload(message);
+    appendPayloadString(payload, payloadOutputTrunc, tab, sb);
+
+    return sb.toString();
   }
 
   public static String createStringFromMessage(Message message) {
@@ -39,15 +64,8 @@ public class DisplayUtils {
     var sb = new StringBuilder();
     sb.append("Message Type: TextMessage\n");
     appendMessageProps(message, listJmsProps, sb);
-    var payload = "null";
-    try {
-      if (message.getBody(Object.class) != null) {
-        payload = ((TextMessage) message).getText();
-      }
-    } catch (JMSException e) {
-      LOG.error("Failed to extract payload from TextMessage", e);
-    }
-    appendPayloadString(payload, payloadOutputTrunc, sb);
+    var payload = getJmsMsgPayload(message);
+    appendPayloadString(payload, payloadOutputTrunc, "", sb);
     return sb;
   }
 
@@ -56,30 +74,14 @@ public class DisplayUtils {
     var sb = new StringBuilder();
     sb.append("Message Type: BytesMessage\n");
     appendMessageProps(message, listJmsProps, sb);
-    byte[] bytes = null;
-    BytesMessage bytesMessage = (BytesMessage) message;
-    try {
-      // When the message is first created the body of the message is in write-only mode. After
-      // the first call to the reset method has been made, the message is in read-only mode.
-      bytesMessage.reset();
-      bytes = new byte[(int) bytesMessage.getBodyLength()];
-      bytesMessage.readBytes(bytes);
-    } catch (JMSException e) {
-      LOG.error("Failed to extract payload from BytesMessage", e);
-    }
-    appendPayloadString(new String(bytes), payloadOutputTrunc, sb);
+    var payload = getJmsMsgPayload(message);
+    appendPayloadString(payload, payloadOutputTrunc, "", sb);
     return sb;
   }
 
-  /**
-   * Creates a multi-lined string of the message properties, headers and payload
-   *
-   * @param payloadOutputTrunc the number of characters of the payload that will be output
-   * @param listJmsProps include JMSMessage properties in the output String
-   */
   public static String createStringFromMessage(
       Message message, int payloadOutputTrunc, boolean listJmsProps) {
-    var sb = new StringBuilder("\n"); // always start with a newline
+    var sb = new StringBuilder("\n");
     if (message != null) {
       if (message instanceof TextMessage) {
         sb.append(stringFromTextMessage(message, payloadOutputTrunc, listJmsProps));
@@ -94,15 +96,31 @@ public class DisplayUtils {
     } else {
       sb.append("Message is null.");
     }
-    sb.append("\n"); // always end with a newline
+    sb.append("\n");
     return sb.toString();
   }
 
+  private static String resolveMessageType(Message message) {
+    if (message instanceof TextMessage) {
+      return "Text";
+    } else if (message instanceof BytesMessage) {
+      return "Bytes";
+    } else if (message instanceof ObjectMessage) {
+      return "Object";
+    } else if (message instanceof StreamMessage) {
+      return "Stream";
+    } else if (message instanceof MapMessage) {
+      return "Map";
+    }
+    return "unknown";
+  }
+
   private static void appendPayloadString(
-      String payload, int payloadOutputTrunc, StringBuilder sb) {
+      String payload, int payloadOutputTrunc, String prefix, StringBuilder sb) {
     sb.append(
         String.format(
-            "Payload (truncated to "
+            prefix
+                + "Payload (truncated to "
                 + payloadOutputTrunc
                 + " chars): %1."
                 + payloadOutputTrunc
@@ -111,36 +129,19 @@ public class DisplayUtils {
   }
 
   private static void appendMessageProps(Message message, boolean listJmsProps, StringBuilder sb) {
-    try {
-      appendJmsProps(message, listJmsProps, sb);
-      appendCustomProps(message, sb);
-    } catch (JMSException e) {
-      LOG.error("Failed to append message properties", e);
-    }
-  }
-
-  private static void appendCustomProps(Message message, StringBuilder sb) throws JMSException {
     var tab = "  ";
-    sb.append("Custom Properties:\n");
-    for (Enumeration<String> e = message.getPropertyNames(); e.hasMoreElements(); ) {
-      var s = e.nextElement();
-      sb.append(String.format("%s%-20s = %s%n", tab, s, message.getObjectProperty(s)));
-    }
-  }
-
-  private static void appendJmsProps(Message message, boolean listJmsProps, StringBuilder sb)
-      throws JMSException {
-    var tab = "  ";
-    final String msgPrefix = "%s%-16s = %s%n";
+    var fmt = "%s%-20s = %s%n";
     if (listJmsProps) {
-      sb.append("JMS Properties:\n")
-          .append(String.format(msgPrefix, tab, "JMSMessageID", message.getJMSMessageID()))
-          .append(String.format(msgPrefix, tab, "JMSPriority", message.getJMSPriority()))
-          .append(String.format(msgPrefix, tab, "JMSRedelivered", message.getJMSRedelivered()))
-          .append(String.format(msgPrefix, tab, "JMSDestination", message.getJMSDestination()))
-          .append(String.format(msgPrefix, tab, "JMSDeliveryTime", message.getJMSDeliveryTime()))
-          .append(String.format(msgPrefix, tab, "JMSExpiration", message.getJMSExpiration()))
-          .append(String.format(msgPrefix, tab, "JMSCorrelationID", message.getJMSCorrelationID()));
+      var jmsHeaders = extractJmsHeaders(message);
+      sb.append("JMS Properties:\n");
+      for (Map.Entry<String, String> entry : jmsHeaders.entrySet()) {
+        sb.append(String.format(fmt, tab, entry.getKey(), entry.getValue()));
+      }
+    }
+    var customProps = extractMsgProperties(message);
+    sb.append("Custom Properties:\n");
+    for (Map.Entry<String, String> entry : customProps.entrySet()) {
+      sb.append(String.format(fmt, tab, entry.getKey(), entry.getValue()));
     }
   }
 }
