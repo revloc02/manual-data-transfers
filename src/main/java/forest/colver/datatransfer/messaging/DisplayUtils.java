@@ -28,6 +28,10 @@ public class DisplayUtils {
     return stringFromMessage(message, DEFAULT_PAYLOAD_OUTPUT_LEN, false);
   }
 
+  public static void displayMessage(Message message) {
+    LOG.info(stringFromMessage(message));
+  }
+
   public static String stringFromMessage(
       Message message, int payloadOutputTrunc, boolean listJmsProps) {
     var sb = new StringBuilder("\n");
