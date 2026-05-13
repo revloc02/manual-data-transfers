@@ -72,7 +72,7 @@ class AwsSqsIntTests {
    * This is actually not a unit test. This is a helper method that allows me to cleanup both SQS1
    * and SQS2 in case other unit tests didn't finish correctly and cleanup after themselves.
    */
-  //  @Test // uncomment this line if you need to run this
+  @Test // uncomment this line if you need to run this
   void helperPurge() {
     var creds = getEmxSbCreds();
 

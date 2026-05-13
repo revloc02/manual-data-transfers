@@ -26,6 +26,10 @@ import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 public class SqsAndAsbQueue {
 
   private static final Logger LOG = LoggerFactory.getLogger(SqsAndAsbQueue.class);
+  private static final int COPY_ALL_MAX_DEPTH = 1000; // This could probably go as high as 40k
+  private static final int COPY_ALL_WAIT_TIME_SECONDS = 2;
+  private static final int COPY_ALL_MAX_MESSAGES_PER_BATCH = 10;
+  private static final int COPY_ALL_VISIBILITY_TIMEOUT_BASE = 10;
 
   private SqsAndAsbQueue() {
     // https://rules.sonarsource.com/java/RSPEC-1118/
@@ -121,27 +125,26 @@ public class SqsAndAsbQueue {
       AwsCredentialsProvider awsCreds, String sqs, ConnectionStringBuilder azureConnStr) {
     // check the queue depth, if it is beyond a certain size, abort
     var depth = sqsDepth(awsCreds, sqs);
-    var maxDepth = 1000; // This could probably go as high as 40k
     var counter = 0;
-    if (depth < maxDepth) {
+    if (depth < COPY_ALL_MAX_DEPTH) {
       // calculate a visibility timeout, probably 1 sec per message in the sqs
-      var visibilityTimeout = 10 + (depth); // max is 12 hours or 43,200 seconds
+      var visibilityTimeout =
+          COPY_ALL_VISIBILITY_TIMEOUT_BASE + depth; // max is 12 hours or 43,200 seconds
       var moreMessages = true;
       try (var sqsClient = getSqsClient(awsCreds)) {
         do {
           var receiveMessageRequest =
               ReceiveMessageRequest.builder()
-                  .waitTimeSeconds(2)
+                  .waitTimeSeconds(COPY_ALL_WAIT_TIME_SECONDS)
                   .messageAttributeNames("All")
                   .attributeNames(QueueAttributeName.ALL)
                   .queueUrl(qUrl(sqsClient, sqs))
-                  .maxNumberOfMessages(10)
+                  .maxNumberOfMessages(COPY_ALL_MAX_MESSAGES_PER_BATCH)
                   .visibilityTimeout(visibilityTimeout)
                   .build();
           var response = sqsClient.receiveMessage(receiveMessageRequest);
           if (!response.messages().isEmpty()) {
             for (var message : response.messages()) {
-              // copy to ASB queue
               counter++;
               Map<String, Object> properties =
                   new HashMap<>(convertSqsMessageAttributesToStrings(message.messageAttributes()));
@@ -153,7 +156,6 @@ public class SqsAndAsbQueue {
           }
         } while (moreMessages);
       }
-      // display summary: num messages checked, num messages moved
       LOG.info("Copied {} messages", counter);
     } else {
       counter = -1;
@@ -161,7 +163,7 @@ public class SqsAndAsbQueue {
           "Queue {} is too deep ({}), for an SQS copy all, max depth is currently {}.",
           sqs,
           depth,
-          maxDepth);
+          COPY_ALL_MAX_DEPTH);
     }
     return counter;
   }
