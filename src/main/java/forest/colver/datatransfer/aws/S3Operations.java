@@ -43,10 +43,10 @@ public class S3Operations {
    * this for one-off S3 operations, as opposed to doing several S3 operations and passing the
    * client around.
    */
-  public static void s3Put(
+  public static Optional<String> s3Put(
       AwsCredentialsProvider awsCp, String bucket, String objectKey, String payload) {
     try (var s3Client = getS3Client(awsCp)) {
-      s3Put(s3Client, bucket, objectKey, payload);
+      return s3Put(s3Client, bucket, objectKey, payload);
     }
   }
 
@@ -69,14 +69,14 @@ public class S3Operations {
    * Creates an S3Client--good to use this for one-off S3 operations, as opposed to doing several S3
    * operations and passing the client around.
    */
-  public static void s3Put(
+  public static Optional<String> s3Put(
       AwsCredentialsProvider awsCp,
       String bucket,
       String objectKey,
       String payload,
       Map<String, String> metadata) {
     try (var s3Client = getS3Client(awsCp)) {
-      s3Put(s3Client, bucket, objectKey, payload, metadata);
+      return s3Put(s3Client, bucket, objectKey, payload, metadata);
     }
   }
 
@@ -85,7 +85,7 @@ public class S3Operations {
    * Creates an S3Client--good to use this for one-off S3 operations, as opposed to doing several S3
    * operations and passing the client around.
    */
-  public static void s3Put(
+  public static Optional<String> s3Put(
       S3Client s3Client,
       String bucket,
       String objectKey,
@@ -97,6 +97,7 @@ public class S3Operations {
     var putObjectResponse = s3Client.putObject(putObjectRequest, requestBody);
     awsResponseValidation(putObjectResponse);
     LOG.info(PUT_SUCCESS, objectKey, bucket);
+    return Optional.ofNullable(putObjectResponse.versionId());
   }
 
   /**
@@ -104,10 +105,10 @@ public class S3Operations {
    * S3Client--good to use this for one-off S3 operations, as opposed to doing several S3 operations
    * and passing the client around.
    */
-  public static void s3Put(
+  public static Optional<String> s3Put(
       AwsCredentialsProvider awsCp, String payload, PutObjectRequest putObjectRequest) {
     try (var s3Client = getS3Client(awsCp)) {
-      s3Put(s3Client, payload, putObjectRequest);
+      return s3Put(s3Client, payload, putObjectRequest);
     }
   }
 
@@ -115,11 +116,13 @@ public class S3Operations {
    * s3Put with S3Client and PutObjectRequest. Put an object on a desired S3 bucket. Pass in the
    * S3Client--good for stringing multiple S3 calls together so only one client is created.
    */
-  public static void s3Put(S3Client s3Client, String payload, PutObjectRequest putObjectRequest) {
+  public static Optional<String> s3Put(
+      S3Client s3Client, String payload, PutObjectRequest putObjectRequest) {
     var requestBody = RequestBody.fromString(payload);
     var putObjectResponse = s3Client.putObject(putObjectRequest, requestBody);
     awsResponseValidation(putObjectResponse);
     LOG.info(PUT_SUCCESS, putObjectRequest.key(), putObjectRequest.bucket());
+    return Optional.ofNullable(putObjectResponse.versionId());
   }
 
   /**

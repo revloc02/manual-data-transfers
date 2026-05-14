@@ -1,7 +1,9 @@
 package forest.colver.datatransfer;
 
-import static forest.colver.datatransfer.CommonTasks.cleanS3DirectoryVersioned;
-
+import forest.colver.datatransfer.config.ConfigUtils;
+import forest.colver.datatransfer.messaging.Environment;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +15,15 @@ public class Main {
   public static void main(String[] args) {
     LOG.info("main start");
 
-    cleanS3DirectoryVersioned("emx-sandbox-sftp-internal", "emx2-core-test");
+    // inject file into cubs for Equity Bank
+    var filename = "PAIN001_43000245600_43000245600_MD_13032026_EDJC_ALL_008.xml";
+    var properties =
+        Map.of(
+            "name", filename, "datatype", "finance.payment.eft", "targetSystem", "ext-equity-bank");
+    var body = ConfigUtils.readFile("src/main/resources/" + filename, StandardCharsets.UTF_8);
+    CommonTasks.injectQpidMessage(Environment.STAGE, "cubs-emxonramp-stage", body, properties);
+
+    //    cleanS3DirectoryVersioned("emx-sandbox-sftp-internal", "revloc02");
 
     //    var bucket = "cp-aws-gayedtiak3nflbiftucz-s3-logging";
     //    var keyPrefix = "emx-sandbox-sftp/";
