@@ -217,29 +217,24 @@ public class ServiceBusQueueOperations {
 
   public static int asbQueuePurge(ConnectionStringBuilder connectionStringBuilder) {
     int counter = 0;
-    IMessageReceiver iMessageReceiver = null;
     try {
-      iMessageReceiver =
+      var iMessageReceiver =
           ClientFactory.createMessageReceiverFromConnectionStringBuilder(
               connectionStringBuilder, ReceiveMode.RECEIVEANDDELETE);
-      while (iMessageReceiver.peek() != null) {
-        var messages = iMessageReceiver.receiveBatch(ASB_MAX_BATCH_SIZE);
-        if (messages != null && !messages.isEmpty()) {
-          LOG.info("asbQueuePurge received {} messages, purging...", messages.size());
-          counter += messages.size();
+      try {
+        while (iMessageReceiver.peek() != null) {
+          var messages = iMessageReceiver.receiveBatch(ASB_MAX_BATCH_SIZE);
+          if (messages != null && !messages.isEmpty()) {
+            LOG.info("asbQueuePurge received {} messages, purging...", messages.size());
+            counter += messages.size();
+          }
         }
+      } finally {
+        iMessageReceiver.close();
       }
     } catch (InterruptedException | ServiceBusException e) {
       Thread.currentThread().interrupt();
       LOG.error("An error occurred in asbQueuePurge", e);
-    } finally {
-      if (iMessageReceiver != null) {
-        try {
-          iMessageReceiver.close();
-        } catch (ServiceBusException e) {
-          LOG.error("Failed to close IMessageReceiver", e);
-        }
-      }
     }
     LOG.info("asbQueuePurge purged {} messages.", counter);
     return counter;
