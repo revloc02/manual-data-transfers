@@ -377,8 +377,6 @@ class AzureServiceBusQueueTests {
     asbQueuePurge(CREDS);
   }
 
-  // todo: this is not working yet, I haven't found a strategy to apply the equivalent of a
-  // VisibilityTimeout to Azure messages
   @Test
   void testCopyAll() {
     LOG.info("...send some messages...");

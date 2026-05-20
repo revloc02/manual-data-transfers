@@ -189,30 +189,52 @@ public class ServiceBusQueueOperations {
             message -> asbSend(toCsb, message), () -> LOG.error("No ASB message available."));
   }
 
-  // todo: this won't work because there needs to be a visibility timeout
   /**
-   * Copy all messages from one queue to another. The challenge here is if the queue is too deep,
-   * messages that were copied early will become available on the queue before the copyAll process
-   * is complete, and then those messages will get copied again. So this code employs this strategy:
-   * 1) Check the queue message count, if it is deeper than 1000 messages, abort. 2) Currently this
-   * code relies on ReceiveMode.PEEKLOCK which has a 60 sec timeout before making the message
-   * available again. 3) Retrieve each message from the queue. 4) Copy the message to the other
-   * queue.
+   * Copy all messages from one queue to another using peek (non-destructive read).
+   *
+   * <p>Why peek and not receive: ASB has no per-receive visibility timeout like AWS SQS, so a
+   * receive-based copy would either consume messages or rely on the PEEKLOCK timer (default 60
+   * sec), which fails on deeper queues — locks expire mid-copy and messages get re-read and
+   * duplicated. Peek reads a snapshot without any lock or state change, so there is no time
+   * pressure, no depth limit, and no duplicate risk.
+   *
+   * <p>Iteration: ASB assigns each message a monotonically increasing sequence number. We peek a
+   * batch, remember the highest sequence number seen, then peek the next batch starting from
+   * (lastSeq + 1). Loop until a batch comes back empty.
    */
-  public static void asbCopyAll(ConnectionStringBuilder fromCsb, ConnectionStringBuilder toCsb) {
-    // check the queue depth, if it is beyond a certain size, abort
-    var depth = messageCount(fromCsb);
-    var maxDepth = 1000;
-    if (depth < maxDepth) {
-      while (depth > 0) {
-        LOG.info("depth={}", depth);
-        asbReadWithPeeklock(fromCsb).ifPresent(message -> asbSend(toCsb, message));
-        depth = messageCount(fromCsb);
+  public static int asbCopyAll(ConnectionStringBuilder fromCsb, ConnectionStringBuilder toCsb) {
+    var counter = 0;
+    try {
+      // ReceiveMode is required to construct the receiver but is irrelevant for peek — peek never
+      // locks or consumes regardless of mode.
+      var receiver =
+          ClientFactory.createMessageReceiverFromConnectionStringBuilder(
+              fromCsb, ReceiveMode.PEEKLOCK);
+      try {
+        // First batch: no sequence number, so peek starts from the earliest active message.
+        var batch = receiver.peekBatch(ASB_MAX_BATCH_SIZE);
+        while (batch != null && !batch.isEmpty()) {
+          long lastSequenceNumber = 0;
+          for (var message : batch) {
+            asbSend(toCsb, message);
+            counter++;
+            lastSequenceNumber = message.getSequenceNumber();
+          }
+          LOG.info("Copied {} messages so far...", counter);
+          // Advance past the last seen message — without +1 we'd re-peek it and loop forever.
+          batch = receiver.peekBatch(lastSequenceNumber + 1, ASB_MAX_BATCH_SIZE);
+        }
+      } finally {
+        receiver.close();
       }
-    } else {
-      LOG.info(
-          "Queue is too deep ({}), for a copy all, max depth is currently {}.", depth, maxDepth);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      LOG.error("An error occurred in asbCopyAll", e);
+    } catch (ServiceBusException e) {
+      LOG.error("An error occurred in asbCopyAll", e);
     }
+    LOG.info("asbCopyAll copied {} messages total.", counter);
+    return counter;
   }
 
   public static int asbQueuePurge(ConnectionStringBuilder connectionStringBuilder) {
