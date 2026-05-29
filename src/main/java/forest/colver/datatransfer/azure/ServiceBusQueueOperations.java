@@ -58,15 +58,21 @@ public class ServiceBusQueueOperations {
     return Optional.empty();
   }
 
-  // todo: okay, okay...I have some things to learn about receiving messages.
-  // todo: Should I be using PEEKLOCK with .abandon immediately afterwards? Hypothesis: without
-  // .abandon() you can't get the message payload.
-  // todo: How do I create a message retriever that makes the message unavailable for the default 60
-  // sec
+  // ASB ReceiveMode primer — ASB has two modes, and the three methods below show the three
+  // patterns built from them:
+  //   PEEKLOCK         — message is locked for 60 sec (configurable on the queue, up to 5 min).
+  //                      You must call complete() to delete it, or abandon() to release it back.
+  //                      If you do nothing, the lock expires and the message reappears.
+  //   RECEIVEANDDELETE — atomic read+delete. Once received, it's gone. If your process crashes
+  //                      mid-handling, the message is lost.
+  // The patterns:
+  //   asbRead              — PEEKLOCK + immediate abandon  → "peek without consuming"
+  //   asbReadWithPeeklock  — PEEKLOCK alone, no follow-up  → "claim it for ~60 sec"
+  //   asbConsume           — RECEIVEANDDELETE              → "take it and don't look back"
 
   /**
-   * This method reads a message off of the queue, and then immediately abandons the lock on the
-   * message and makes it available for any other consumers to access that message.
+   * Reads a message from the queue non-destructively: locks it via PEEKLOCK, then immediately
+   * abandons the lock so other consumers can see it. Returns the full message payload.
    */
   public static Optional<IMessage> asbRead(ConnectionStringBuilder connectionStringBuilder) {
     try {
@@ -88,12 +94,10 @@ public class ServiceBusQueueOperations {
     return Optional.empty();
   }
 
-  // todo: I tried this version of asbRead and got a null when I tried to get the message body, so
-  // what gives? Works with RECEIVEANDDELETE, Azure is stupid.
-
   /**
-   * This method will read a message, and then it will not be available for any other consumers for
-   * 60 sec, as the message is locked by the queue.
+   * Reads a message under PEEKLOCK and leaves the lock held. The message stays invisible to other
+   * consumers until the lock expires (default 60 sec) and then becomes available again. Useful when
+   * you want to claim a message for a window of time without deleting it.
    */
   public static Optional<IMessage> asbReadWithPeeklock(
       ConnectionStringBuilder connectionStringBuilder) {
@@ -112,9 +116,9 @@ public class ServiceBusQueueOperations {
   }
 
   /**
-   * Consumes a message from an ASB queue. Uses ReceiveMode.RECEIVEANDDELETE which immediately
-   * deletes the message after retrieving it--simply consuming the message without any thought of
-   * processing it first.
+   * Consumes a message destructively using RECEIVEANDDELETE — the message is removed from the queue
+   * atomically with the receive. No lock, no follow-up call needed. If this process dies before
+   * handling the message, it's gone.
    */
   public static Optional<IMessage> asbConsume(ConnectionStringBuilder connectionStringBuilder) {
     try {
