@@ -3,8 +3,10 @@ package forest.colver.datatransfer.it;
 import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_SA_CONN_STR;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqConsume;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqCopy;
+import static forest.colver.datatransfer.azure.StorageQueueOperations.asqCopyAll;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqMove;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqMoveAll;
+import static forest.colver.datatransfer.azure.StorageQueueOperations.asqMoveMatching;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqPeek;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqPurge;
 import static forest.colver.datatransfer.azure.StorageQueueOperations.asqQueueDepth;
@@ -158,6 +160,87 @@ public class AzureStorageQueueIntTests {
                 assertThat(asqQueueDepth(CONNECT_STR, QUEUE2_NAME))
                     .isGreaterThanOrEqualTo(numMsgs));
     // cleanup
+    asqPurge(CONNECT_STR, QUEUE2_NAME);
+  }
+
+  @Test
+  void testAsqCopyAll() {
+    // start clean so depth assertions are exact
+    asqPurge(CONNECT_STR, QUEUE_NAME);
+    asqPurge(CONNECT_STR, QUEUE2_NAME);
+
+    // send unique messages so we can verify each one was copied (and no duplicates)
+    var numMsgs = 5;
+    var uuids = generateUniqueStrings(numMsgs);
+    asqSendMultipleUniqueMessages(CONNECT_STR, QUEUE_NAME, uuids);
+
+    // verify messages landed on the source queue
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(asqQueueDepth(CONNECT_STR, QUEUE_NAME)).isEqualTo(numMsgs));
+
+    // copy all messages — should leave source intact
+    var copied = asqCopyAll(CONNECT_STR, QUEUE_NAME, QUEUE2_NAME);
+    assertThat(copied).isEqualTo(numMsgs);
+
+    // verify destination has the copies
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(
+            () -> assertThat(asqQueueDepth(CONNECT_STR, QUEUE2_NAME)).isEqualTo(numMsgs));
+
+    // verify source still has the originals (after the visibility timeout has expired)
+    await()
+        .pollInterval(Duration.ofSeconds(5))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(asqQueueDepth(CONNECT_STR, QUEUE_NAME)).isEqualTo(numMsgs));
+
+    // cleanup
+    asqPurge(CONNECT_STR, QUEUE_NAME);
+    asqPurge(CONNECT_STR, QUEUE2_NAME);
+  }
+
+  @Test
+  void testAsqMoveMatching() {
+    // start clean
+    asqPurge(CONNECT_STR, QUEUE_NAME);
+    asqPurge(CONNECT_STR, QUEUE2_NAME);
+
+    // send a mix of matches and non-matches
+    asqSend(CONNECT_STR, QUEUE_NAME, "MATCH-alpha");
+    asqSend(CONNECT_STR, QUEUE_NAME, "skip-beta");
+    asqSend(CONNECT_STR, QUEUE_NAME, "MATCH-gamma");
+    asqSend(CONNECT_STR, QUEUE_NAME, "skip-delta");
+
+    // verify all four arrived
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(asqQueueDepth(CONNECT_STR, QUEUE_NAME)).isEqualTo(4));
+
+    // move only messages whose body starts with "MATCH-"
+    var moved =
+        asqMoveMatching(CONNECT_STR, QUEUE_NAME, QUEUE2_NAME, body -> body.startsWith("MATCH-"));
+    assertThat(moved).isEqualTo(2);
+
+    // destination should have exactly the two matches
+    await()
+        .pollInterval(Duration.ofSeconds(3))
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(() -> assertThat(asqQueueDepth(CONNECT_STR, QUEUE2_NAME)).isEqualTo(2));
+
+    // source should retain the two non-matches — and they should be visible immediately
+    // (this is the explicit-release pattern: non-matches were released with Duration.ZERO,
+    // so they don't sit invisible for 30 sec). Use a tight timeout to verify that property.
+    await()
+        .pollInterval(Duration.ofSeconds(1))
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(() -> assertThat(asqQueueDepth(CONNECT_STR, QUEUE_NAME)).isEqualTo(2));
+
+    // cleanup
+    asqPurge(CONNECT_STR, QUEUE_NAME);
     asqPurge(CONNECT_STR, QUEUE2_NAME);
   }
 }
