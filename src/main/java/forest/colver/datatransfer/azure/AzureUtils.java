@@ -10,6 +10,9 @@ import com.microsoft.azure.servicebus.MessageBodyType;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -107,16 +110,19 @@ public class AzureUtils {
     }
   }
 
-  // "2017-08-10T21:03:07+00:00"
-  public static List<BinaryData> createEvent() {
-    // todo: eventTime is hard coded--a little hacky
-    return createEvent(
-        "test",
-        "AppEventA",
-        "this is the body",
-        "test.event.type",
-        "2017-08-10T21:03:07+00:00",
-        "0.0.1");
+  /**
+   * Build an Event Grid event payload using the current UTC time as eventTime. This is what you
+   * normally want — Event Grid events should claim to have happened "now". Use the 6-arg overload
+   * only when you need a specific timestamp (e.g. a deterministic test asserting on eventTime).
+   *
+   * <p>The format produced (e.g. {@code 2026-06-08T14:30:00.123Z}) is ISO-8601 with explicit UTC,
+   * which is what Event Grid's schema expects.
+   */
+  public static List<BinaryData> createEvent(
+      String id, String subject, Object body, String eventType, String dataVersion) {
+    String nowIso =
+        OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+    return createEvent(id, subject, body, eventType, nowIso, dataVersion);
   }
 
   public static List<BinaryData> createEvent(
