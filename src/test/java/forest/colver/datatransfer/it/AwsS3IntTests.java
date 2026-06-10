@@ -31,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1048,5 +1049,52 @@ class AwsS3IntTests {
     }
   }
 
-  // todo: add tests for S3Operations.s3Retrieve(), both with a versionId and without a versionId
+  @Test
+  void testS3Retrieve_withoutVersionId() throws IOException {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      var objectKey = "revloc02/source/test/test-retrieve.txt";
+      var payload = getDefaultPayload();
+      s3Put(s3Client, S3_INTERNAL, objectKey, payload);
+
+      var response = S3Operations.s3Retrieve(s3Client, S3_INTERNAL, objectKey, Optional.empty());
+      var respPayload = new String(response.readAllBytes(), StandardCharsets.UTF_8);
+      assertThat(respPayload).isEqualTo(payload);
+
+      response.close();
+      s3Delete(s3Client, S3_INTERNAL, objectKey);
+    }
+  }
+
+  @Test
+  void testS3Retrieve_withVersionId() throws IOException {
+    var creds = getEmxSbCreds();
+    try (var s3Client = getS3Client(creds)) {
+      var keyPrefix = "revloc02/target/retrieve-version/";
+      var objectKey = keyPrefix + "test-retrieve-versioned.txt";
+      var payload1 = "payload-version-1";
+      var payload2 = "payload-version-2";
+
+      s3Put(s3Client, S3_INTERNAL_VERSIONED, objectKey, payload1);
+      s3Put(s3Client, S3_INTERNAL_VERSIONED, objectKey, payload2);
+
+      var versions = s3ListVersions(s3Client, S3_INTERNAL_VERSIONED, keyPrefix);
+      assertThat(versions).hasSizeGreaterThanOrEqualTo(2);
+
+      // versions are returned newest-first; the oldest is last
+      var oldestVersionId = versions.get(versions.size() - 1).versionId();
+      var response =
+          S3Operations.s3Retrieve(
+              s3Client, S3_INTERNAL_VERSIONED, objectKey, Optional.of(oldestVersionId));
+      var respPayload = new String(response.readAllBytes(), StandardCharsets.UTF_8);
+      assertThat(respPayload).isEqualTo(payload1);
+      response.close();
+
+      // cleanup
+      for (var version : versions) {
+        S3Operations.s3DeleteVersion(
+            s3Client, S3_INTERNAL_VERSIONED, objectKey, version.versionId());
+      }
+    }
+  }
 }
