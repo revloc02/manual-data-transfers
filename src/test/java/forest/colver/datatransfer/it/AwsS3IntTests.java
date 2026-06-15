@@ -792,12 +792,12 @@ class AwsS3IntTests {
   }
 
   @Test
-  void testS3CountAllLessThanOneThousand() {
+  void test_S3CountAll_LessThanOneThousand() {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
       LOG.info("...place several files...");
       var numFiles = 23;
-      var keyPrefix = "revloc02/source/test/";
+      var keyPrefix = "revloc02/source/test-count-all/less-than-one-thousand/";
       for (var i = 0; i < numFiles; i++) {
         var objectKey = keyPrefix + "test-" + i + ".txt";
         var payload = getDefaultPayload() + " " + i;
@@ -809,9 +809,7 @@ class AwsS3IntTests {
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(30))
           .untilAsserted(
-              () ->
-                  assertThat(s3CountAll(s3Client, S3_INTERNAL, keyPrefix))
-                      .isGreaterThanOrEqualTo(numFiles)); // todo: why is there sometimes 24?
+              () -> assertThat(s3CountAll(s3Client, S3_INTERNAL, keyPrefix)).isEqualTo(numFiles));
 
       LOG.info("...cleanup and delete all files...");
       s3DeleteAll(s3Client, S3_INTERNAL, keyPrefix);
