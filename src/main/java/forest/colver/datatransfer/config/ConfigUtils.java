@@ -57,13 +57,12 @@ public class ConfigUtils {
    * @return The file's contents.
    */
   public static String readFile(String path, Charset encoding) {
-    byte[] encoded = new byte[0];
     try {
-      encoded = Files.readAllBytes(Paths.get(path));
+      byte[] encoded = Files.readAllBytes(Paths.get(path));
+      return new String(encoded, encoding);
     } catch (IOException e) {
-      LOG.error("Failed to read file: {}", path, e);
+      throw new RuntimeException("Failed to read file: " + path, e);
     }
-    return new String(encoded, encoding);
   }
 
   /**
