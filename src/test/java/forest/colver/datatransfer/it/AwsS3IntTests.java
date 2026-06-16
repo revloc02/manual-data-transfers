@@ -271,9 +271,9 @@ class AwsS3IntTests {
   @Test
   void testS3List() {
     var creds = getEmxSbCreds();
-    var objectKey = "revloc02/target/test/mdtTest1.txt";
+    var objectKey = "revloc02/target/test-list/mdtTest1.txt";
     s3Put(creds, S3_INTERNAL, objectKey, getDefaultPayload());
-    var objects = s3List(creds, S3_INTERNAL, "revloc02/target/test");
+    var objects = s3List(creds, S3_INTERNAL, "revloc02/target/test-list");
     assertThat(objects.get(0).key()).isEqualTo(objectKey);
     assertThat(objects.get(0).size()).isEqualTo(40L);
     s3Delete(creds, S3_INTERNAL, objectKey);
@@ -284,9 +284,9 @@ class AwsS3IntTests {
   void testS3ListWithMaxkeys() {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
-      var objectKey = "revloc02/target/test/mdtTest1.txt";
+      var objectKey = "revloc02/target/test-list-maxkeys/mdtTest1.txt";
       s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
-      var objects = s3List(s3Client, S3_INTERNAL, "revloc02/target/test", 10);
+      var objects = s3List(s3Client, S3_INTERNAL, "revloc02/target/test-list-maxkeys", 10);
       assertThat(objects.get(0).key()).isEqualTo(objectKey);
       assertThat(objects.get(0).size()).isEqualTo(40L);
       s3Delete(s3Client, S3_INTERNAL, objectKey);
@@ -297,9 +297,9 @@ class AwsS3IntTests {
   @Test
   void testS3ListResponse() {
     var creds = getEmxSbCreds();
-    var objectKey = "revloc02/target/test/mdtTest1.txt";
+    var objectKey = "revloc02/target/test-list-response/mdtTest1.txt";
     s3Put(creds, S3_INTERNAL, objectKey, getDefaultPayload());
-    var response = s3ListResponse(creds, S3_INTERNAL, "revloc02/target/test");
+    var response = s3ListResponse(creds, S3_INTERNAL, "revloc02/target/test-list-response");
     assertThat(response.contents().get(0).key()).isEqualTo(objectKey);
     assertThat(response.contents().get(0).size()).isEqualTo(40L);
     s3Delete(creds, S3_INTERNAL, objectKey);
@@ -310,9 +310,10 @@ class AwsS3IntTests {
   void testS3ListResponseWithMaxKeys() {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
-      var objectKey = "revloc02/target/test/mdtTest1.txt";
+      var objectKey = "revloc02/target/test-list-response-maxkeys/mdtTest1.txt";
       s3Put(s3Client, S3_INTERNAL, objectKey, getDefaultPayload());
-      var response = s3ListResponse(s3Client, S3_INTERNAL, "revloc02/target/test", 50);
+      var response =
+          s3ListResponse(s3Client, S3_INTERNAL, "revloc02/target/test-list-response-maxkeys", 50);
       assertThat(response.contents().get(0).key()).isEqualTo(objectKey);
       assertThat(response.contents().get(0).size()).isEqualTo(40L);
       s3Delete(s3Client, S3_INTERNAL, objectKey);
@@ -330,7 +331,7 @@ class AwsS3IntTests {
     try (var s3Client = getS3Client(creds)) {
       LOG.info("...place several files...");
       var numFiles = 1100;
-      var keyPrefix = "revloc02/source/test/";
+      var keyPrefix = "revloc02/source/test-list-param-gt-1000/";
       for (var i = 0; i < numFiles; i++) {
         var objectKey = keyPrefix + "test-" + i + ".txt";
         var payload = getDefaultPayload() + " " + i;
@@ -353,7 +354,7 @@ class AwsS3IntTests {
     try (var s3Client = getS3Client(creds)) {
       LOG.info("...place several files...");
       var numFiles = 1100;
-      var keyPrefix = "revloc02/source/test/";
+      var keyPrefix = "revloc02/source/test-list-gt-1000/";
       for (var i = 0; i < numFiles; i++) {
         var objectKey = keyPrefix + "test-" + i + ".txt";
         var payload = getDefaultPayload() + " " + i;
@@ -365,7 +366,7 @@ class AwsS3IntTests {
       response =
           s3ListContResponse(s3Client, S3_INTERNAL, keyPrefix, response.nextContinuationToken());
       LOG.info("...check the the last list is 100 objects...");
-      assertThat(response.contents()).hasSizeGreaterThanOrEqualTo(100);
+      assertThat(response.contents()).hasSize(100);
 
       LOG.info("...cleanup...");
       s3DeleteAll(s3Client, S3_INTERNAL, keyPrefix);
@@ -595,7 +596,7 @@ class AwsS3IntTests {
     try (var s3Client = getS3Client(creds)) {
       LOG.info("...place several files...");
       var numFiles = 14; // don't change this to >1000, because s3List can only list 1000 items
-      var keyPrefix = "revloc02/source/test/";
+      var keyPrefix = "revloc02/source/test-move-all/";
       for (var i = 0; i < numFiles; i++) {
         var objectKey = keyPrefix + "test-" + i + ".txt";
         var payload = getDefaultPayload() + " " + i;
@@ -643,7 +644,7 @@ class AwsS3IntTests {
     try (var s3Client = getS3Client(creds)) {
       LOG.info("...place several files...");
       var numFiles = 24;
-      var keyPrefix = "revloc02/target/test/";
+      var keyPrefix = "revloc02/target/test-delete-all/";
       for (var i = 0; i < numFiles; i++) {
         var objectKey = keyPrefix + "test-" + i + ".txt";
         var payload = getDefaultPayload() + " " + i;
@@ -675,7 +676,7 @@ class AwsS3IntTests {
     try (var s3Client = getS3Client(creds)) {
       LOG.info("...place several files...");
       var numFiles = 14;
-      var keyPrefix = "revloc02/source/test/";
+      var keyPrefix = "revloc02/source/test-copy-all/";
       for (var i = 0; i < numFiles; i++) {
         var objectKey = keyPrefix + "test-" + i + ".txt";
         var payload = getDefaultPayload() + " " + i;
@@ -722,7 +723,7 @@ class AwsS3IntTests {
     try (var s3Client = getS3Client(creds)) {
       LOG.info("...place more than 1000 files...");
       var numFiles = 1100;
-      var keyPrefix = "revloc02/source/test/";
+      var keyPrefix = "revloc02/source/test-copy-all-thousands/";
       for (var i = 0; i < numFiles; i++) {
         var objectKey = keyPrefix + "test-" + i + ".txt";
         var payload = getDefaultPayload() + " " + i;
@@ -734,9 +735,7 @@ class AwsS3IntTests {
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(60))
           .untilAsserted(
-              () ->
-                  assertThat(s3CountAll(s3Client, S3_INTERNAL, keyPrefix))
-                      .isGreaterThanOrEqualTo(numFiles)); // sometimes there is 1 extra
+              () -> assertThat(s3CountAll(s3Client, S3_INTERNAL, keyPrefix)).isEqualTo(numFiles));
 
       LOG.info("...copy all files...");
       s3CopyAll(s3Client, S3_INTERNAL, keyPrefix, S3_TARGET_CUSTOMER);
@@ -748,16 +747,14 @@ class AwsS3IntTests {
           .untilAsserted(
               () ->
                   assertThat(s3CountAll(s3Client, S3_TARGET_CUSTOMER, keyPrefix))
-                      .isGreaterThanOrEqualTo(numFiles));
+                      .isEqualTo(numFiles));
 
       LOG.info("...verify the source still contains all files...");
       await()
           .pollInterval(Duration.ofSeconds(3))
           .atMost(Duration.ofSeconds(60))
           .untilAsserted(
-              () ->
-                  assertThat(s3CountAll(s3Client, S3_INTERNAL, keyPrefix))
-                      .isGreaterThanOrEqualTo(numFiles));
+              () -> assertThat(s3CountAll(s3Client, S3_INTERNAL, keyPrefix)).isEqualTo(numFiles));
 
       LOG.info("...cleanup and delete all files...");
       s3DeleteAll(s3Client, S3_INTERNAL, keyPrefix);
@@ -772,7 +769,7 @@ class AwsS3IntTests {
     try (var s3Client = getS3Client(creds)) {
       LOG.info("...place several files...");
       var numFiles = 1234;
-      var keyPrefix = "revloc02/source/test/";
+      var keyPrefix = "revloc02/source/test-count-all/more-than-one-thousand/";
       for (var i = 0; i < numFiles; i++) {
         var objectKey = keyPrefix + "test-" + i + ".txt";
         var payload = getDefaultPayload() + " " + i;
@@ -1051,7 +1048,7 @@ class AwsS3IntTests {
   void testS3Retrieve_withoutVersionId() throws IOException {
     var creds = getEmxSbCreds();
     try (var s3Client = getS3Client(creds)) {
-      var objectKey = "revloc02/source/test/test-retrieve.txt";
+      var objectKey = "revloc02/source/test-retrieve/test-retrieve.txt";
       var payload = getDefaultPayload();
       s3Put(s3Client, S3_INTERNAL, objectKey, payload);
 
