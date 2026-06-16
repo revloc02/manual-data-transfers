@@ -97,7 +97,7 @@ public class HybridS3AndAzureBlobIntTests {
     try (var s3Client = getS3Client(creds)) {
       LOG.info("...place several files...");
       var numFiles = 6; // don't change this to >1000, because s3List can only list 1000 items
-      var keyPrefix = "revloc02/source/test/";
+      var keyPrefix = "revloc02/source/test-move-all-s3-to-blob/";
       for (var i = 0; i < numFiles; i++) {
         var objectKey = keyPrefix + "test-" + i + ".txt";
         var payload = getDefaultPayload() + " " + i;
