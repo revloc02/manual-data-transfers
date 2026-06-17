@@ -69,10 +69,6 @@ class AzureServiceBusOpsTest {
         .untilAsserted(() -> assertThat(messageCount(CREDS)).isZero());
   }
 
-  // todo: ...and then possibly read from forest-test-sub-subscription (if it is a durable
-  // subscription...I think Azure does those). I dunno how to get creds for this, maybe get creds
-  // from the namespace? Maybe topic creds will work on the subscription?
-
   @Test
   void testSendTopicReadQueue() {
     var topic = "forest-test-sub-topic";
