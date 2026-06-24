@@ -230,7 +230,7 @@ public class SqsOperations {
             moreMessages = false;
           } else {
             for (var message : response.messages()) {
-              sqsDeleteMessage(awsCP, queueName, message);
+              sqsDeleteMessage(sqsClient, queueName, message);
               counter++;
             }
           }
@@ -315,33 +315,50 @@ public class SqsOperations {
   }
 
   /**
-   * Deletes a list of messages from the given SQS.
+   * Deletes a list of messages from the given SQS. Creates an SqsClient for the batch.
    *
    * @param response ReceiveMessageResponse which contains the list of messages to be deleted.
    */
   public static void sqsDeleteMessages(
       AwsCredentialsProvider awsCP, String queueName, ReceiveMessageResponse response) {
+    try (var sqsClient = getSqsClient(awsCP)) {
+      sqsDeleteMessages(sqsClient, queueName, response);
+    }
+  }
+
+  /**
+   * Deletes a list of messages from the given SQS using an existing SqsClient.
+   *
+   * @param response ReceiveMessageResponse which contains the list of messages to be deleted.
+   */
+  public static void sqsDeleteMessages(
+      SqsClient sqsClient, String queueName, ReceiveMessageResponse response) {
     var count = 0;
     for (Message message : response.messages()) {
-      sqsDeleteMessage(awsCP, queueName, message);
+      sqsDeleteMessage(sqsClient, queueName, message);
       count++;
     }
     LOG.info("DELETED {} message(s).", count);
   }
 
-  /** Deletes a message from the SQS. */
+  /** Deletes a message from the SQS. Creates an SqsClient for one-off deletes. */
   public static void sqsDeleteMessage(
       AwsCredentialsProvider awsCP, String queueName, Message message) {
     try (var sqsClient = getSqsClient(awsCP)) {
-      var deleteMessageRequest =
-          DeleteMessageRequest.builder()
-              .queueUrl(qUrl(sqsClient, queueName))
-              .receiptHandle(message.receiptHandle())
-              .build();
-      var deleteResponse = sqsClient.deleteMessage(deleteMessageRequest);
-      awsResponseValidation(deleteResponse);
-      LOG.info("DELETED: From {} message {}.", queueName, message);
+      sqsDeleteMessage(sqsClient, queueName, message);
     }
+  }
+
+  /** Deletes a message from the SQS using an existing SqsClient. */
+  public static void sqsDeleteMessage(SqsClient sqsClient, String queueName, Message message) {
+    var deleteMessageRequest =
+        DeleteMessageRequest.builder()
+            .queueUrl(qUrl(sqsClient, queueName))
+            .receiptHandle(message.receiptHandle())
+            .build();
+    var deleteResponse = sqsClient.deleteMessage(deleteMessageRequest);
+    awsResponseValidation(deleteResponse);
+    LOG.info("DELETED: From {} message {}.", queueName, message);
   }
 
   /** Copy a message from one SQS queue to another. */
@@ -699,7 +716,7 @@ public class SqsOperations {
           var response = sqsClient.receiveMessage(receiveMessageRequest);
           if (response.hasMessages()) {
             counter =
-                deletingMessagesWithSpecificPayload(awsCP, sqs, payloadLike, response, counter);
+                deletingMessagesWithSpecificPayload(sqsClient, sqs, payloadLike, response, counter);
           } else {
             moreMessages = false;
           }
@@ -723,7 +740,7 @@ public class SqsOperations {
    * complaining about Cognitive Complexity.
    */
   private static int deletingMessagesWithSpecificPayload(
-      AwsCredentialsProvider awsCP,
+      SqsClient sqsClient,
       String sqs,
       String payloadLike,
       ReceiveMessageResponse response,
@@ -731,7 +748,7 @@ public class SqsOperations {
     for (var message : response.messages()) {
       // check each message's payload content
       if (message.body().contains(payloadLike)) {
-        sqsDeleteMessage(awsCP, sqs, message);
+        sqsDeleteMessage(sqsClient, sqs, message);
         counter++;
         LOG.info("Deleted message #{}", counter);
       } else {
