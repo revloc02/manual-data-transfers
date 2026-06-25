@@ -84,7 +84,7 @@ public class ConfigUtils {
       Files.write(path, contents);
       LOG.info("File written to: {}", path);
     } catch (IOException e) {
-      LOG.error("Failed to write file: {}", path, e);
+      throw new RuntimeException("Failed to write file: " + path, e);
     }
   }
 
