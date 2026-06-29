@@ -6,17 +6,16 @@ import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_EVENTGRID_
 import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_NAMESPACE;
 import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY;
 import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY;
+import static forest.colver.datatransfer.azure.AzureUtils.buildAsbConnectionString;
 import static forest.colver.datatransfer.azure.AzureUtils.createEvent;
 import static forest.colver.datatransfer.azure.EventGridOperations.aegSendMessage;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsume;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbQueuePurge;
-import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.connectAsbQ;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.microsoft.azure.servicebus.primitives.ConnectionStringBuilder;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -63,18 +62,16 @@ class AzureEventGridTests {
   private static final Logger LOG = LoggerFactory.getLogger(AzureEventGridTests.class);
   private static final String EVENTGRID_HOST = EMX_SANDBOX_EVENTGRID_HOST;
   private static final String EVENTGRID_TOPIC_KEY = EMX_SANDBOX_EVENTGRID_TOPIC_KEY;
-
-  private static ConnectionStringBuilder subscriptionQueueCreds() {
-    return connectAsbQ(
-        EMX_SANDBOX_NAMESPACE,
-        EMX_SANDBOX_EVENTGRID_SUBSCRIPTION_QUEUE,
-        EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
-        EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
-  }
+  private static final String CONN_STR =
+      buildAsbConnectionString(
+          EMX_SANDBOX_NAMESPACE,
+          EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
+          EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
+  private static final String SUBSCRIPTION_QUEUE = EMX_SANDBOX_EVENTGRID_SUBSCRIPTION_QUEUE;
 
   @BeforeEach
   void purgeBeforeEach() {
-    var purged = asbQueuePurge(subscriptionQueueCreds());
+    var purged = asbQueuePurge(CONN_STR, SUBSCRIPTION_QUEUE);
     LOG.info("Purged {} stale messages from subscription queue before test.", purged);
   }
 
@@ -88,7 +85,6 @@ class AzureEventGridTests {
    * not someone else's.
    */
   private HashMap<String, Object> awaitEventWithId(String expectedId) {
-    var creds = subscriptionQueueCreds();
     var mapper = new ObjectMapper();
     var holder = new HashMap<String, HashMap<String, Object>>();
     await()
@@ -96,13 +92,13 @@ class AzureEventGridTests {
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(
             () -> {
-              var maybe = asbConsume(creds);
+              var maybe = asbConsume(CONN_STR, SUBSCRIPTION_QUEUE);
               assertThat(maybe).isPresent();
               var msg = maybe.get();
               @SuppressWarnings("unchecked")
               var event =
                   (HashMap<String, Object>)
-                      mapper.readValue(msg.getMessageBody().getBinaryData().get(0), HashMap.class);
+                      mapper.readValue(msg.getBody().toBytes(), HashMap.class);
               assertThat(event.get("id")).isEqualTo(expectedId);
               holder.put("event", event);
             });

@@ -7,13 +7,12 @@ import static forest.colver.datatransfer.aws.SqsOperations.sqsConsumeOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsDepth;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsReadOneMessage;
 import static forest.colver.datatransfer.aws.SqsOperations.sqsSend;
-import static forest.colver.datatransfer.azure.AzureUtils.createIMessage;
+import static forest.colver.datatransfer.azure.AzureUtils.createServiceBusMessage;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsume;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbRead;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbSend;
 
-import com.microsoft.azure.servicebus.IMessage;
-import com.microsoft.azure.servicebus.primitives.ConnectionStringBuilder;
+import com.azure.messaging.servicebus.ServiceBusReceivedMessage;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -37,27 +36,39 @@ public class SqsAndAsbQueue {
   }
 
   public static void moveOneSqsToAsbQueue(
-      AwsCredentialsProvider awsCreds, String sqs, ConnectionStringBuilder azureConnStr) {
+      AwsCredentialsProvider awsCreds,
+      String sqs,
+      String asbConnectionString,
+      String asbQueueName) {
     sqsConsumeOneMessage(awsCreds, sqs)
         .ifPresentOrElse(
             sqsMsg -> {
               Map<String, Object> properties =
                   new HashMap<>(convertSqsMessageAttributesToStrings(sqsMsg.messageAttributes()));
-              asbSend(azureConnStr, createIMessage(sqsMsg.body(), properties));
+              asbSend(
+                  asbConnectionString,
+                  asbQueueName,
+                  createServiceBusMessage(sqsMsg.body(), properties));
             },
             () -> LOG.error("No SQS message available."));
   }
 
   public static void moveOneAsbQueueToSqs(
-      ConnectionStringBuilder azureConnStr, AwsCredentialsProvider awsCreds, String sqs) {
-    asbConsume(azureConnStr)
+      String asbConnectionString,
+      String asbQueueName,
+      AwsCredentialsProvider awsCreds,
+      String sqs) {
+    asbConsume(asbConnectionString, asbQueueName)
         .ifPresentOrElse(
-            iMessage -> sendIMessageToSqs(iMessage, awsCreds, sqs),
+            message -> sendReceivedMessageToSqs(message, awsCreds, sqs),
             () -> LOG.error("No ASB message available."));
   }
 
   public static void moveAllSqsToAsbQueue(
-      AwsCredentialsProvider awsCreds, String sqs, ConnectionStringBuilder azureConnStr) {
+      AwsCredentialsProvider awsCreds,
+      String sqs,
+      String asbConnectionString,
+      String asbQueueName) {
     var counter = 0;
     var sqsMsg = sqsConsumeOneMessage(awsCreds, sqs);
     while (sqsMsg.isPresent()) {
@@ -65,64 +76,63 @@ public class SqsAndAsbQueue {
       var msg = sqsMsg.get();
       Map<String, Object> properties =
           new HashMap<>(convertSqsMessageAttributesToStrings(msg.messageAttributes()));
-      asbSend(azureConnStr, createIMessage(msg.body(), properties));
-      LOG.info(
-          "Moved from SQS={} to ASB-Queue={}; counter={}",
-          sqs,
-          azureConnStr.getEntityPath(),
-          counter);
+      asbSend(asbConnectionString, asbQueueName, createServiceBusMessage(msg.body(), properties));
+      LOG.info("Moved from SQS={} to ASB-Queue={}; counter={}", sqs, asbQueueName, counter);
       sqsMsg = sqsConsumeOneMessage(awsCreds, sqs);
     }
-    LOG.info(
-        "Moved {} messages from SQS={} to ASB-Queue={}.",
-        counter,
-        sqs,
-        azureConnStr.getEntityPath());
+    LOG.info("Moved {} messages from SQS={} to ASB-Queue={}.", counter, sqs, asbQueueName);
   }
 
   public static void moveAllAsbQueueToSqs(
-      ConnectionStringBuilder azureConnStr, String sqs, AwsCredentialsProvider awsCreds) {
+      String asbConnectionString,
+      String asbQueueName,
+      String sqs,
+      AwsCredentialsProvider awsCreds) {
     var counter = 0;
-    var iMessage = asbConsume(azureConnStr);
-    while (iMessage.isPresent()) {
+    var message = asbConsume(asbConnectionString, asbQueueName);
+    while (message.isPresent()) {
       counter++;
-      sendIMessageToSqs(iMessage.get(), awsCreds, sqs);
-      LOG.info(
-          "Moved from ASB-Queue={} to SQS={}; counter={}",
-          azureConnStr.getEntityPath(),
-          sqs,
-          counter);
-      iMessage = asbConsume(azureConnStr);
+      sendReceivedMessageToSqs(message.get(), awsCreds, sqs);
+      LOG.info("Moved from ASB-Queue={} to SQS={}; counter={}", asbQueueName, sqs, counter);
+      message = asbConsume(asbConnectionString, asbQueueName);
     }
-    LOG.info(
-        "Moved {} messages from ASB-Queue={} to SQS={}.",
-        counter,
-        azureConnStr.getEntityPath(),
-        sqs);
+    LOG.info("Moved {} messages from ASB-Queue={} to SQS={}.", counter, asbQueueName, sqs);
   }
 
   public static void copyOneSqsToAsbQueue(
-      AwsCredentialsProvider awsCreds, String sqs, ConnectionStringBuilder azureConnStr) {
+      AwsCredentialsProvider awsCreds,
+      String sqs,
+      String asbConnectionString,
+      String asbQueueName) {
     sqsReadOneMessage(awsCreds, sqs)
         .ifPresentOrElse(
             msg -> {
               Map<String, Object> properties =
                   new HashMap<>(convertSqsMessageAttributesToStrings(msg.messageAttributes()));
-              asbSend(azureConnStr, createIMessage(msg.body(), properties));
+              asbSend(
+                  asbConnectionString,
+                  asbQueueName,
+                  createServiceBusMessage(msg.body(), properties));
             },
             () -> LOG.error("No SQS message available."));
   }
 
   public static void copyOneAsbQueueToSqs(
-      ConnectionStringBuilder azureConnStr, AwsCredentialsProvider awsCreds, String sqs) {
-    asbRead(azureConnStr)
+      String asbConnectionString,
+      String asbQueueName,
+      AwsCredentialsProvider awsCreds,
+      String sqs) {
+    asbRead(asbConnectionString, asbQueueName)
         .ifPresentOrElse(
-            iMessage -> sendIMessageToSqs(iMessage, awsCreds, sqs),
+            message -> sendReceivedMessageToSqs(message, awsCreds, sqs),
             () -> LOG.error("No ASB message available."));
   }
 
   public static int copyAllSqsToAsbQueue(
-      AwsCredentialsProvider awsCreds, String sqs, ConnectionStringBuilder azureConnStr) {
+      AwsCredentialsProvider awsCreds,
+      String sqs,
+      String asbConnectionString,
+      String asbQueueName) {
     // check the queue depth, if it is beyond a certain size, abort
     var depth = sqsDepth(awsCreds, sqs);
     var counter = 0;
@@ -148,7 +158,10 @@ public class SqsAndAsbQueue {
               counter++;
               Map<String, Object> properties =
                   new HashMap<>(convertSqsMessageAttributesToStrings(message.messageAttributes()));
-              asbSend(azureConnStr, createIMessage(message.body(), properties));
+              asbSend(
+                  asbConnectionString,
+                  asbQueueName,
+                  createServiceBusMessage(message.body(), properties));
               LOG.info("Copied message #{}", counter);
             }
           } else {
@@ -169,18 +182,14 @@ public class SqsAndAsbQueue {
   }
 
   /**
-   * Extracts the payload and properties from an IMessage and sends that data to an SQS.
-   *
-   * @param iMessage An Azure IMessage.
-   * @param awsCreds Credentials for AWS.
-   * @param sqs The SQS queue.
+   * Extracts the payload and properties from a ServiceBusReceivedMessage and sends that data to an
+   * SQS.
    */
-  private static void sendIMessageToSqs(
-      IMessage iMessage, AwsCredentialsProvider awsCreds, String sqs) {
-    var asbQueProps = iMessage.getProperties();
-    var body = new String(iMessage.getMessageBody().getBinaryData().get(0));
+  private static void sendReceivedMessageToSqs(
+      ServiceBusReceivedMessage message, AwsCredentialsProvider awsCreds, String sqs) {
+    var body = message.getBody().toString();
     Map<String, String> properties =
-        asbQueProps.entrySet().stream()
+        message.getApplicationProperties().entrySet().stream()
             .filter(entry -> entry.getValue() instanceof String)
             .collect(Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue()));
     sqsSend(awsCreds, sqs, body, properties);

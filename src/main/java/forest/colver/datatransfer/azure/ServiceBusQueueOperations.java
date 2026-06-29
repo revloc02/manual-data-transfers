@@ -3,16 +3,14 @@ package forest.colver.datatransfer.azure;
 import static forest.colver.datatransfer.azure.AzureUtils.ASB_MAX_BATCH_SIZE;
 import static forest.colver.datatransfer.azure.AzureUtils.ASB_RECEIVE_TIMEOUT;
 
-import com.microsoft.azure.servicebus.ClientFactory;
-import com.microsoft.azure.servicebus.IMessage;
-import com.microsoft.azure.servicebus.IMessageReceiver;
-import com.microsoft.azure.servicebus.IMessageSender;
-import com.microsoft.azure.servicebus.ReceiveMode;
-import com.microsoft.azure.servicebus.management.ManagementClient;
-import com.microsoft.azure.servicebus.primitives.ConnectionStringBuilder;
-import com.microsoft.azure.servicebus.primitives.ServiceBusException;
-import java.io.IOException;
-import java.net.URI;
+import com.azure.messaging.servicebus.ServiceBusClientBuilder;
+import com.azure.messaging.servicebus.ServiceBusMessage;
+import com.azure.messaging.servicebus.ServiceBusReceivedMessage;
+import com.azure.messaging.servicebus.ServiceBusReceiverClient;
+import com.azure.messaging.servicebus.ServiceBusSenderClient;
+import com.azure.messaging.servicebus.administration.ServiceBusAdministrationClient;
+import com.azure.messaging.servicebus.administration.ServiceBusAdministrationClientBuilder;
+import com.azure.messaging.servicebus.models.ServiceBusReceiveMode;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,175 +27,148 @@ public class ServiceBusQueueOperations {
   /**
    * Azure Service Bus Send message.
    *
-   * @param connectionStringBuilder Credentials.
+   * @param connectionString Connection string to the Service Bus namespace or queue.
+   * @param queueName The queue name.
    * @param message The message to send.
    */
-  public static void asbSend(ConnectionStringBuilder connectionStringBuilder, IMessage message) {
-    try {
-      IMessageSender iMessageSender =
-          ClientFactory.createMessageSenderFromConnectionStringBuilder(connectionStringBuilder);
-      iMessageSender.send(message);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      LOG.error("An error occurred in asbSend", e);
-    } catch (ServiceBusException e) {
-      LOG.error("An error occurred in asbSend", e);
+  public static void asbSend(String connectionString, String queueName, ServiceBusMessage message) {
+    try (ServiceBusSenderClient sender =
+        new ServiceBusClientBuilder()
+            .connectionString(connectionString)
+            .sender()
+            .queueName(queueName)
+            .buildClient()) {
+      sender.sendMessage(message);
     }
-  }
-
-  public static Optional<IMessageReceiver> getReceiver(
-      ConnectionStringBuilder connectionStringBuilder) {
-    try {
-      return Optional.of(
-          ClientFactory.createMessageReceiverFromConnectionStringBuilder(
-              connectionStringBuilder, ReceiveMode.PEEKLOCK));
-    } catch (InterruptedException | ServiceBusException e) {
-      Thread.currentThread().interrupt();
-      LOG.error("An error occurred in getReceiver", e);
-    }
-    return Optional.empty();
+    LOG.info("ASB_SEND: Message sent to queue: {}", queueName);
   }
 
   // ASB ReceiveMode primer — ASB has two modes, and the three methods below show the three
   // patterns built from them:
-  //   PEEKLOCK         — message is locked for 60 sec (configurable on the queue, up to 5 min).
+  //   PEEK_LOCK         — message is locked for 60 sec (configurable on the queue, up to 5 min).
   //                      You must call complete() to delete it, or abandon() to release it back.
   //                      If you do nothing, the lock expires and the message reappears.
-  //   RECEIVEANDDELETE — atomic read+delete. Once received, it's gone. If your process crashes
+  //   RECEIVE_AND_DELETE — atomic read+delete. Once received, it's gone. If your process crashes
   //                      mid-handling, the message is lost.
   // The patterns:
-  //   asbRead              — PEEKLOCK + immediate abandon  → "peek without consuming"
-  //   asbReadWithPeeklock  — PEEKLOCK alone, no follow-up  → "claim it for ~60 sec"
-  //   asbConsume           — RECEIVEANDDELETE              → "take it and don't look back"
+  //   asbRead              — PEEK_LOCK + immediate abandon  → "peek without consuming"
+  //   asbReadWithPeeklock  — PEEK_LOCK alone, no follow-up  → "claim it for ~60 sec"
+  //   asbConsume           — RECEIVE_AND_DELETE              → "take it and don't look back"
 
   /**
-   * Reads a message from the queue non-destructively: locks it via PEEKLOCK, then immediately
+   * Reads a message from the queue non-destructively: locks it via PEEK_LOCK, then immediately
    * abandons the lock so other consumers can see it. Returns the full message payload.
    */
-  public static Optional<IMessage> asbRead(ConnectionStringBuilder connectionStringBuilder) {
-    try {
-      IMessageReceiver iMessageReceiver =
-          ClientFactory.createMessageReceiverFromConnectionStringBuilder(
-              connectionStringBuilder, ReceiveMode.PEEKLOCK);
-      var message = iMessageReceiver.receive(ASB_RECEIVE_TIMEOUT);
-      if (message != null) {
-        iMessageReceiver.abandon(
-            message.getLockToken()); // make message available for other consumers
-        return Optional.of(message);
-      }
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      LOG.error("An error occurred in asbRead", e);
-    } catch (ServiceBusException e) {
-      LOG.error("An error occurred in asbRead", e);
+  public static Optional<ServiceBusReceivedMessage> asbRead(
+      String connectionString, String queueName) {
+    try (ServiceBusReceiverClient receiver =
+        new ServiceBusClientBuilder()
+            .connectionString(connectionString)
+            .receiver()
+            .queueName(queueName)
+            .receiveMode(ServiceBusReceiveMode.PEEK_LOCK)
+            .buildClient()) {
+      var message = receiver.receiveMessages(1, ASB_RECEIVE_TIMEOUT).stream().findFirst();
+      message.ifPresent(receiver::abandon);
+      return message;
     }
-    return Optional.empty();
   }
 
   /**
-   * Reads a message under PEEKLOCK and leaves the lock held. The message stays invisible to other
+   * Reads a message under PEEK_LOCK and leaves the lock held. The message stays invisible to other
    * consumers until the lock expires (default 60 sec) and then becomes available again. Useful when
    * you want to claim a message for a window of time without deleting it.
    */
-  public static Optional<IMessage> asbReadWithPeeklock(
-      ConnectionStringBuilder connectionStringBuilder) {
-    try {
-      IMessageReceiver iMessageReceiver =
-          ClientFactory.createMessageReceiverFromConnectionStringBuilder(
-              connectionStringBuilder, ReceiveMode.PEEKLOCK);
-      return Optional.ofNullable(iMessageReceiver.receive(ASB_RECEIVE_TIMEOUT));
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      LOG.error("An error occurred in asbReadWithPeeklock", e);
-    } catch (ServiceBusException e) {
-      LOG.error("An error occurred in asbReadWithPeeklock", e);
+  public static Optional<ServiceBusReceivedMessage> asbReadWithPeeklock(
+      String connectionString, String queueName) {
+    try (ServiceBusReceiverClient receiver =
+        new ServiceBusClientBuilder()
+            .connectionString(connectionString)
+            .receiver()
+            .queueName(queueName)
+            .receiveMode(ServiceBusReceiveMode.PEEK_LOCK)
+            .buildClient()) {
+      return receiver.receiveMessages(1, ASB_RECEIVE_TIMEOUT).stream().findFirst();
     }
-    return Optional.empty();
   }
 
   /**
-   * Consumes a message destructively using RECEIVEANDDELETE — the message is removed from the queue
-   * atomically with the receive. No lock, no follow-up call needed. If this process dies before
-   * handling the message, it's gone.
+   * Consumes a message destructively using RECEIVE_AND_DELETE — the message is removed from the
+   * queue atomically with the receive. No lock, no follow-up call needed. If this process dies
+   * before handling the message, it's gone.
    */
-  public static Optional<IMessage> asbConsume(ConnectionStringBuilder connectionStringBuilder) {
-    try {
-      IMessageReceiver iMessageReceiver =
-          ClientFactory.createMessageReceiverFromConnectionStringBuilder(
-              connectionStringBuilder, ReceiveMode.RECEIVEANDDELETE);
-      var message = iMessageReceiver.receive(ASB_RECEIVE_TIMEOUT);
-      LOG.info("=====Consumed message from ASB queue: {}", connectionStringBuilder.getEntityPath());
-      return Optional.ofNullable(message);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      LOG.error("An error occurred in asbConsume", e);
-    } catch (ServiceBusException e) {
-      LOG.error("An error occurred in asbConsume", e);
+  public static Optional<ServiceBusReceivedMessage> asbConsume(
+      String connectionString, String queueName) {
+    try (ServiceBusReceiverClient receiver =
+        new ServiceBusClientBuilder()
+            .connectionString(connectionString)
+            .receiver()
+            .queueName(queueName)
+            .receiveMode(ServiceBusReceiveMode.RECEIVE_AND_DELETE)
+            .buildClient()) {
+      var message = receiver.receiveMessages(1, ASB_RECEIVE_TIMEOUT).stream().findFirst();
+      message.ifPresent(m -> LOG.info("ASB_CONSUME: Consumed message from queue: {}", queueName));
+      return message;
     }
-    return Optional.empty();
   }
 
   /**
    * Take a message on the queue and send it to the dead-letter sub-queue.
    *
-   * @param connectionStringBuilder Credentials.
+   * @param connectionString Connection string to the Service Bus namespace or queue.
+   * @param queueName The queue name.
    */
-  public static void asbDlq(ConnectionStringBuilder connectionStringBuilder) {
-    try {
-      IMessageReceiver iMessageReceiver =
-          ClientFactory.createMessageReceiverFromConnectionStringBuilder(
-              connectionStringBuilder, ReceiveMode.PEEKLOCK);
-      var message = iMessageReceiver.receive(ASB_RECEIVE_TIMEOUT);
-      iMessageReceiver.deadLetterAsync(message.getLockToken());
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      LOG.error("An error occurred in asbDlq", e);
-    } catch (ServiceBusException e) {
-      LOG.error("An error occurred in asbDlq", e);
+  public static void asbDlq(String connectionString, String queueName) {
+    try (ServiceBusReceiverClient receiver =
+        new ServiceBusClientBuilder()
+            .connectionString(connectionString)
+            .receiver()
+            .queueName(queueName)
+            .receiveMode(ServiceBusReceiveMode.PEEK_LOCK)
+            .buildClient()) {
+      var message = receiver.receiveMessages(1, ASB_RECEIVE_TIMEOUT).stream().findFirst();
+      message.ifPresent(receiver::deadLetter);
     }
   }
 
-  public static void asbMove(ConnectionStringBuilder fromCsb, ConnectionStringBuilder toCsb) {
-    getReceiver(fromCsb)
-        .ifPresentOrElse(
-            receiver -> {
-              try {
-                var message = receiver.receive(ASB_RECEIVE_TIMEOUT);
-                if (message != null) {
-                  asbSend(toCsb, message);
-                  receiver.completeAsync(message.getLockToken()); // delete the message
-                  LOG.info(
-                      "Message moved from {} to {}",
-                      fromCsb.getEntityPath(),
-                      toCsb.getEntityPath());
-                } else {
-                  LOG.warn("No message to move from {}", fromCsb.getEntityPath());
-                }
-              } catch (InterruptedException | ServiceBusException e) {
-                Thread.currentThread().interrupt();
-                LOG.error("An error occurred in asbMove", e);
-              }
-            },
-            () -> LOG.error("Could not get receiver for {}", fromCsb.getEntityPath()));
-  }
-
-  public static void asbMoveAll(ConnectionStringBuilder fromCsb, ConnectionStringBuilder toCsb) {
-    while (messageCount(fromCsb) > 0) {
-      asbMove(fromCsb, toCsb);
+  public static void asbMove(String connectionString, String fromQueue, String toQueue) {
+    try (ServiceBusReceiverClient receiver =
+        new ServiceBusClientBuilder()
+            .connectionString(connectionString)
+            .receiver()
+            .queueName(fromQueue)
+            .receiveMode(ServiceBusReceiveMode.PEEK_LOCK)
+            .buildClient()) {
+      var message = receiver.receiveMessages(1, ASB_RECEIVE_TIMEOUT).stream().findFirst();
+      if (message.isPresent()) {
+        var msg = message.get();
+        asbSend(connectionString, toQueue, new ServiceBusMessage(msg));
+        receiver.complete(msg);
+        LOG.info("Message moved from {} to {}", fromQueue, toQueue);
+      } else {
+        LOG.warn("No message to move from {}", fromQueue);
+      }
     }
   }
 
-  public static void asbCopy(ConnectionStringBuilder fromCsb, ConnectionStringBuilder toCsb) {
-    asbRead(fromCsb)
+  public static void asbMoveAll(String connectionString, String fromQueue, String toQueue) {
+    while (messageCount(connectionString, fromQueue) > 0) {
+      asbMove(connectionString, fromQueue, toQueue);
+    }
+  }
+
+  public static void asbCopy(String connectionString, String fromQueue, String toQueue) {
+    asbRead(connectionString, fromQueue)
         .ifPresentOrElse(
-            message -> asbSend(toCsb, message), () -> LOG.error("No ASB message available."));
+            message -> asbSend(connectionString, toQueue, new ServiceBusMessage(message)),
+            () -> LOG.error("No ASB message available."));
   }
 
   /**
    * Copy all messages from one queue to another using peek (non-destructive read).
    *
    * <p>Why peek and not receive: ASB has no per-receive visibility timeout like AWS SQS, so a
-   * receive-based copy would either consume messages or rely on the PEEKLOCK timer (default 60
+   * receive-based copy would either consume messages or rely on the PEEK_LOCK timer (default 60
    * sec), which fails on deeper queues — locks expire mid-copy and messages get re-read and
    * duplicated. Peek reads a snapshot without any lock or state change, so there is no time
    * pressure, no depth limit, and no duplicate risk.
@@ -206,61 +177,48 @@ public class ServiceBusQueueOperations {
    * batch, remember the highest sequence number seen, then peek the next batch starting from
    * (lastSeq + 1). Loop until a batch comes back empty.
    */
-  public static int asbCopyAll(ConnectionStringBuilder fromCsb, ConnectionStringBuilder toCsb) {
+  public static int asbCopyAll(String connectionString, String fromQueue, String toQueue) {
     var counter = 0;
-    try {
-      // ReceiveMode is required to construct the receiver but is irrelevant for peek — peek never
-      // locks or consumes regardless of mode.
-      var receiver =
-          ClientFactory.createMessageReceiverFromConnectionStringBuilder(
-              fromCsb, ReceiveMode.PEEKLOCK);
-      try {
-        // First batch: no sequence number, so peek starts from the earliest active message.
-        var batch = receiver.peekBatch(ASB_MAX_BATCH_SIZE);
-        while (batch != null && !batch.isEmpty()) {
-          long lastSequenceNumber = 0;
-          for (var message : batch) {
-            asbSend(toCsb, message);
-            counter++;
-            lastSequenceNumber = message.getSequenceNumber();
-          }
-          LOG.info("Copied {} messages so far...", counter);
-          // Advance past the last seen message — without +1 we'd re-peek it and loop forever.
-          batch = receiver.peekBatch(lastSequenceNumber + 1, ASB_MAX_BATCH_SIZE);
+    try (ServiceBusReceiverClient receiver =
+        new ServiceBusClientBuilder()
+            .connectionString(connectionString)
+            .receiver()
+            .queueName(fromQueue)
+            .receiveMode(ServiceBusReceiveMode.PEEK_LOCK)
+            .buildClient()) {
+      long lastSequenceNumber = 0;
+      var batch = receiver.peekMessages(ASB_MAX_BATCH_SIZE);
+      while (batch != null && batch.iterator().hasNext()) {
+        for (var message : batch) {
+          asbSend(connectionString, toQueue, new ServiceBusMessage(message));
+          counter++;
+          lastSequenceNumber = message.getSequenceNumber();
         }
-      } finally {
-        receiver.close();
+        LOG.info("Copied {} messages so far...", counter);
+        batch = receiver.peekMessages(ASB_MAX_BATCH_SIZE, lastSequenceNumber + 1);
       }
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      LOG.error("An error occurred in asbCopyAll", e);
-    } catch (ServiceBusException e) {
-      LOG.error("An error occurred in asbCopyAll", e);
     }
     LOG.info("asbCopyAll copied {} messages total.", counter);
     return counter;
   }
 
-  public static int asbQueuePurge(ConnectionStringBuilder connectionStringBuilder) {
+  public static int asbQueuePurge(String connectionString, String queueName) {
     int counter = 0;
-    try {
-      var iMessageReceiver =
-          ClientFactory.createMessageReceiverFromConnectionStringBuilder(
-              connectionStringBuilder, ReceiveMode.RECEIVEANDDELETE);
-      try {
-        while (iMessageReceiver.peek() != null) {
-          var messages = iMessageReceiver.receiveBatch(ASB_MAX_BATCH_SIZE);
-          if (messages != null && !messages.isEmpty()) {
-            LOG.info("asbQueuePurge received {} messages, purging...", messages.size());
-            counter += messages.size();
-          }
+    try (ServiceBusReceiverClient receiver =
+        new ServiceBusClientBuilder()
+            .connectionString(connectionString)
+            .receiver()
+            .queueName(queueName)
+            .receiveMode(ServiceBusReceiveMode.RECEIVE_AND_DELETE)
+            .buildClient()) {
+      while (receiver.peekMessage() != null) {
+        var messages = receiver.receiveMessages(ASB_MAX_BATCH_SIZE, ASB_RECEIVE_TIMEOUT);
+        if (messages != null && messages.stream().findAny().isPresent()) {
+          long messageCount = messages.stream().count();
+          LOG.info("asbQueuePurge received {} messages, purging...", messageCount);
+          counter += messageCount;
         }
-      } finally {
-        iMessageReceiver.close();
       }
-    } catch (InterruptedException | ServiceBusException e) {
-      Thread.currentThread().interrupt();
-      LOG.error("An error occurred in asbQueuePurge", e);
     }
     LOG.info("asbQueuePurge purged {} messages.", counter);
     return counter;
@@ -271,43 +229,20 @@ public class ServiceBusQueueOperations {
    *
    * @return The number of Active messages on the queue.
    */
-  public static long messageCount(String connectionString) {
-    return messageCount(new ConnectionStringBuilder(connectionString));
-  }
-
-  public static long messageCount(ConnectionStringBuilder connectionStringBuilder) {
-    ManagementClient client = new ManagementClient(connectionStringBuilder);
-    long messageCount = -1;
-    try {
-      var mcd =
-          client
-              .getQueueRuntimeInfo(connectionStringBuilder.getEntityPath())
-              .getMessageCountDetails();
-      messageCount = mcd.getActiveMessageCount();
-      LOG.info(
-          "Message Count Details:\n  ActiveMessageCount={}\n  DeadLetterMessageCount={}\n  ScheduledMessageCount={}\n  TransferMessageCount={}\n  TransferDeadLetterMessageCount={}\n",
-          mcd.getActiveMessageCount(),
-          mcd.getDeadLetterMessageCount(),
-          mcd.getScheduledMessageCount(),
-          mcd.getTransferMessageCount(),
-          mcd.getTransferDeadLetterMessageCount());
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      LOG.error("An error occurred in messageCount", e);
-    } catch (ServiceBusException e) {
-      LOG.error("An error occurred in messageCount", e);
-    } finally {
-      try {
-        client.close();
-      } catch (IOException e) {
-        LOG.error("Failed to close ManagementClient", e);
-      }
-    }
-    return messageCount;
-  }
-
-  public static ConnectionStringBuilder connectAsbQ(
-      URI endPoint, String entityPath, String sharedAccessKeyName, String sharedAccessKey) {
-    return new ConnectionStringBuilder(endPoint, entityPath, sharedAccessKeyName, sharedAccessKey);
+  public static long messageCount(String connectionString, String queueName) {
+    ServiceBusAdministrationClient adminClient =
+        new ServiceBusAdministrationClientBuilder()
+            .connectionString(connectionString)
+            .buildClient();
+    var properties = adminClient.getQueueRuntimeProperties(queueName);
+    var activeCount = properties.getActiveMessageCount();
+    LOG.info(
+        "Message Count Details:\n  ActiveMessageCount={}\n  DeadLetterMessageCount={}\n  ScheduledMessageCount={}\n  TransferMessageCount={}\n  TransferDeadLetterMessageCount={}\n",
+        properties.getActiveMessageCount(),
+        properties.getDeadLetterMessageCount(),
+        properties.getScheduledMessageCount(),
+        properties.getTransferMessageCount(),
+        properties.getTransferDeadLetterMessageCount());
+    return activeCount;
   }
 }

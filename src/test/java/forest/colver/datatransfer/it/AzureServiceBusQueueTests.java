@@ -8,7 +8,8 @@ import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_FOREST_TTL
 import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_NAMESPACE;
 import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY;
 import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY;
-import static forest.colver.datatransfer.azure.AzureUtils.createIMessage;
+import static forest.colver.datatransfer.azure.AzureUtils.buildAsbConnectionString;
+import static forest.colver.datatransfer.azure.AzureUtils.createServiceBusMessage;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsume;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbCopy;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbCopyAll;
@@ -18,14 +19,12 @@ import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbMove
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbQueuePurge;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbRead;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbSend;
-import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.connectAsbQ;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.messageCount;
 import static forest.colver.datatransfer.config.ConfigUtils.defaultPayload;
 import static forest.colver.datatransfer.config.ConfigUtils.getTimeStampFormatted;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
-import com.microsoft.azure.servicebus.primitives.ConnectionStringBuilder;
 import java.time.Duration;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -35,24 +34,17 @@ import org.slf4j.LoggerFactory;
 class AzureServiceBusQueueTests {
 
   private static final Logger LOG = LoggerFactory.getLogger(AzureServiceBusQueueTests.class);
-  private static final ConnectionStringBuilder CREDS =
-      connectAsbQ(
+  private static final String CONN_STR =
+      buildAsbConnectionString(
           EMX_SANDBOX_NAMESPACE,
-          EMX_SANDBOX_FOREST_QUEUE,
           EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
           EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
 
   /** This is simply a convenience method for purging the queues used in other unit tests. */
   @Test
   void purgeQueues() {
-    var creds2 =
-        connectAsbQ(
-            EMX_SANDBOX_NAMESPACE,
-            EMX_SANDBOX_FOREST_QUEUE2,
-            EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
-            EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
-    asbQueuePurge(CREDS);
-    asbQueuePurge(creds2);
+    asbQueuePurge(CONN_STR, EMX_SANDBOX_FOREST_QUEUE);
+    asbQueuePurge(CONN_STR, EMX_SANDBOX_FOREST_QUEUE2);
   }
 
   @Test
@@ -60,23 +52,25 @@ class AzureServiceBusQueueTests {
     LOG.info("...send a message...");
     Map<String, Object> properties =
         Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
-    asbSend(CREDS, createIMessage(defaultPayload, properties));
+    asbSend(
+        CONN_STR, EMX_SANDBOX_FOREST_QUEUE, createServiceBusMessage(defaultPayload, properties));
     LOG.info("...ensure the message arrived...");
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
-        .untilAsserted(() -> assertThat(messageCount(CREDS)).isEqualTo(1));
+        .untilAsserted(
+            () -> assertThat(messageCount(CONN_STR, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(1));
 
     LOG.info("...read that message...");
-    var message = asbRead(CREDS).orElseThrow();
+    var message = asbRead(CONN_STR, EMX_SANDBOX_FOREST_QUEUE).orElseThrow();
 
     LOG.info("...check the message...");
-    var body = new String(message.getMessageBody().getBinaryData().get(0));
+    var body = message.getBody().toString();
     assertThat(body).isEqualTo(defaultPayload);
-    assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
+    assertThat(message.getApplicationProperties()).containsEntry("specificKey", "specificValue");
 
     LOG.info("...clean up...");
-    asbConsume(CREDS);
+    asbConsume(CONN_STR, EMX_SANDBOX_FOREST_QUEUE);
   }
 
   @Test
@@ -84,41 +78,38 @@ class AzureServiceBusQueueTests {
     LOG.info("...send a message...");
     Map<String, Object> properties =
         Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
-    asbSend(CREDS, createIMessage(defaultPayload, properties));
+    asbSend(
+        CONN_STR, EMX_SANDBOX_FOREST_QUEUE, createServiceBusMessage(defaultPayload, properties));
     LOG.info("...ensure the message arrived...");
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
-        .untilAsserted(() -> assertThat(messageCount(CREDS)).isEqualTo(1));
+        .untilAsserted(
+            () -> assertThat(messageCount(CONN_STR, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(1));
 
     LOG.info("...move that message...");
-    var toCreds =
-        connectAsbQ(
-            EMX_SANDBOX_NAMESPACE,
-            EMX_SANDBOX_FOREST_QUEUE2,
-            EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
-            EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
-    asbMove(CREDS, toCreds);
+    asbMove(CONN_STR, EMX_SANDBOX_FOREST_QUEUE, EMX_SANDBOX_FOREST_QUEUE2);
     LOG.info("...ensure the message arrived on the other queue...");
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
-        .untilAsserted(() -> assertThat(messageCount(toCreds)).isEqualTo(1));
+        .untilAsserted(
+            () -> assertThat(messageCount(CONN_STR, EMX_SANDBOX_FOREST_QUEUE2)).isEqualTo(1));
 
     LOG.info("...check the message...");
-    var message = asbRead(toCreds).orElseThrow();
-    var body = new String(message.getMessageBody().getBinaryData().get(0));
+    var message = asbRead(CONN_STR, EMX_SANDBOX_FOREST_QUEUE2).orElseThrow();
+    var body = message.getBody().toString();
     assertThat(body).isEqualTo(defaultPayload);
-    assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
+    assertThat(message.getApplicationProperties()).containsEntry("specificKey", "specificValue");
 
     LOG.info("...ensure there are no messages on the source queue...");
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
-        .untilAsserted(() -> assertThat(messageCount(CREDS)).isZero());
+        .untilAsserted(() -> assertThat(messageCount(CONN_STR, EMX_SANDBOX_FOREST_QUEUE)).isZero());
 
     LOG.info("...cleanup...");
-    asbQueuePurge(toCreds);
+    asbQueuePurge(CONN_STR, EMX_SANDBOX_FOREST_QUEUE2);
   }
 
   @Test
@@ -126,90 +117,87 @@ class AzureServiceBusQueueTests {
     LOG.info("...send a message...");
     Map<String, Object> properties =
         Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
-    asbSend(CREDS, createIMessage(defaultPayload, properties));
+    asbSend(
+        CONN_STR, EMX_SANDBOX_FOREST_QUEUE, createServiceBusMessage(defaultPayload, properties));
     LOG.info("...ensure the message arrived...");
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
-        .untilAsserted(() -> assertThat(messageCount(CREDS)).isEqualTo(1));
+        .untilAsserted(
+            () -> assertThat(messageCount(CONN_STR, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(1));
 
     LOG.info("...retrieve that message...");
-    var message = asbConsume(CREDS).orElseThrow();
-    assertThat(messageCount(CREDS)).isZero();
+    var message = asbConsume(CONN_STR, EMX_SANDBOX_FOREST_QUEUE).orElseThrow();
+    assertThat(messageCount(CONN_STR, EMX_SANDBOX_FOREST_QUEUE)).isZero();
 
     LOG.info("...check the message...");
-    var body = new String(message.getMessageBody().getBinaryData().get(0));
+    var body = message.getBody().toString();
     assertThat(body).isEqualTo(defaultPayload);
-    assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
+    assertThat(message.getApplicationProperties()).containsEntry("specificKey", "specificValue");
   }
 
   @Test
   void testPurge() {
-    var message = createIMessage(defaultPayload);
+    var message = createServiceBusMessage(defaultPayload);
 
     LOG.info("...send a bunch of messages...");
     var num = 4;
     for (var i = 0; i < num; i++) {
-      asbSend(CREDS, message);
+      asbSend(CONN_STR, EMX_SANDBOX_FOREST_QUEUE, message);
     }
     LOG.info("...ensure the messages arrived...");
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
-        .untilAsserted(() -> assertThat(messageCount(CREDS)).isGreaterThanOrEqualTo(num));
+        .untilAsserted(
+            () ->
+                assertThat(messageCount(CONN_STR, EMX_SANDBOX_FOREST_QUEUE))
+                    .isGreaterThanOrEqualTo(num));
 
     LOG.info("...now purge the queue...");
-    assertThat(asbQueuePurge(CREDS)).isGreaterThanOrEqualTo(num);
+    assertThat(asbQueuePurge(CONN_STR, EMX_SANDBOX_FOREST_QUEUE)).isGreaterThanOrEqualTo(num);
     LOG.info("...and check that it was purged...");
-    assertThat(messageCount(CREDS)).isZero();
+    assertThat(messageCount(CONN_STR, EMX_SANDBOX_FOREST_QUEUE)).isZero();
   }
 
   @Test
   void testDeadLetterQueue() {
     var dlqName = EMX_SANDBOX_FOREST_QUEUE_WITH_DLQ + "/$DeadLetterQueue";
-    // connection string to the queue with a DLQ configured
-    var credsQwDlq =
-        connectAsbQ(
-            EMX_SANDBOX_NAMESPACE,
-            EMX_SANDBOX_FOREST_QUEUE_WITH_DLQ,
-            EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
-            EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
-    // connection string to the actual DLQ of the queue (with a DLQ configured)
-    var credsQwDlq_Dlq =
-        connectAsbQ(
-            EMX_SANDBOX_NAMESPACE,
-            dlqName,
-            EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
-            EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
 
     LOG.info("...send a message to the queue...");
     Map<String, Object> properties =
         Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
-    asbSend(credsQwDlq, createIMessage(defaultPayload, properties));
+    asbSend(
+        CONN_STR,
+        EMX_SANDBOX_FOREST_QUEUE_WITH_DLQ,
+        createServiceBusMessage(defaultPayload, properties));
     LOG.info("...ensure the message arrived...");
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
-        .untilAsserted(() -> assertThat(messageCount(credsQwDlq)).isEqualTo(1));
+        .untilAsserted(
+            () ->
+                assertThat(messageCount(CONN_STR, EMX_SANDBOX_FOREST_QUEUE_WITH_DLQ)).isEqualTo(1));
 
     LOG.info("...have the message on the queue move to the DLQ...");
-    asbDlq(credsQwDlq);
+    asbDlq(CONN_STR, EMX_SANDBOX_FOREST_QUEUE_WITH_DLQ);
 
     LOG.info("...check queue to see if main queue is empty...");
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
-        .untilAsserted(() -> assertThat(messageCount(credsQwDlq)).isZero());
+        .untilAsserted(
+            () -> assertThat(messageCount(CONN_STR, EMX_SANDBOX_FOREST_QUEUE_WITH_DLQ)).isZero());
 
     LOG.info("...check the DLQ message...");
-    var message = asbConsume(credsQwDlq_Dlq).orElseThrow();
-    var body = new String(message.getMessageBody().getBinaryData().get(0));
+    var message = asbConsume(CONN_STR, dlqName).orElseThrow();
+    var body = message.getBody().toString();
     assertThat(body).isEqualTo(defaultPayload);
-    assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
+    assertThat(message.getApplicationProperties()).containsEntry("specificKey", "specificValue");
 
     LOG.info("...cleanup the queue and the DLQ...");
-    asbQueuePurge(credsQwDlq);
-    asbQueuePurge(credsQwDlq_Dlq);
+    asbQueuePurge(CONN_STR, EMX_SANDBOX_FOREST_QUEUE_WITH_DLQ);
+    asbQueuePurge(CONN_STR, dlqName);
   }
 
   /**
@@ -220,86 +208,69 @@ class AzureServiceBusQueueTests {
   @Test
   void testExpireToDeadLetterQueue() {
     var dlqName = EMX_SANDBOX_FOREST_TTL_QUEUE + "/$DeadLetterQueue";
-    // connection string to the queue with a DLQ configured
-    var credsTtlQueue =
-        connectAsbQ(
-            EMX_SANDBOX_NAMESPACE,
-            EMX_SANDBOX_FOREST_TTL_QUEUE,
-            EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
-            EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
-    // connection string to the actual DLQ of the queue (with a DLQ configured)
-    var credsTtlQueueDlq =
-        connectAsbQ(
-            EMX_SANDBOX_NAMESPACE,
-            dlqName,
-            EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
-            EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
+    asbQueuePurge(CONN_STR, EMX_SANDBOX_FOREST_TTL_QUEUE);
+    asbQueuePurge(CONN_STR, dlqName);
 
     LOG.info("...send a message to the queue...");
     Map<String, Object> properties =
         Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
-    asbSend(credsTtlQueue, createIMessage(defaultPayload, properties));
+    asbSend(
+        CONN_STR,
+        EMX_SANDBOX_FOREST_TTL_QUEUE,
+        createServiceBusMessage(defaultPayload, properties));
 
     LOG.info("...check to see the message on the queue...");
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
-        .untilAsserted(() -> assertThat(messageCount(credsTtlQueue)).isEqualTo(1));
+        .untilAsserted(
+            () -> assertThat(messageCount(CONN_STR, EMX_SANDBOX_FOREST_TTL_QUEUE)).isEqualTo(1));
 
     LOG.info(
         "...check queue to see if main queue is empty, indicating that the 10 sec TTL message has expired...");
     await()
         .pollInterval(Duration.ofSeconds(10))
         .atMost(Duration.ofSeconds(120))
-        .untilAsserted(() -> assertThat(messageCount(credsTtlQueue)).isZero());
+        .untilAsserted(
+            () -> assertThat(messageCount(CONN_STR, EMX_SANDBOX_FOREST_TTL_QUEUE)).isZero());
 
     LOG.info("...check the message in the DLQ...");
-    // check the DLQ message
-    var message = asbConsume(credsTtlQueueDlq).orElseThrow();
-    var body = new String(message.getMessageBody().getBinaryData().get(0));
+    var message = asbConsume(CONN_STR, dlqName).orElseThrow();
+    var body = message.getBody().toString();
     assertThat(body).isEqualTo(defaultPayload);
-    assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
+    assertThat(message.getApplicationProperties()).containsEntry("specificKey", "specificValue");
 
     LOG.info("...cleanup the queue and the DLQ...");
-    asbQueuePurge(credsTtlQueue);
-    asbQueuePurge(credsTtlQueueDlq);
+    asbQueuePurge(CONN_STR, EMX_SANDBOX_FOREST_TTL_QUEUE);
+    asbQueuePurge(CONN_STR, dlqName);
   }
 
   @Test
   void testSendAutoForwarding() {
-    // connection string to the queue with a forward_to configured
-    var credsQueWithForward =
-        connectAsbQ(
-            EMX_SANDBOX_NAMESPACE,
-            EMX_SANDBOX_FOREST_QUEUE_WITH_FORWARD,
-            EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
-            EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
-    var toCreds =
-        connectAsbQ(
-            EMX_SANDBOX_NAMESPACE,
-            EMX_SANDBOX_FOREST_QUEUE2,
-            EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
-            EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
-
     LOG.info("...send a message to the queue...");
     Map<String, Object> properties =
         Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
-    asbSend(credsQueWithForward, createIMessage(defaultPayload, properties));
+    asbSend(
+        CONN_STR,
+        EMX_SANDBOX_FOREST_QUEUE_WITH_FORWARD,
+        createServiceBusMessage(defaultPayload, properties));
 
     LOG.info("...check message is not on original queue as it was forwarded...");
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(12))
-        .untilAsserted(() -> assertThat(messageCount(credsQueWithForward)).isZero());
+        .untilAsserted(
+            () ->
+                assertThat(messageCount(CONN_STR, EMX_SANDBOX_FOREST_QUEUE_WITH_FORWARD)).isZero());
 
     LOG.info("...check the message on the destination queue...");
-    var message = asbRead(toCreds).orElseThrow();
-    var body = new String(message.getMessageBody().getBinaryData().get(0));
+    var message = asbRead(CONN_STR, EMX_SANDBOX_FOREST_QUEUE2).orElseThrow();
+    var body = message.getBody().toString();
     assertThat(body).isEqualTo(defaultPayload);
-    assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
+    assertThat(message.getApplicationProperties()).containsEntry("specificKey", "specificValue");
 
     LOG.info("...cleanup...");
-    asbConsume(toCreds);
+    asbConsume(CONN_STR, EMX_SANDBOX_FOREST_QUEUE2);
   }
 
   @Test
@@ -307,31 +278,27 @@ class AzureServiceBusQueueTests {
     LOG.info("...send some messages...");
     var numMsgs = 7;
     for (var i = 0; i < numMsgs; i++) {
-      asbSend(CREDS, createIMessage(defaultPayload));
+      asbSend(CONN_STR, EMX_SANDBOX_FOREST_QUEUE, createServiceBusMessage(defaultPayload));
     }
     LOG.info("...check to see the messages arrived...");
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(messageCount(CREDS)).isEqualTo(numMsgs));
+        .untilAsserted(
+            () -> assertThat(messageCount(CONN_STR, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(numMsgs));
 
     LOG.info("...move the messages...");
-    var toCreds =
-        connectAsbQ(
-            EMX_SANDBOX_NAMESPACE,
-            EMX_SANDBOX_FOREST_QUEUE2,
-            EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
-            EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
-    asbMoveAll(CREDS, toCreds);
+    asbMoveAll(CONN_STR, EMX_SANDBOX_FOREST_QUEUE, EMX_SANDBOX_FOREST_QUEUE2);
 
     LOG.info("...verify messages are on the target queue...");
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(messageCount(toCreds)).isEqualTo(numMsgs));
+        .untilAsserted(
+            () -> assertThat(messageCount(CONN_STR, EMX_SANDBOX_FOREST_QUEUE2)).isEqualTo(numMsgs));
 
     LOG.info("...cleanup...");
-    asbQueuePurge(toCreds);
+    asbQueuePurge(CONN_STR, EMX_SANDBOX_FOREST_QUEUE2);
   }
 
   @Test
@@ -339,42 +306,40 @@ class AzureServiceBusQueueTests {
     LOG.info("...send a message...");
     Map<String, Object> properties =
         Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
-    asbSend(CREDS, createIMessage(defaultPayload, properties));
+    asbSend(
+        CONN_STR, EMX_SANDBOX_FOREST_QUEUE, createServiceBusMessage(defaultPayload, properties));
     LOG.info("...ensure the message arrived...");
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
-        .untilAsserted(() -> assertThat(messageCount(CREDS)).isEqualTo(1));
+        .untilAsserted(
+            () -> assertThat(messageCount(CONN_STR, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(1));
 
     LOG.info("...copy that message...");
-    var toCreds =
-        connectAsbQ(
-            EMX_SANDBOX_NAMESPACE,
-            EMX_SANDBOX_FOREST_QUEUE2,
-            EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
-            EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
-    asbCopy(CREDS, toCreds);
+    asbCopy(CONN_STR, EMX_SANDBOX_FOREST_QUEUE, EMX_SANDBOX_FOREST_QUEUE2);
     LOG.info("...ensure the message arrived on the other queue...");
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
-        .untilAsserted(() -> assertThat(messageCount(toCreds)).isEqualTo(1));
+        .untilAsserted(
+            () -> assertThat(messageCount(CONN_STR, EMX_SANDBOX_FOREST_QUEUE2)).isEqualTo(1));
 
     LOG.info("...check the message...");
-    var message = asbRead(toCreds).orElseThrow();
-    var body = new String(message.getMessageBody().getBinaryData().get(0));
+    var message = asbRead(CONN_STR, EMX_SANDBOX_FOREST_QUEUE2).orElseThrow();
+    var body = message.getBody().toString();
     assertThat(body).isEqualTo(defaultPayload);
-    assertThat(message.getProperties()).containsEntry("specificKey", "specificValue");
+    assertThat(message.getApplicationProperties()).containsEntry("specificKey", "specificValue");
 
     LOG.info("...ensure the message is still on the original queue...");
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
-        .untilAsserted(() -> assertThat(messageCount(CREDS)).isEqualTo(1));
+        .untilAsserted(
+            () -> assertThat(messageCount(CONN_STR, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(1));
 
     LOG.info("...cleanup...");
-    asbQueuePurge(toCreds);
-    asbQueuePurge(CREDS);
+    asbQueuePurge(CONN_STR, EMX_SANDBOX_FOREST_QUEUE2);
+    asbQueuePurge(CONN_STR, EMX_SANDBOX_FOREST_QUEUE);
   }
 
   @Test
@@ -382,37 +347,34 @@ class AzureServiceBusQueueTests {
     LOG.info("...send some messages...");
     var numMsgs = 4;
     for (var i = 0; i < numMsgs; i++) {
-      asbSend(CREDS, createIMessage(defaultPayload));
+      asbSend(CONN_STR, EMX_SANDBOX_FOREST_QUEUE, createServiceBusMessage(defaultPayload));
     }
     LOG.info("...check to see the messages arrived...");
     await()
         .pollInterval(Duration.ofSeconds(5))
         .atMost(Duration.ofSeconds(80))
-        .untilAsserted(() -> assertThat(messageCount(CREDS)).isEqualTo(numMsgs));
+        .untilAsserted(
+            () -> assertThat(messageCount(CONN_STR, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(numMsgs));
 
     LOG.info("...copy the messages...");
-    var toCreds =
-        connectAsbQ(
-            EMX_SANDBOX_NAMESPACE,
-            EMX_SANDBOX_FOREST_QUEUE2,
-            EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
-            EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
-    asbCopyAll(CREDS, toCreds);
+    asbCopyAll(CONN_STR, EMX_SANDBOX_FOREST_QUEUE, EMX_SANDBOX_FOREST_QUEUE2);
 
     LOG.info("...verify messages are on the target queue...");
     await()
         .pollInterval(Duration.ofSeconds(5))
         .atMost(Duration.ofSeconds(80))
-        .untilAsserted(() -> assertThat(messageCount(toCreds)).isEqualTo(numMsgs));
+        .untilAsserted(
+            () -> assertThat(messageCount(CONN_STR, EMX_SANDBOX_FOREST_QUEUE2)).isEqualTo(numMsgs));
 
     LOG.info("...ensure the messages are still on the original queue...");
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
-        .untilAsserted(() -> assertThat(messageCount(CREDS)).isEqualTo(numMsgs));
+        .untilAsserted(
+            () -> assertThat(messageCount(CONN_STR, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(numMsgs));
 
     LOG.info("...cleanup...");
-    asbQueuePurge(toCreds);
-    asbQueuePurge(CREDS);
+    asbQueuePurge(CONN_STR, EMX_SANDBOX_FOREST_QUEUE2);
+    asbQueuePurge(CONN_STR, EMX_SANDBOX_FOREST_QUEUE);
   }
 }

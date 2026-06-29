@@ -11,12 +11,12 @@ import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_FOREST_QUE
 import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_NAMESPACE;
 import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY;
 import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY;
-import static forest.colver.datatransfer.azure.AzureUtils.createIMessage;
+import static forest.colver.datatransfer.azure.AzureUtils.buildAsbConnectionString;
+import static forest.colver.datatransfer.azure.AzureUtils.createServiceBusMessage;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbConsume;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbQueuePurge;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbRead;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbSend;
-import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.connectAsbQ;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.messageCount;
 import static forest.colver.datatransfer.config.ConfigUtils.defaultPayload;
 import static forest.colver.datatransfer.config.ConfigUtils.getDefaultPayload;
@@ -31,7 +31,6 @@ import static forest.colver.datatransfer.hybrid.SqsAndAsbQueue.moveOneSqsToAsbQu
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
-import com.microsoft.azure.servicebus.primitives.ConnectionStringBuilder;
 import java.time.Duration;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -44,10 +43,9 @@ class HybridSqsAndAsbQueueIntTests {
   private static final Logger LOG = LoggerFactory.getLogger(HybridSqsAndAsbQueueIntTests.class);
   private static final String SQS1 = EMX_SANDBOX_TEST_SQS1;
   private static final AwsCredentialsProvider awsCreds = getEmxSbCreds();
-  private final ConnectionStringBuilder asbCreds =
-      connectAsbQ(
+  private static final String ASB_CONN_STR =
+      buildAsbConnectionString(
           EMX_SANDBOX_NAMESPACE,
-          EMX_SANDBOX_FOREST_QUEUE,
           EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
           EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
 
@@ -67,19 +65,19 @@ class HybridSqsAndAsbQueueIntTests {
         .untilAsserted(() -> assertThat(sqsDepth(awsCreds, SQS1)).isEqualTo(1));
 
     // move it to ASB queue
-    moveOneSqsToAsbQueue(awsCreds, SQS1, asbCreds);
+    moveOneSqsToAsbQueue(awsCreds, SQS1, ASB_CONN_STR, EMX_SANDBOX_FOREST_QUEUE);
 
     // read that message
-    var message = asbRead(asbCreds).orElseThrow();
+    var message = asbRead(ASB_CONN_STR, EMX_SANDBOX_FOREST_QUEUE).orElseThrow();
 
     // check it
-    var body = new String(message.getMessageBody().getBinaryData().get(0));
+    var body = message.getBody().toString();
     assertThat(body).isEqualTo(payload);
-    assertThat(message.getProperties()).containsEntry("key2", "value2");
-    assertThat(message.getProperties()).containsEntry("key3", "value3");
+    assertThat(message.getApplicationProperties()).containsEntry("key2", "value2");
+    assertThat(message.getApplicationProperties()).containsEntry("key3", "value3");
 
     // clean up
-    asbConsume(asbCreds);
+    asbConsume(ASB_CONN_STR, EMX_SANDBOX_FOREST_QUEUE);
   }
 
   @Test
@@ -87,13 +85,17 @@ class HybridSqsAndAsbQueueIntTests {
     // send a message to ASB queue
     Map<String, Object> properties =
         Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
-    asbSend(asbCreds, createIMessage(defaultPayload, properties));
+    asbSend(
+        ASB_CONN_STR,
+        EMX_SANDBOX_FOREST_QUEUE,
+        createServiceBusMessage(defaultPayload, properties));
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
-        .untilAsserted(() -> assertThat(messageCount(asbCreds)).isEqualTo(1));
+        .untilAsserted(
+            () -> assertThat(messageCount(ASB_CONN_STR, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(1));
 
-    moveOneAsbQueueToSqs(asbCreds, awsCreds, SQS1);
+    moveOneAsbQueueToSqs(ASB_CONN_STR, EMX_SANDBOX_FOREST_QUEUE, awsCreds, SQS1);
 
     // check that it arrived
     var msg = sqsReadOneMessage(awsCreds, SQS1);
@@ -123,16 +125,19 @@ class HybridSqsAndAsbQueueIntTests {
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(() -> assertThat(sqsDepth(awsCreds, SQS1)).isEqualTo(numMsgs));
 
-    moveAllSqsToAsbQueue(awsCreds, SQS1, asbCreds);
+    moveAllSqsToAsbQueue(awsCreds, SQS1, ASB_CONN_STR, EMX_SANDBOX_FOREST_QUEUE);
 
     // verify messages are on the ASB queue
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(messageCount(asbCreds)).isEqualTo(numMsgs));
+        .untilAsserted(
+            () ->
+                assertThat(messageCount(ASB_CONN_STR, EMX_SANDBOX_FOREST_QUEUE))
+                    .isEqualTo(numMsgs));
 
     // cleanup
-    asbQueuePurge(asbCreds);
+    asbQueuePurge(ASB_CONN_STR, EMX_SANDBOX_FOREST_QUEUE);
   }
 
   /**
@@ -146,14 +151,17 @@ class HybridSqsAndAsbQueueIntTests {
     // send messages to ASB queue
     var numMsgs = 7;
     for (var i = 0; i < numMsgs; i++) {
-      asbSend(asbCreds, createIMessage(defaultPayload));
+      asbSend(ASB_CONN_STR, EMX_SANDBOX_FOREST_QUEUE, createServiceBusMessage(defaultPayload));
     }
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(messageCount(asbCreds)).isGreaterThanOrEqualTo(numMsgs));
+        .untilAsserted(
+            () ->
+                assertThat(messageCount(ASB_CONN_STR, EMX_SANDBOX_FOREST_QUEUE))
+                    .isGreaterThanOrEqualTo(numMsgs));
 
-    moveAllAsbQueueToSqs(asbCreds, SQS1, awsCreds);
+    moveAllAsbQueueToSqs(ASB_CONN_STR, EMX_SANDBOX_FOREST_QUEUE, SQS1, awsCreds);
 
     // verify messages are on the target sqs
     await()
@@ -181,19 +189,19 @@ class HybridSqsAndAsbQueueIntTests {
         .untilAsserted(() -> assertThat(sqsDepth(awsCreds, SQS1)).isEqualTo(1));
 
     // copy it to ASB queue
-    copyOneSqsToAsbQueue(awsCreds, SQS1, asbCreds);
+    copyOneSqsToAsbQueue(awsCreds, SQS1, ASB_CONN_STR, EMX_SANDBOX_FOREST_QUEUE);
 
     // read that message
-    var message = asbRead(asbCreds).orElseThrow();
+    var message = asbRead(ASB_CONN_STR, EMX_SANDBOX_FOREST_QUEUE).orElseThrow();
 
     // check it
-    var body = new String(message.getMessageBody().getBinaryData().get(0));
+    var body = message.getBody().toString();
     assertThat(body).isEqualTo(payload);
-    assertThat(message.getProperties()).containsEntry("key2", "value2");
-    assertThat(message.getProperties()).containsEntry("key3", "value3");
+    assertThat(message.getApplicationProperties()).containsEntry("key2", "value2");
+    assertThat(message.getApplicationProperties()).containsEntry("key3", "value3");
 
     // clean up
-    asbConsume(asbCreds);
+    asbConsume(ASB_CONN_STR, EMX_SANDBOX_FOREST_QUEUE);
     sqsDeleteMessage(awsCreds, SQS1, sqsReadOneMessage(awsCreds, SQS1).orElseThrow());
   }
 
@@ -202,14 +210,18 @@ class HybridSqsAndAsbQueueIntTests {
     // send a message to ASB queue
     Map<String, Object> properties =
         Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
-    asbSend(asbCreds, createIMessage(defaultPayload, properties));
+    asbSend(
+        ASB_CONN_STR,
+        EMX_SANDBOX_FOREST_QUEUE,
+        createServiceBusMessage(defaultPayload, properties));
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
-        .untilAsserted(() -> assertThat(messageCount(asbCreds)).isEqualTo(1));
+        .untilAsserted(
+            () -> assertThat(messageCount(ASB_CONN_STR, EMX_SANDBOX_FOREST_QUEUE)).isEqualTo(1));
 
     // copy the message to SQS
-    copyOneAsbQueueToSqs(asbCreds, awsCreds, SQS1);
+    copyOneAsbQueueToSqs(ASB_CONN_STR, EMX_SANDBOX_FOREST_QUEUE, awsCreds, SQS1);
 
     // check that it arrived on SQS
     var msg = sqsReadOneMessage(awsCreds, SQS1);
@@ -221,7 +233,7 @@ class HybridSqsAndAsbQueueIntTests {
 
     // cleanup
     sqsDeleteMessage(awsCreds, SQS1, msg.get());
-    asbConsume(asbCreds);
+    asbConsume(ASB_CONN_STR, EMX_SANDBOX_FOREST_QUEUE);
   }
 
   @Test
@@ -240,13 +252,16 @@ class HybridSqsAndAsbQueueIntTests {
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(() -> assertThat(sqsDepth(awsCreds, SQS1)).isEqualTo(numMsgs));
 
-    copyAllSqsToAsbQueue(awsCreds, SQS1, asbCreds);
+    copyAllSqsToAsbQueue(awsCreds, SQS1, ASB_CONN_STR, EMX_SANDBOX_FOREST_QUEUE);
 
     // verify messages are on the ASB queue
     await()
         .pollInterval(Duration.ofSeconds(3))
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(() -> assertThat(messageCount(asbCreds)).isEqualTo(numMsgs));
+        .untilAsserted(
+            () ->
+                assertThat(messageCount(ASB_CONN_STR, EMX_SANDBOX_FOREST_QUEUE))
+                    .isEqualTo(numMsgs));
 
     // verify messages are still on the sqs
     await()
@@ -255,7 +270,7 @@ class HybridSqsAndAsbQueueIntTests {
         .untilAsserted(() -> assertThat(sqsDepth(awsCreds, SQS1)).isEqualTo(numMsgs));
 
     // cleanup
-    asbQueuePurge(asbCreds);
+    asbQueuePurge(ASB_CONN_STR, EMX_SANDBOX_FOREST_QUEUE);
     sqsPurge(awsCreds, SQS1);
   }
 }

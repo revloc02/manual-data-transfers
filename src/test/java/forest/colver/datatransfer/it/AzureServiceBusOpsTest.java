@@ -7,19 +7,19 @@ import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_FOREST_QUE
 import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_NAMESPACE;
 import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY;
 import static forest.colver.datatransfer.azure.AzureUtils.EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY;
+import static forest.colver.datatransfer.azure.AzureUtils.buildAsbConnectionString;
 import static forest.colver.datatransfer.azure.AzureUtils.createServiceBusMessage;
 import static forest.colver.datatransfer.azure.ServiceBusOperations.asbReadMessage;
 import static forest.colver.datatransfer.azure.ServiceBusOperations.asbReceiveMessageComplete;
 import static forest.colver.datatransfer.azure.ServiceBusOperations.asbSendMessageToQueue;
 import static forest.colver.datatransfer.azure.ServiceBusOperations.asbSendMessageToTopic;
-import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.connectAsbQ;
+import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.asbQueuePurge;
 import static forest.colver.datatransfer.azure.ServiceBusQueueOperations.messageCount;
 import static forest.colver.datatransfer.config.ConfigUtils.defaultPayload;
 import static forest.colver.datatransfer.config.ConfigUtils.getTimeStampFormatted;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
-import com.microsoft.azure.servicebus.primitives.ConnectionStringBuilder;
 import java.time.Duration;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -28,10 +28,9 @@ import org.slf4j.LoggerFactory;
 
 class AzureServiceBusOpsTest {
   private static final Logger LOG = LoggerFactory.getLogger(AzureServiceBusOpsTest.class);
-  private static final ConnectionStringBuilder CREDS =
-      connectAsbQ(
+  private static final String CONN_STR =
+      buildAsbConnectionString(
           EMX_SANDBOX_NAMESPACE,
-          EMX_SANDBOX_FOREST_QUEUE,
           EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_POLICY,
           EMX_SANDBOX_NAMESPACE_SHARED_ACCESS_KEY);
 
@@ -48,7 +47,7 @@ class AzureServiceBusOpsTest {
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
-        .untilAsserted(() -> assertThat(messageCount(CREDS)).isOne());
+        .untilAsserted(() -> assertThat(messageCount(CONN_STR, EMX_SANDBOX_FOREST_QUEUE)).isOne());
 
     LOG.info("...read that message from the queue...");
     var message =
@@ -66,13 +65,14 @@ class AzureServiceBusOpsTest {
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
-        .untilAsserted(() -> assertThat(messageCount(CREDS)).isZero());
+        .untilAsserted(() -> assertThat(messageCount(CONN_STR, EMX_SANDBOX_FOREST_QUEUE)).isZero());
   }
 
   @Test
   void testSendTopicReadQueue() {
     var topic = "forest-test-sub-topic";
     var queue = "forest-test-sub-queue";
+    asbQueuePurge(CONN_STR, queue);
     LOG.info("...send a message to a topic with a queue subscription...");
     Map<String, Object> properties =
         Map.of("timestamp", getTimeStampFormatted(), "specificKey", "specificValue");
@@ -84,8 +84,7 @@ class AzureServiceBusOpsTest {
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
-        .untilAsserted(
-            () -> assertThat(messageCount(EMX_SANDBOX_ASB_FOREST_TEST_SUB_QUEUE_CONN_STR)).isOne());
+        .untilAsserted(() -> assertThat(messageCount(CONN_STR, queue)).isOne());
 
     LOG.info("...read that message from the queue...");
     var message =
@@ -101,8 +100,6 @@ class AzureServiceBusOpsTest {
     await()
         .pollInterval(Duration.ofSeconds(1))
         .atMost(Duration.ofSeconds(10))
-        .untilAsserted(
-            () ->
-                assertThat(messageCount(EMX_SANDBOX_ASB_FOREST_TEST_SUB_QUEUE_CONN_STR)).isZero());
+        .untilAsserted(() -> assertThat(messageCount(CONN_STR, queue)).isZero());
   }
 }

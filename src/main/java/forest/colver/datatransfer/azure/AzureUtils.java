@@ -4,11 +4,7 @@ import static forest.colver.datatransfer.config.ConfigUtils.userCreds;
 
 import com.azure.core.util.BinaryData;
 import com.azure.messaging.servicebus.ServiceBusMessage;
-import com.microsoft.azure.servicebus.IMessage;
-import com.microsoft.azure.servicebus.Message;
-import com.microsoft.azure.servicebus.MessageBodyType;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -73,25 +69,6 @@ public class AzureUtils {
   public static final String EMX_SANDBOX_ASB_FOREST_TEST_SUB_TOPIC_CONN_STR =
       userCreds.getProperty("azure-emx-sandbox-forest-test-sub-topic-conn-str");
 
-  public static IMessage createIMessage(
-      String payload, String label, String id, Map<String, Object> properties) {
-    Message message = new Message(payload);
-    message.setLabel(label);
-    message.setMessageId(id);
-    if (!properties.isEmpty()) {
-      message.setProperties(properties);
-    }
-    return message;
-  }
-
-  public static IMessage createIMessage(String payload, Map<String, Object> properties) {
-    return createIMessage(payload, "testMessage", "123", properties);
-  }
-
-  public static IMessage createIMessage(String payload) {
-    return createIMessage(payload, Map.of());
-  }
-
   public static ServiceBusMessage createServiceBusMessage(
       String body, Map<String, Object> properties) {
     var serviceBusMessage = new ServiceBusMessage(body);
@@ -100,14 +77,19 @@ public class AzureUtils {
     return serviceBusMessage;
   }
 
-  public static void displayIMessage(IMessage msg) {
-    if (msg != null && msg.getMessageId() != null) {
-      LOG.info("message body type: {}", msg.getMessageBody().getBodyType().name());
-      if (msg.getMessageBody().getBodyType().equals(MessageBodyType.BINARY)) {
-        List<byte[]> body = msg.getMessageBody().getBinaryData();
-        body.forEach(bytes -> LOG.info("body: {}", new String(bytes, StandardCharsets.UTF_8)));
-      }
-    }
+  public static ServiceBusMessage createServiceBusMessage(String body) {
+    return createServiceBusMessage(body, Map.of());
+  }
+
+  /**
+   * Builds an Azure Service Bus connection string from namespace components. This is the format
+   * expected by the new com.azure SDK's ServiceBusClientBuilder.connectionString().
+   */
+  public static String buildAsbConnectionString(
+      URI namespace, String sharedAccessKeyName, String sharedAccessKey) {
+    return String.format(
+        "Endpoint=sb://%s;SharedAccessKeyName=%s;SharedAccessKey=%s",
+        namespace.getHost(), sharedAccessKeyName, sharedAccessKey);
   }
 
   /**
