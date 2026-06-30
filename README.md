@@ -4,10 +4,13 @@ This project exists for the following reasons:
 
 * To learn, practice, and increase my Java prowess.
 * To deepen my understanding of various message brokers, cloud technologies, and other data transfer tools.
-  Specifically, JMS, Qpid, AWS SQS, AWS SNS, AWS S3, and Azure Service Bus.
+  Specifically: JMS/Qpid, AWS (SQS, SNS, S3, Lambda, CloudWatch Logs), Azure (Service Bus, Blob Storage,
+  Storage Queues, Event Grid), and SFTP.
 * To occasionally help me manually move data around between these various systems as a part of my daily work tasks. Mind
   you, manual data transfers are an exception, and I only do them when absolutely necessary. But since my job is system
   integration these situations come up regularly.
+* As a record of my learning and experiences with these various technologies, so that I can refer back to them in the
+  future.
 
 ### Reference:
 
